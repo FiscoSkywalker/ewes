@@ -1,0 +1,27 @@
+---
+description: Système AIOS EWES — source de vérité du projet, à lire avant toute modification de code
+alwaysApply: true
+---
+
+# EWES — Modernisation du site institutionnel
+
+Projet pour Planning Events (prestataire) / EWES S.A.R.L. (client) : site institutionnel bilingue (FR/EN), portail d'administration, espace documentaire privé. Contrat : `raw/`.
+
+## Source de vérité
+
+Le dossier `blueprint/` (documents `00` à `21`) fait autorité sur toute décision d'architecture, règle métier ou priorité. Commencer par `blueprint/00_Project_Blueprint.md`.
+
+## Avant de coder
+
+Lire `blueprint/00_Project_Blueprint.md`, `blueprint/19_AI_Coding_Rules.md`, et la dernière entrée du journal dans `blueprint/21_Backlog_and_Session_Handoff.md` pour connaître l'état courant du projet — ce fichier tient lieu de mémoire persistante entre les sessions Claude Code et Cursor, qui ne partagent pas de contexte de conversation.
+
+## Avant de clore une session de travail
+
+Committer le travail, cocher les tâches faites et ajouter une entrée au journal de `blueprint/21_Backlog_and_Session_Handoff.md` (protocole détaillé dans ce même fichier, §3).
+
+## Règles clés
+
+- Rendu serveur (SSR/SSG/ISR) pour le site public, composants client isolés au strict nécessaire ; portail admin et espace documentaire privé en client-side sans SSR forcé (`blueprint/16_Rendering_State_Strategy.md`).
+- Toute vérification de rôle/droit/confidentialité se fait côté serveur NestJS, jamais seulement côté UI (`blueprint/10_Security.md`).
+- Sobriété d'infrastructure : hébergement à 120 USD/an, éviter toute dépendance tierce payante non prévue au contrat.
+- Stack : Next.js (App Router, TypeScript) + NestJS (API REST) + PostgreSQL/Prisma + Docker/Nginx/HTTPS.

@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+.next/
+
+# NestJS
+apps/api/dist/
+dist/
+
+# Env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Prisma
+apps/api/prisma/*.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Uploads (documents privés — jamais versionnés)
+apps/api/storage/
+uploads/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.claude/settings.local.json
+
+# Build / misc
+coverage/
+*.tsbuildinfo
