@@ -11,6 +11,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.104.0",
     "next": "16.3.6",
     "next-intl": "^4.14.7",
     "react": "19.2.8",
