@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+
+/*
+ * Tokens de design — blueprint/05_UI_UX_System.md §3.
+ * Couleurs sémantiques uniquement (jamais de couleur "brute" dans les
+ * composants) ; rayons différenciés contrôle/carte/panneau ; espacement
+ * laissé à l'échelle par défaut de Tailwind (4/8/12/16/24/32/48 px via
+ * p-1/p-2/p-3/p-4/p-6/p-8/p-12), déjà alignée sur le blueprint.
+ */
+:root {
+  --color-primary: #0f5d52;
+  --color-primary-foreground: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f4f6f5;
+  --color-text: #14181a;
+  --color-text-muted: #52605c;
+  --color-success: #1e7a3d;
+  --color-warning: #b7791f;
+  --color-danger: #b3261e;
+  --color-disabled: #9aa5a1;
+  --color-border: #dfe5e3;
+
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-sheet: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #3fa896;
+    --color-primary-foreground: #05201c;
+    --color-surface: #101513;
+    --color-surface-muted: #171d1b;
+    --color-text: #edf2f0;
+    --color-text-muted: #a9b6b1;
+    --color-success: #4caf6f;
+    --color-warning: #d99a3a;
+    --color-danger: #e5645c;
+    --color-disabled: #4b5652;
+    --color-border: #2a332f;
+  }
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-disabled: var(--color-disabled);
+  --color-border: var(--color-border);
+
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-sheet: var(--radius-sheet);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-text);
+}

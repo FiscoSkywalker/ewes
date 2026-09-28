@@ -1,0 +1,423 @@
+// Schéma de données EWES — voir blueprint/07_Database_Design.md pour les
+// conventions et invariants. Rôle modélisé en enum plutôt qu'en table
+// dynamique : blueprint/09_Business_Rules.md §5 fixe une liste fermée de
+// 3 rôles, une table dédiée ajouterait de la complexité sans besoin réel
+// (principe de sobriété, blueprint/00_Project_Blueprint.md §5).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMINISTRATEUR
+  GESTIONNAIRE
+  UTILISATEUR
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ArticleType {
+  ACTUALITE
+  EVENEMENT
+  FORMATION
+  COMMUNIQUE
+}
+
+enum ConfidentialityLevel {
+  PUBLIC_INTERNE
+  RESTREINT
+  CONFIDENTIEL
+}
+
+enum DocumentLifecycleStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ContactMessageStatus {
+  NOUVEAU
+  TRAITE
+}
+
+// --- Identité (blueprint/07_Database_Design.md §2 "Identité") ---
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  fullName     String
+  role         Role
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  sessions             Session[]
+  passwordResetTokens  PasswordResetToken[]
+  folderAccessGrants   FolderAccessGrant[]
+  documentAccessGrants DocumentAccessGrant[]
+  auditLogs            AuditLog[]            @relation("AuditActor")
+  notifications        Notification[]
+
+  @@map("users")
+}
+
+model Session {
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+// --- Contenu institutionnel ---
+
+model Page {
+  id          String        @id @default(uuid())
+  slug        String        @unique
+  titleFr     String
+  titleEn     String?
+  contentFr   String
+  contentEn   String?
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("pages")
+}
+
+model Service {
+  id            String        @id @default(uuid())
+  slug          String        @unique
+  nameFr        String
+  nameEn        String?
+  descriptionFr String
+  descriptionEn String?
+  status        ContentStatus @default(DRAFT)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  realisations Realisation[]
+  experts      Expert[]
+
+  @@map("services")
+}
+
+model Expert {
+  id        String   @id @default(uuid())
+  fullName  String
+  roleFr    String
+  roleEn    String?
+  bioFr     String?
+  bioEn     String?
+  photoUrl  String?
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceId])
+  @@map("experts")
+}
+
+// --- Réalisations (blueprint/12_Realisations_Portfolio_System.md) ---
+
+model Realisation {
+  id             String        @id @default(uuid())
+  slug           String        @unique
+  titleFr        String
+  titleEn        String?
+  clientName     String?
+  isClientPublic Boolean       @default(false)
+  location       String?
+  year           Int?
+  projectType    String?
+  descriptionFr  String?
+  descriptionEn  String?
+  objectivesFr   String?
+  objectivesEn   String?
+  resultsFr      String?
+  resultsEn      String?
+  status         ContentStatus @default(DRAFT)
+  isFeatured     Boolean       @default(false)
+  publishedAt    DateTime?
+  serviceId      String
+  service        Service       @relation(fields: [serviceId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  images    RealisationImage[]
+  documents RealisationDocument[]
+  partners  RealisationPartner[]
+
+  @@index([serviceId, status, publishedAt])
+  @@map("realisations")
+}
+
+model RealisationImage {
+  id            String      @id @default(uuid())
+  realisationId String
+  realisation   Realisation @relation(fields: [realisationId], references: [id], onDelete: Cascade)
+  url           String
+  altFr         String?
+  altEn         String?
+  position      Int         @default(0)
+  createdAt     DateTime    @default(now())
+
+  @@index([realisationId])
+  @@map("realisation_images")
+}
+
+model RealisationDocument {
+  id               String         @id @default(uuid())
+  realisationId    String
+  realisation      Realisation    @relation(fields: [realisationId], references: [id], onDelete: Cascade)
+  publicDocumentId String
+  publicDocument   PublicDocument @relation(fields: [publicDocumentId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+
+  @@unique([realisationId, publicDocumentId])
+  @@map("realisation_documents")
+}
+
+model RealisationPartner {
+  id            String      @id @default(uuid())
+  realisationId String
+  realisation   Realisation @relation(fields: [realisationId], references: [id], onDelete: Cascade)
+  name          String
+  createdAt     DateTime    @default(now())
+
+  @@index([realisationId])
+  @@map("realisation_partners")
+}
+
+// --- Actualités & publications ---
+
+model Article {
+  id          String        @id @default(uuid())
+  slug        String        @unique
+  type        ArticleType
+  titleFr     String
+  titleEn     String?
+  excerptFr   String?
+  excerptEn   String?
+  contentFr   String
+  contentEn   String?
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  images    ArticleImage[]
+  documents ArticleDocument[]
+
+  @@index([type, status, publishedAt])
+  @@map("articles")
+}
+
+model ArticleImage {
+  id        String   @id @default(uuid())
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  url       String
+  altFr     String?
+  altEn     String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([articleId])
+  @@map("article_images")
+}
+
+model ArticleDocument {
+  id               String         @id @default(uuid())
+  articleId        String
+  article          Article        @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  publicDocumentId String
+  publicDocument   PublicDocument @relation(fields: [publicDocumentId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+
+  @@unique([articleId, publicDocumentId])
+  @@map("article_documents")
+}
+
+model PublicDocument {
+  id            String    @id @default(uuid())
+  titleFr       String
+  titleEn       String?
+  fileUrl       String
+  fileType      String
+  fileSizeBytes Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  realisationLinks RealisationDocument[]
+  articleLinks     ArticleDocument[]
+
+  @@map("public_documents")
+}
+
+// --- Espace documentaire privé (blueprint/11_Document_Management_System.md) ---
+
+model Folder {
+  id              String               @id @default(uuid())
+  name            String
+  category        String
+  subCategory     String?
+  projectRef      String?
+  year            Int?
+  department      String?
+  confidentiality ConfidentialityLevel @default(RESTREINT)
+  parentId        String?
+  parent          Folder?              @relation("FolderChildren", fields: [parentId], references: [id])
+  children        Folder[]             @relation("FolderChildren")
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  documents    PrivateDocument[]
+  accessGrants FolderAccessGrant[]
+
+  @@index([parentId])
+  @@map("folders")
+}
+
+model PrivateDocument {
+  id              String                  @id @default(uuid())
+  folderId        String
+  folder          Folder                  @relation(fields: [folderId], references: [id])
+  name            String
+  fileUrl         String
+  fileType        String
+  fileSizeBytes   Int
+  // Surcharge optionnelle de la confidentialité héritée du dossier
+  // (blueprint/09_Business_Rules.md §4). null = hérite du dossier.
+  confidentiality ConfidentialityLevel?
+  status          DocumentLifecycleStatus @default(ACTIVE)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  deletedAt       DateTime?
+
+  accessGrants DocumentAccessGrant[]
+
+  @@index([folderId])
+  @@map("private_documents")
+}
+
+model FolderAccessGrant {
+  id          String   @id @default(uuid())
+  folderId    String
+  folder      Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grantedById String?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, folderId])
+  @@map("folder_access_grants")
+}
+
+model DocumentAccessGrant {
+  id                String          @id @default(uuid())
+  privateDocumentId String
+  privateDocument   PrivateDocument @relation(fields: [privateDocumentId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grantedById       String?
+  createdAt         DateTime        @default(now())
+
+  @@unique([userId, privateDocumentId])
+  @@map("document_access_grants")
+}
+
+// --- Contact ---
+
+model ContactMessage {
+  id        String               @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  status    ContactMessageStatus @default(NOUVEAU)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+// --- Système ---
+
+model Notification {
+  id              String    @id @default(uuid())
+  recipientEmail  String
+  recipientUserId String?
+  recipientUser   User?     @relation(fields: [recipientUserId], references: [id])
+  type            String
+  payload         Json?
+  sentAt          DateTime?
+  failedAt        DateTime?
+  attempts        Int       @default(0)
+  createdAt       DateTime  @default(now())
+
+  @@index([recipientUserId])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  beforeData Json?
+  afterData  Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@map("audit_logs")
+}
+
+model MediaAsset {
+  id            String   @id @default(uuid())
+  url           String
+  altFr         String?
+  altEn         String?
+  fileType      String
+  fileSizeBytes Int
+  createdAt     DateTime @default(now())
+
+  @@map("media_assets")
+}

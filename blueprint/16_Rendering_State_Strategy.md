@@ -1,0 +1,45 @@
+# EWES
+## Stratégie de Rendu et de Gestion d'État
+### Version 1.0 | Statut : Draft
+
+---
+
+# 1. Principe
+
+Ce document opérationnalise la règle directrice posée dans `06_Application_Architecture.md` : rendu serveur maximal pour le site public, application client-side pour le portail d'administration et l'espace documentaire privé. Toute décision de rendu doit être justifiée par la fraîcheur réelle des données, pas par défaut.
+
+# 2. Mode de rendu par page (site public)
+
+| Page | Mode | Revalidation |
+|---|---|---|
+| Accueil | SSG + ISR | Longue (ex. 1h), invalidée manuellement à la publication d'un contenu mis en avant |
+| À propos | SSG + ISR | Longue (ex. 24h) |
+| Nos services | SSG + ISR | Longue (ex. 24h) |
+| Nos réalisations (liste) | ISR | Courte (ex. 5-15 min), invalidée à la publication/dépublication |
+| Fiche réalisation | SSG + ISR | Invalidée à la publication de la fiche concernée |
+| Actualités & publications (liste) | ISR | Courte (ex. 5-15 min) |
+| Article détail | SSG + ISR | Invalidée à la publication de l'article concerné |
+| Documents (publics) | ISR | Courte |
+| Contact | Statique (page), formulaire en composant client isolé | — |
+
+L'invalidation ciblée (revalidation à la demande déclenchée par la mutation d'administration) est préférée à une revalidation temporisée large, pour éviter qu'un contenu publié mette plusieurs minutes à apparaître.
+
+# 3. Portail d'administration et espace documentaire privé
+
+Ces zones sont des Client Components sous un layout dédié (`app/(admin)/...`), sans SSR de données métier. La récupération de données utilise TanStack Query (cache, revalidation, état de chargement/erreur standardisé). L'authentification est vérifiée par middleware Next.js avant tout rendu de la zone.
+
+# 4. Isolation des composants interactifs côté public
+
+Formulaire de contact, filtres de portfolio/actualités, sélecteur de langue, uploader (le cas échéant côté public) sont chacun un sous-composant `"use client"` minimal, monté dans une page Server Component par ailleurs statique. Une page publique ne devient jamais un Client Component dans son ensemble pour ce motif.
+
+# 5. Gestion d'état
+
+État serveur (données métier) : TanStack Query côté admin ; props serveur + revalidation Next.js côté public. État de formulaire : React Hook Form + Zod (validation partagée avec les DTO NestJS autant que possible). État UI éphémère (ouverture de menu, onglet actif) : état local du composant, jamais remonté globalement sans raison. Pas de store global (Redux/Zustand) tant qu'aucun besoin transverse ne le justifie — cohérent avec le principe de sobriété du blueprint.
+
+# 6. Règles de mutation (admin)
+
+Les boutons de soumission se désactivent pendant la requête, les listes dépendantes ne sont invalidées qu'après confirmation du résultat par le serveur (pas de mise à jour optimiste sur les actions de publication ou de droits d'accès, pour éviter tout affichage trompeur d'un état non confirmé).
+
+# 7. Références
+
+`06_Application_Architecture.md`, `08_API_Specification.md`, `15_Public_Site_Pages.md`, `19_AI_Coding_Rules.md`.

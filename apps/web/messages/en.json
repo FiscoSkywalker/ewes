@@ -1,0 +1,18 @@
+{
+  "Nav": {
+    "home": "Home",
+    "about": "About",
+    "services": "Our services",
+    "realisations": "Our projects",
+    "news": "News & publications",
+    "documents": "Documents",
+    "contact": "Contact"
+  },
+  "HomePage": {
+    "title": "EWES — Environment, Water, Engineering Works",
+    "intro": "Site under construction. Institutional content coming soon."
+  },
+  "Footer": {
+    "rights": "All rights reserved."
+  }
+}
