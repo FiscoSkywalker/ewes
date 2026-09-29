@@ -1,9 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import type { Project } from '@/data/projects';
-import { useTranslations } from 'next-intl';
-import { ProjectModal } from '@/components/public/project-modal';
+import { useRef } from 'react';
 import { ProjectsExplorer } from '@/components/public/projects-explorer';
 import { Hero } from './sections/hero';
 import { WorldSection } from './sections/world-section';
@@ -13,7 +10,7 @@ import { EngineeringSection } from './sections/engineering-section';
 import { ImpactSection } from './sections/impact-section';
 import { ResourcesSection } from './sections/resources-section';
 import { FinalCTASection } from './sections/final-cta-section';
-import { useScrollProgress } from '@/hooks/useScrollProgress';
+import { scrollToElement } from '@/lib/smooth-scroll';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useWebglAvailable } from '@/hooks/useWebglAvailable';
@@ -25,12 +22,9 @@ import { useWebglAvailable } from '@/hooks/useWebglAvailable';
  * un Server Component pour les métadonnées ; toute l'interactivité vit ici.
  */
 export function HomeExperience() {
-  const t = useTranslations('Projects');
-  const { progress, velocity } = useScrollProgress();
   const { dpr, particleMultiplier } = useResponsive();
   const reducedMotion = useReducedMotion();
 
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const webglAvailable = useWebglAvailable();
 
   // Références de section pour le défilement programmatique (Hero → CTA).
@@ -59,35 +53,22 @@ export function HomeExperience() {
       resourcesRef,
       ctaRef,
     ];
-    sectionRefs[index]?.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const selectProjectById = (id: string) => {
-    const projects = t.raw('items') as Project[];
-    const project = projects.find((item) => item.id === id);
-    if (project) setSelectedProject(project);
+    scrollToElement(sectionRefs[index]?.current ?? null);
   };
 
   return (
     <main className="relative min-h-screen bg-background text-sand selection:bg-primary selection:text-white">
-      <ProjectModal
-        project={selectedProject}
-        onClose={() => setSelectedProject(null)}
-      />
-
       <div className="relative z-10">
         <div ref={heroRef} data-section-index="0">
           <Hero onExplore={() => handleNavigateSection(1)} />
         </div>
 
         <div ref={worldRef} data-section-index="1">
-          <WorldSection onSelectProject={selectProjectById} />
+          <WorldSection />
         </div>
 
         <div ref={waterRef} data-section-index="2">
           <WaterSection
-            scrollProgress={progress}
-            velocity={velocity}
             reducedMotion={reducedMotion}
             dpr={dpr}
             particleMultiplier={particleMultiplier}
@@ -101,8 +82,6 @@ export function HomeExperience() {
 
         <div ref={engineeringRef} data-section-index="4">
           <EngineeringSection
-            scrollProgress={progress}
-            velocity={velocity}
             reducedMotion={reducedMotion}
             dpr={dpr}
             webglAvailable={webglAvailable}

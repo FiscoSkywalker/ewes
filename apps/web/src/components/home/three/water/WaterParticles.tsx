@@ -16,11 +16,8 @@ import * as THREE from 'three';
 
 interface WaterParticlesProps {
   count?: number;
-  scrollProgress: number;
 }
 
-// `scrollProgress` is part of the shared water-props shape (kept in sync
-// with WaterSurface) but this component's flow field doesn't use it.
 export const WaterParticles: React.FC<WaterParticlesProps> = ({
   count = 900,
 }) => {

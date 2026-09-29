@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     template: '%s | EWES S.A.R.L.',
   },
   description:
-    'Bureau d’études d’ingénierie et d’analyses environnementales en RD Congo (Lubumbashi & Kinshasa). EIES, adduction d’eau potable (AEP), gestion des rejets miniers et formation continue.',
+    'Société spécialisée en environnement, eau et travaux d’ingénierie à Lubumbashi (RD Congo) : études d’impact, audits environnementaux, adduction d’eau potable, analyses et formation.',
 };
 
 export function generateStaticParams() {

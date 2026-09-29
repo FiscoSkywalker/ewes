@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { ArrowRight, GraduationCap, Phone } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
+import { EWES_CONTACT } from '@/data/contact';
 
 /**
  * Bloc d'appel à l'action final de l'Accueil — homepage uniquement. Le pied
@@ -41,11 +42,11 @@ export function FinalCTASection() {
           </Link>
 
           <a
-            href="tel:+243818153110"
+            href={EWES_CONTACT.phoneHref}
             className="flex w-full items-center justify-center gap-2.5 rounded-full border border-border bg-surface px-8 py-3.5 text-sm tracking-wider text-sand transition-colors hover:border-primary/40 sm:w-auto"
           >
             <Phone size={15} className="text-primary" />
-            <span>{t('phoneLabel')}</span>
+            <span>{EWES_CONTACT.phoneDisplay}</span>
           </a>
         </div>
       </div>

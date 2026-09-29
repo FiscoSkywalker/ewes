@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { LogIn, Menu, X } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
+import { BrandLogo } from './brand-logo';
 import { LanguageSelector } from './language-selector';
 
 /**
@@ -67,25 +68,20 @@ export function Header() {
           <Link
             href="/"
             className="group flex items-center gap-3 text-left"
-            aria-label="Retour à l’accueil"
+            aria-label={t('homeAriaLabel')}
           >
-            <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-black text-background">
-              EW
-              <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-water/80" />
-            </span>
-            <span className="hidden flex-col sm:flex">
-              <span className="font-heading text-lg font-bold leading-none tracking-[0.12em] text-sand transition-colors group-hover:text-primary">
-                EWES
-              </span>
-              <span className="mt-1 text-[9px] uppercase tracking-[0.18em] text-muted">
-                Environnement · Eau · Ingénierie
-              </span>
+            <BrandLogo
+              priority
+              className={`transition-[height] duration-500 ${isScrolled ? 'h-10' : 'h-14'}`}
+            />
+            <span className="hidden border-l border-sand/15 pl-3 text-[9px] font-bold uppercase leading-4 tracking-[0.18em] text-muted 2xl:block">
+              {t('tagline')}
             </span>
           </Link>
 
           <nav
             className="hidden items-center gap-[clamp(.6rem,1vw,1.1rem)] xl:flex"
-            aria-label="Navigation principale"
+            aria-label={t('mainNavAriaLabel')}
           >
             {navItems.map((item) => {
               const isActive = pathname === item.href;
@@ -117,16 +113,16 @@ export function Header() {
                   ? 'border-primary bg-primary text-white hover:bg-primary-hover'
                   : 'border-sand/22 bg-white/18 text-sand backdrop-blur-sm hover:bg-white/38'
               }`}
-              title="Accès à l’espace documentaire privé"
+              title={t('loginTitle')}
             >
               <LogIn size={13} />
-              Connexion
+              {t('login')}
             </Link>
             <button
               type="button"
               className="flex h-10 w-10 items-center justify-center rounded-full border border-sand/15 text-sand xl:hidden"
               onClick={() => setMobileOpen(true)}
-              aria-label="Ouvrir le menu"
+              aria-label={t('openMenu')}
               aria-expanded={mobileOpen}
             >
               <Menu size={18} />
@@ -140,21 +136,23 @@ export function Header() {
           mobileOpen ? 'visible opacity-100' : 'invisible opacity-0'
         }`}
         aria-hidden={!mobileOpen}
+        data-lenis-prevent
       >
         <div className="flex items-center justify-between">
-          <span className="font-heading text-2xl font-bold tracking-[0.14em] text-sand">
-            EWES
-          </span>
+          <BrandLogo className="h-12" />
           <button
             type="button"
             className="flex h-11 w-11 items-center justify-center rounded-full border border-sand/15 text-sand"
             onClick={() => setMobileOpen(false)}
-            aria-label="Fermer le menu"
+            aria-label={t('closeMenu')}
           >
             <X size={20} />
           </button>
         </div>
-        <nav className="mt-14 flex flex-col" aria-label="Navigation mobile">
+        <nav
+          className="mt-14 flex flex-col"
+          aria-label={t('mobileNavAriaLabel')}
+        >
           {navItems.map((item, index) => (
             <Link
               key={item.href}
@@ -178,7 +176,7 @@ export function Header() {
           className="primary-button mt-5 w-full"
         >
           <LogIn size={14} />
-          Connexion
+          {t('login')}
         </Link>
       </div>
     </>

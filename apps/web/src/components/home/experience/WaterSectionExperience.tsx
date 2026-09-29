@@ -6,25 +6,25 @@ import { Environment, Lightformer } from '@react-three/drei';
 import * as THREE from 'three';
 import { WaterSurface } from '../three/water/WaterSurface';
 import { WaterParticles } from '../three/water/WaterParticles';
+import { readScroll } from '@/lib/scroll-state';
 
 interface WaterSectionExperienceProps {
-  scrollProgress: number;
-  velocity: number;
+  /** `false` suspend la boucle de rendu (section hors écran). */
+  active: boolean;
   reducedMotion: boolean;
   dpr: number;
   particleMultiplier: number;
 }
 
 function WaterStage({
-  scrollProgress,
-  velocity,
   reducedMotion,
   particleMultiplier,
-}: Omit<WaterSectionExperienceProps, 'dpr'>) {
+}: Pick<WaterSectionExperienceProps, 'reducedMotion' | 'particleMultiplier'>) {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame(() => {
     if (!groupRef.current || reducedMotion) return;
+    const { velocity } = readScroll();
     const scrollInfluence = THREE.MathUtils.clamp(
       velocity * 0.035,
       -0.08,
@@ -69,14 +69,9 @@ function WaterStage({
       />
 
       <group ref={groupRef}>
-        <WaterSurface
-          scrollProgress={scrollProgress}
-          velocity={velocity}
-          reducedMotion={reducedMotion}
-        />
+        <WaterSurface reducedMotion={reducedMotion} />
         <WaterParticles
           count={reducedMotion ? 0 : Math.round(560 * particleMultiplier)}
-          scrollProgress={scrollProgress}
         />
       </group>
     </>
@@ -85,6 +80,7 @@ function WaterStage({
 
 /** Canvas WebGL dédié à la section Eau — chargé dynamiquement (`ssr:false`), homepage uniquement. */
 export function WaterSectionExperience({
+  active,
   dpr,
   ...stageProps
 }: WaterSectionExperienceProps) {
@@ -93,8 +89,10 @@ export function WaterSectionExperience({
       <Canvas
         camera={{ position: [0, 2.2, 3.75], fov: 45, near: 0.1, far: 80 }}
         dpr={dpr}
+        frameloop={active ? 'always' : 'never'}
         gl={{
-          antialias: true,
+          // À haute densité de pixels l'anticrénelage matériel est superflu et coûteux.
+          antialias: dpr < 1.5,
           alpha: true,
           powerPreference: 'high-performance',
           toneMapping: THREE.ACESFilmicToneMapping,

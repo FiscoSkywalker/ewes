@@ -5,23 +5,23 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
 import * as THREE from 'three';
 import { Infrastructure } from '../three/infrastructure/Infrastructure';
+import { readScroll } from '@/lib/scroll-state';
 
 interface EngineeringSectionExperienceProps {
-  scrollProgress: number;
-  velocity: number;
+  /** `false` suspend la boucle de rendu (section hors écran). */
+  active: boolean;
   reducedMotion: boolean;
   dpr: number;
 }
 
 function EngineeringStage({
-  scrollProgress,
-  velocity,
   reducedMotion,
-}: Omit<EngineeringSectionExperienceProps, 'dpr'>) {
+}: Pick<EngineeringSectionExperienceProps, 'reducedMotion'>) {
   const stageRef = useRef<THREE.Group>(null);
 
   useFrame(() => {
     if (!stageRef.current || reducedMotion) return;
+    const { velocity } = readScroll();
     stageRef.current.position.y = THREE.MathUtils.lerp(
       stageRef.current.position.y,
       THREE.MathUtils.clamp(-velocity * 0.05, -0.2, 0.2),
@@ -60,16 +60,12 @@ function EngineeringStage({
         intensity={1.35}
         color="#fff4d9"
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.00025}
       />
 
       <group ref={stageRef} position={[1.15, 0, 0]}>
-        <Infrastructure
-          scrollProgress={scrollProgress}
-          velocity={velocity}
-          reducedMotion={reducedMotion}
-        />
+        <Infrastructure reducedMotion={reducedMotion} />
       </group>
     </>
   );
@@ -77,6 +73,7 @@ function EngineeringStage({
 
 /** Canvas WebGL dédié à la section Ingénierie — chargé dynamiquement (`ssr:false`), homepage uniquement. */
 export function EngineeringSectionExperience({
+  active,
   dpr,
   ...stageProps
 }: EngineeringSectionExperienceProps) {
@@ -86,8 +83,9 @@ export function EngineeringSectionExperience({
         camera={{ position: [1.05, 1.7, 3.85], fov: 45, near: 0.1, far: 80 }}
         dpr={dpr}
         shadows="soft"
+        frameloop={active ? 'always' : 'never'}
         gl={{
-          antialias: true,
+          antialias: dpr < 1.5,
           alpha: true,
           powerPreference: 'high-performance',
           toneMapping: THREE.ACESFilmicToneMapping,

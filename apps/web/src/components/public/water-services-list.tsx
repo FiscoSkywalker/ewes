@@ -9,7 +9,7 @@ interface WaterService {
   desc: string;
 }
 
-/** Liste des 6 prestations du pôle Eau — partagée entre l'Accueil et /services. */
+/** Liste des 8 prestations du pôle Eau — partagée entre l'Accueil et /services. */
 export function WaterServicesList() {
   const t = useTranslations('Water');
   const services = t.raw('services') as WaterService[];

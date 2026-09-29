@@ -3,22 +3,25 @@
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { ArrowUpRight, Building, MapPin } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import type { Project, ProjectCategory } from '@/data/projects';
+import { Link } from '@/i18n/navigation';
 import { SectionHeading } from './section-heading';
-import { ProjectModal } from './project-modal';
 
 type CategoryFilter = ProjectCategory | 'TOUS';
 
+/** Nombre de références affichées dans la section de l'Accueil. */
+const HOME_PREVIEW_COUNT = 6;
+
 interface ProjectsExplorerProps {
-  /** `home` conserve la mise en page pleine largeur du prototype ; `page` s'insère dans une page standard. */
+  /** `home` : aperçu pleine largeur avec lien vers la page ; `page` : liste complète dans une page standard. */
   variant?: 'home' | 'page';
 }
 
 /**
  * Portfolio filtrable des réalisations (blueprint/12_Realisations_Portfolio_System.md),
- * partagé entre la section Accueil et la page /realisations — même contenu,
- * mise en page adaptée au contexte.
+ * partagé entre la section Accueil (aperçu) et la page /realisations (liste
+ * complète). Contenu limité aux références du profil EWES.
  */
 export function ProjectsExplorer({ variant = 'page' }: ProjectsExplorerProps) {
   const t = useTranslations('Projects');
@@ -28,24 +31,29 @@ export function ProjectsExplorer({ variant = 'page' }: ProjectsExplorerProps) {
     key: CategoryFilter;
     label: string;
   }[];
+  const categoryLabels = useMemo(
+    () => new Map(categories.map((category) => [category.key, category.label])),
+    [categories],
+  );
 
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('TOUS');
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const filteredProjects = useMemo(
-    () =>
+  const filteredProjects = useMemo(() => {
+    const filtered =
       activeCategory === 'TOUS'
         ? projects
-        : projects.filter((p) => p.category === activeCategory),
-    [projects, activeCategory],
-  );
+        : projects.filter((p) => p.category === activeCategory);
+    return variant === 'home'
+      ? filtered.slice(0, HOME_PREVIEW_COUNT)
+      : filtered;
+  }, [projects, activeCategory, variant]);
 
   return (
     <section
       className={
         variant === 'home'
-          ? 'relative min-h-screen bg-[#e8f0f3] px-6 py-28 text-sand pointer-events-auto md:px-16'
-          : 'px-6 py-16 text-sand md:px-16'
+          ? 'relative bg-[#e8f0f3] px-6 py-28 text-sand pointer-events-auto md:px-16'
+          : 'px-6 pb-16 pt-28 text-sand md:px-16 md:pt-36'
       }
     >
       <div className="mx-auto w-full max-w-7xl">
@@ -65,7 +73,8 @@ export function ProjectsExplorer({ variant = 'page' }: ProjectsExplorerProps) {
                 key={cat.key}
                 type="button"
                 onClick={() => setActiveCategory(cat.key)}
-                className={`border-b px-1 py-2 text-[10px] font-bold uppercase tracking-[0.12em] transition-all ${
+                aria-pressed={activeCategory === cat.key}
+                className={`border-b px-1 py-2 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${
                   activeCategory === cat.key
                     ? 'border-primary text-primary'
                     : 'border-transparent text-sand/45 hover:border-sand/30 hover:text-sand'
@@ -101,61 +110,45 @@ export function ProjectsExplorer({ variant = 'page' }: ProjectsExplorerProps) {
             {tPage('emptyState')}
           </p>
         ) : (
-          <div className="border-b border-sand/20" data-stagger>
+          <div className="border-b border-sand/20">
             {filteredProjects.map((project, index) => (
-              <button
-                type="button"
+              <article
                 key={project.id}
-                onClick={() => setSelectedProject(project)}
-                className="group grid w-full gap-5 border-t border-sand/20 py-7 text-left transition-colors hover:bg-white/45 sm:grid-cols-[48px_1.4fr_.8fr_110px_32px] sm:items-center sm:px-3"
+                className="grid gap-x-6 gap-y-2 border-t border-sand/20 py-6 sm:grid-cols-[48px_1fr_150px] sm:items-start sm:px-3"
               >
-                <span className="font-heading text-3xl font-medium text-water">
-                  0{index + 1}
+                <span className="font-heading text-2xl font-medium text-water sm:text-3xl">
+                  {String(index + 1).padStart(2, '0')}
                 </span>
                 <div>
                   <div className="mb-2 text-[9px] font-bold uppercase tracking-[0.15em] text-primary">
-                    {project.category.replace('_', ' ')} ·{' '}
-                    {t(`statusLabels.${project.status}`)}
+                    {categoryLabels.get(project.category)}
                   </div>
-                  <h3 className="font-heading text-2xl font-semibold leading-tight text-sand transition-colors group-hover:text-primary">
+                  <h3 className="font-heading text-xl font-semibold leading-tight text-sand sm:text-2xl">
                     {project.title}
                   </h3>
-                  <p className="mt-2 max-w-2xl text-xs leading-5 text-sand/52 line-clamp-2">
-                    {project.summary}
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-sand/60">
+                    {project.detail}
                   </p>
                 </div>
-                <div className="space-y-2 text-[11px] text-sand/52">
-                  <div className="flex items-center gap-2">
-                    <MapPin size={12} className="text-primary" />
-                    {project.region} · {project.country}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Building size={12} className="text-primary" />
-                    {project.client}
-                  </div>
+                <div className="font-heading text-lg font-semibold text-sand sm:text-right">
+                  {project.year}
                 </div>
-                <div>
-                  <div className="text-[9px] uppercase tracking-wider text-sand/40">
-                    {project.keyMetric.label}
-                  </div>
-                  <div className="mt-1 font-heading text-xl font-semibold text-sand">
-                    {project.keyMetric.value}
-                  </div>
-                </div>
-                <ArrowUpRight
-                  size={18}
-                  className="text-primary transition-transform group-hover:-translate-y-1 group-hover:translate-x-1"
-                />
-              </button>
+              </article>
             ))}
           </div>
         )}
-      </div>
 
-      <ProjectModal
-        project={selectedProject}
-        onClose={() => setSelectedProject(null)}
-      />
+        {variant === 'home' && (
+          <div className="mt-8 flex justify-end">
+            <Link
+              href="/realisations"
+              className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary transition-colors hover:text-sand"
+            >
+              {t('viewAll')} <ArrowRight size={14} />
+            </Link>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

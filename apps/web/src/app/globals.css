@@ -132,15 +132,6 @@ body {
   background: var(--color-primary-hover);
 }
 
-.noise-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  opacity: 0.022;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
-}
-
 .hero-cinematic-image {
   transform: scale(1.08);
   animation: heroCameraDrift 18s ease-in-out infinite alternate;
@@ -154,8 +145,6 @@ body {
   border-radius: 50%;
   pointer-events: none;
   opacity: 0.28;
-  filter: blur(34px);
-  mix-blend-mode: screen;
   background: radial-gradient(
     ellipse at center,
     rgba(255, 255, 255, 0.9),
@@ -187,8 +176,6 @@ body {
   pointer-events: none;
   opacity: 0.2;
   clip-path: polygon(18% 0, 58% 0, 100% 100%, 0 100%);
-  filter: blur(9px);
-  mix-blend-mode: screen;
   background: repeating-linear-gradient(
     102deg,
     transparent 0 15px,
@@ -197,6 +184,40 @@ body {
   );
   background-size: 160% 160%;
   animation: waterGlint 8s ease-in-out infinite alternate;
+}
+
+/*
+ * Entrée du hero en CSS pur : jouée dès le premier rendu serveur, sans
+ * attendre l'hydratation (l'ancienne animation GSAP masquait puis ré-affichait
+ * le contenu, d'où un clignotement).
+ */
+.hero-enter > * {
+  animation: heroEnter 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-enter > *:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.hero-enter > *:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.hero-enter > *:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.hero-enter > *:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.hero-ticker {
+  animation: scrollTicker 26s linear infinite;
+}
+
+/* Animations décoratives du hero suspendues quand il n'est plus à l'écran. */
+[data-paused='true'] .hero-cinematic-image,
+[data-paused='true'] .hero-cloud,
+[data-paused='true'] .hero-water-shimmer,
+[data-paused='true'] .hero-ticker {
+  animation-play-state: paused;
 }
 
 [data-image-reveal] {
@@ -221,6 +242,26 @@ body {
 
 [data-image-reveal]:hover::after {
   transform: translateX(130%) skewX(-16deg);
+}
+
+@keyframes heroEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 36px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes scrollTicker {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
 }
 
 @keyframes heroCameraDrift {
@@ -265,6 +306,24 @@ body {
   .section-shell {
     padding: 9rem 4rem 6rem;
   }
+}
+
+/* Règles requises par Lenis (défilement fluide). */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+[data-lenis-prevent] {
+  overscroll-behavior: contain;
 }
 
 @media (prefers-reduced-motion: reduce) {

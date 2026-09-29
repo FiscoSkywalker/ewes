@@ -4,12 +4,14 @@ import { getTranslations } from 'next-intl/server';
 import { Building2, MapPin } from 'lucide-react';
 import type { ImpactMetric } from '@/data/metrics';
 import { SectionHeading } from '@/components/public/section-heading';
+import { EWES_CONTACT } from '@/data/contact';
 
 /**
  * Page À propos (blueprint/15_Public_Site_Pages.md) — SSG/ISR, Server
- * Component. Reprend le contenu validé du bloc "Notre histoire" de
- * l'Accueil (namespace `World`), enrichi des valeurs et de l'équipe
- * (contenu à compléter par EWES — voir blueprint/21 §5).
+ * Component. Reprend le bloc "Qui sommes-nous" de l'Accueil (namespace
+ * `World`), enrichi des atouts, de l'équipe, des références clients, des
+ * expertises et des objectifs de recherche décrits dans le profil EWES
+ * (`raw/PROFIL_EWES.md`).
  */
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('AboutPage');
@@ -20,13 +22,21 @@ export default async function AboutPage() {
   const t = await getTranslations('World');
   const tPage = await getTranslations('AboutPage');
   const tImpact = await getTranslations('Impact');
+  const tExpertises = await getTranslations('Expertises');
+  const tResearch = await getTranslations('Research');
   const tMetrics = await getTranslations('Metrics');
   const metrics = tMetrics.raw('items') as ImpactMetric[];
   const values = t.raw('values') as { title: string; text: string }[];
+  const clients = t.raw('clients') as string[];
+  const expertises = tExpertises.raw('items') as {
+    title: string;
+    text: string;
+  }[];
+  const research = tResearch.raw('items') as { title: string; text: string }[];
 
   return (
     <div className="text-sand">
-      <section className="px-6 pb-16 pt-16 md:px-16 md:pt-24">
+      <section className="px-6 pb-16 pt-28 md:px-16 md:pt-36">
         <SectionHeading
           eyebrow={tPage('eyebrow')}
           title={tPage('title')}
@@ -62,9 +72,12 @@ export default async function AboutPage() {
                     <MapPin size={14} className="mt-1 shrink-0 text-primary" />
                     {t('addressLine1')}
                   </p>
-                  <p className="mt-2 pl-7 text-sm leading-6 text-sand/55">
-                    {t('addressLine2')}
-                  </p>
+                  <a
+                    href={EWES_CONTACT.phoneHref}
+                    className="mt-2 block pl-7 text-sm leading-6 text-sand/55 transition-colors hover:text-primary"
+                  >
+                    {EWES_CONTACT.phoneDisplay}
+                  </a>
                 </div>
               </div>
               <div className="border-t border-sand/20 py-5">
@@ -123,16 +136,93 @@ export default async function AboutPage() {
       </section>
 
       <section className="px-6 py-16 md:px-16">
+        <div className="mx-auto max-w-[1440px]">
+          <h2 className="section-title text-3xl text-sand sm:text-4xl">
+            {t('clientsTitle')}
+          </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-sand/60">
+            {t('clientsText')}
+          </p>
+          <ul className="mt-8 flex flex-wrap gap-3">
+            {clients.map((client) => (
+              <li
+                key={client}
+                className="border border-sand/20 bg-surface-elevated px-4 py-2 font-heading text-lg font-semibold text-sand"
+              >
+                {client}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="bg-surface px-6 py-16 md:px-16">
+        <div className="mx-auto max-w-[1440px]">
+          <SectionHeading
+            eyebrow={tExpertises('eyebrow')}
+            title={tExpertises('title')}
+            className="max-w-4xl"
+          />
+          <div className="mt-10 grid grid-cols-1 border-t border-sand/20 sm:grid-cols-2">
+            {expertises.map((item) => (
+              <div
+                key={item.title}
+                className="border-b border-sand/20 py-6 sm:odd:pr-7 sm:even:border-l sm:even:pl-7"
+              >
+                <h3 className="font-heading text-xl font-semibold text-sand">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-sand/60">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 py-16 md:px-16">
+        <div className="mx-auto max-w-[1440px]">
+          <SectionHeading
+            eyebrow={tResearch('eyebrow')}
+            title={tResearch('title')}
+            description={tResearch('description')}
+            className="max-w-4xl"
+          />
+          <div className="mt-10 grid grid-cols-1 border-t border-sand/20 sm:grid-cols-2">
+            {research.map((item, index) => (
+              <div
+                key={item.title}
+                className="grid grid-cols-[48px_1fr] gap-4 border-b border-sand/20 py-6 sm:odd:pr-7 sm:even:border-l sm:even:pl-7"
+              >
+                <span className="font-heading text-3xl font-medium text-water">
+                  0{index + 1}
+                </span>
+                <div>
+                  <h3 className="font-heading text-xl font-semibold text-sand">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-sand/60">
+                    {item.text}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 py-16 md:px-16">
         <SectionHeading
           eyebrow={tImpact('eyebrow')}
           title={tImpact('title')}
           description={tImpact('description')}
         />
-        <div className="mx-auto mt-10 grid max-w-[1440px] border-t border-sand/20 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto mt-10 grid max-w-[1440px] border-t border-sand/20 sm:grid-cols-2 lg:grid-cols-4">
           {metrics.map((metric) => (
             <div
               key={metric.label}
-              className="border-b border-sand/20 py-5 sm:odd:pr-6 sm:even:border-l sm:even:pl-6"
+              className="border-b border-sand/20 py-5 sm:odd:pr-6 sm:even:border-l sm:even:pl-6 lg:border-l lg:px-6 lg:first:border-l-0 lg:first:pl-0"
             >
               <div className="flex items-baseline gap-1">
                 <span className="font-heading text-4xl font-bold text-primary">

@@ -4,13 +4,11 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ArrowUpRight, Building2, MapPin } from 'lucide-react';
 import { SectionHeading } from '@/components/public/section-heading';
+import { Link } from '@/i18n/navigation';
+import { EWES_CONTACT } from '@/data/contact';
 
-interface WorldSectionProps {
-  onSelectProject?: (id: string) => void;
-}
-
-/** Section "Notre histoire" de l'Accueil — homepage uniquement. */
-export function WorldSection({ onSelectProject }: WorldSectionProps) {
+/** Section "Qui sommes-nous" de l'Accueil — homepage uniquement. */
+export function WorldSection() {
   const t = useTranslations('World');
 
   return (
@@ -47,22 +45,24 @@ export function WorldSection({ onSelectProject }: WorldSectionProps) {
                   <MapPin size={14} className="mt-1 shrink-0 text-primary" />
                   {t('addressLine1')}
                 </p>
-                <p className="mt-2 pl-7 text-sm leading-6 text-sand/55">
-                  {t('addressLine2')}
-                </p>
+                <a
+                  href={EWES_CONTACT.phoneHref}
+                  className="mt-2 block pl-7 text-sm leading-6 text-sand/55 transition-colors hover:text-primary"
+                >
+                  {EWES_CONTACT.phoneDisplay}
+                </a>
               </div>
             </div>
             <div className="flex flex-col justify-between gap-5 border-t border-sand/20 py-5 sm:flex-row sm:items-center">
               <p className="max-w-lg text-xs leading-5 text-sand/55">
                 {t('networkLine')}
               </p>
-              <button
-                type="button"
-                onClick={() => onSelectProject?.('eies-katanga-mining')}
+              <Link
+                href="/realisations"
                 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary hover:text-sand"
               >
                 {t('referenceMission')} <ArrowUpRight size={14} />
-              </button>
+              </Link>
             </div>
           </div>
         </div>
