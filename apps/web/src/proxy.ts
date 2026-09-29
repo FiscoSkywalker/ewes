@@ -36,7 +36,13 @@ function adminSessionGuard(request: NextRequest) {
 
   const hasSession = request.cookies.has(REFRESH_TOKEN_COOKIE);
   if (!hasSession) {
-    return NextResponse.redirect(new URL(ADMIN_LOGIN_PATH, request.url));
+    // Mémorise la page demandée pour y revenir après connexion (validée côté
+    // page de connexion par `safeAdminRedirect`).
+    const loginUrl = new URL(ADMIN_LOGIN_PATH, request.url);
+    const { pathname, search } = request.nextUrl;
+    if (pathname !== '/admin')
+      loginUrl.searchParams.set('next', pathname + search);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import NextLink from 'next/link';
 import { LogIn, Menu, X } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { BrandLogo } from './brand-logo';
@@ -106,8 +107,8 @@ export function Header() {
             <div className="hidden lg:block">
               <LanguageSelector compact={isScrolled} />
             </div>
-            <Link
-              href="/documents"
+            <NextLink
+              href="/admin/login"
               className={`hidden h-10 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-[10px] font-bold uppercase tracking-[0.12em] transition-all md:inline-flex ${
                 isScrolled
                   ? 'border-primary bg-primary text-white hover:bg-primary-hover'
@@ -117,7 +118,7 @@ export function Header() {
             >
               <LogIn size={13} />
               {t('login')}
-            </Link>
+            </NextLink>
             <button
               type="button"
               className="flex h-10 w-10 items-center justify-center rounded-full border border-sand/15 text-sand xl:hidden"
@@ -170,14 +171,14 @@ export function Header() {
         <div className="mt-8">
           <LanguageSelector />
         </div>
-        <Link
-          href="/documents"
+        <NextLink
+          href="/admin/login"
           onClick={() => setMobileOpen(false)}
           className="primary-button mt-5 w-full"
         >
           <LogIn size={14} />
           {t('login')}
-        </Link>
+        </NextLink>
       </div>
     </>
   );

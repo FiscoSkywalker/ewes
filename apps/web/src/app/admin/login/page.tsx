@@ -1,93 +1,65 @@
-'use client';
+import type { Metadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { BrandLogo } from '@/components/public/brand-logo';
+import { safeAdminRedirect } from '@/lib/auth/safe-redirect';
+import { LoginForm } from './login-form';
 
-import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+export const metadata: Metadata = {
+  title: 'Connexion | Portail EWES',
+  // Page privée : ne pas l'indexer.
+  robots: { index: false, follow: false },
+};
 
-export default function AdminLoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    setPending(true);
-    setError(null);
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        setError(data?.message ?? 'Connexion impossible.');
-        return;
-      }
-
-      router.replace('/admin');
-      router.refresh();
-    } finally {
-      setPending(false);
-    }
-  }
+/**
+ * Page de connexion du portail (blueprint/14_Admin_Backoffice.md). Composition
+ * serveur ; seul le formulaire (`LoginForm`) est un composant client
+ * (blueprint/16_Rendering_State_Strategy.md §4). Volontairement minimale :
+ * le paysage brumeux du site public en plein cadre (mêmes nuages qui
+ * dérivent que le hero) et une seule carte au centre.
+ */
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const redirectTo = safeAdminRedirect(next);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 rounded-(--radius-card) border border-(--color-border) bg-(--color-surface) p-6"
-      >
-        <h1 className="text-lg font-semibold text-(--color-text)">
-          Portail EWES — Connexion
-        </h1>
+    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background px-5 py-10 text-sand">
+      <div className="absolute inset-0" aria-hidden="true">
+        <Image
+          src="/assets/images/ewes-hero-cinematic.png"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="hero-cinematic-image object-cover"
+        />
+        <div className="hero-cloud hero-cloud-one" />
+        <div className="hero-cloud hero-cloud-two" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(213,228,234,.55),rgba(213,228,234,.82)_70%)]" />
+      </div>
 
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm text-(--color-text-muted)">
-            E-mail
-          </label>
-          <input
-            id="email"
-            type="email"
-            required
-            autoComplete="username"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-(--radius-control) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-sm text-(--color-text)"
-          />
+      <div className="relative w-full max-w-[400px]">
+        <div className="rounded-sheet border border-white/70 bg-surface-elevated/80 p-8 shadow-[0_30px_90px_rgba(23,60,77,.22)] backdrop-blur-xl sm:p-10">
+          <div className="mb-8 flex justify-center">
+            <BrandLogo priority className="h-20" />
+          </div>
+          <h1 className="sr-only">Connexion au portail EWES</h1>
+          <LoginForm redirectTo={redirectTo} />
         </div>
 
-        <div className="space-y-1">
-          <label
-            htmlFor="password"
-            className="text-sm text-(--color-text-muted)"
-          >
-            Mot de passe
-          </label>
-          <input
-            id="password"
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-(--radius-control) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-sm text-(--color-text)"
-          />
-        </div>
-
-        {error && <p className="text-sm text-(--color-danger)">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-(--radius-control) bg-(--color-primary) px-3 py-2 text-sm font-medium text-(--color-primary-foreground) disabled:opacity-60"
+        <Link
+          href="/"
+          className="mx-auto mt-6 flex w-fit items-center gap-2 text-sm font-medium text-sand/65 transition-colors hover:text-sand"
         >
-          {pending ? 'Connexion…' : 'Se connecter'}
-        </button>
-      </form>
-    </div>
+          <ArrowLeft size={15} aria-hidden="true" />
+          Retour au site
+        </Link>
+      </div>
+    </main>
   );
 }
