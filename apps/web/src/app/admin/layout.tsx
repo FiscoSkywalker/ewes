@@ -3,8 +3,15 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import '../globals.css';
 import { AdminProviders } from './providers';
 
+/**
+ * Le portail admin garde une police fonctionnelle (Geist) plutôt que
+ * l'identité DM Sans/Rajdhani du site public (blueprint/05_UI_UX_System.md
+ * §7 : densité d'information et efficacité opérationnelle, pas de
+ * démonstration visuelle). Les variables `--font-body`/`--font-heading`
+ * sont celles consommées par `@theme inline` dans globals.css.
+ */
 const geistSans = Geist({
-  variable: '--font-geist-sans',
+  variable: '--font-body',
   subsets: ['latin'],
 });
 

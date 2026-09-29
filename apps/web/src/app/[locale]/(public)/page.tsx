@@ -1,19 +1,20 @@
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { HomeExperience } from '@/components/home/home-experience';
 
 /**
- * Accueil — blueprint/15_Public_Site_Pages.md. Rendu SSG + ISR (contenu
- * institutionnel appelé à devenir dynamique en Phase 02 via le module
- * NestJS `pages`). Server Component pur, aucune donnée client requise.
+ * Accueil — blueprint/15_Public_Site_Pages.md. Server Component pour les
+ * métadonnées uniquement : le rendu est délégué à `HomeExperience`, un
+ * arbre client assumé (décor immersif WebGL/GSAP, voir le journal de
+ * session Phase 02 pour la justification de cet écart au SSR par défaut).
  */
-export default async function HomePage() {
-  const t = await getTranslations('HomePage');
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('Hero');
+  return {
+    description: t('lead'),
+  };
+}
 
-  return (
-    <section className="space-y-4">
-      <h1 className="text-3xl font-semibold text-(--color-text)">
-        {t('title')}
-      </h1>
-      <p className="text-(--color-text-muted)">{t('intro')}</p>
-    </section>
-  );
+export default function HomePage() {
+  return <HomeExperience />;
 }

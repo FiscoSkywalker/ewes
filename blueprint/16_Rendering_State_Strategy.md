@@ -12,7 +12,7 @@ Ce document opérationnalise la règle directrice posée dans `06_Application_Ar
 
 | Page | Mode | Revalidation |
 |---|---|---|
-| Accueil | SSG + ISR | Longue (ex. 1h), invalidée manuellement à la publication d'un contenu mis en avant |
+| Accueil | Exception validée : Client Component pleine page (voir note ci-dessous) | — |
 | À propos | SSG + ISR | Longue (ex. 24h) |
 | Nos services | SSG + ISR | Longue (ex. 24h) |
 | Nos réalisations (liste) | ISR | Courte (ex. 5-15 min), invalidée à la publication/dépublication |
@@ -23,6 +23,8 @@ Ce document opérationnalise la règle directrice posée dans `06_Application_Ar
 | Contact | Statique (page), formulaire en composant client isolé | — |
 
 L'invalidation ciblée (revalidation à la demande déclenchée par la mutation d'administration) est préférée à une revalidation temporisée large, pour éviter qu'un contenu publié mette plusieurs minutes à apparaître.
+
+**Exception validée — Accueil (2026-09-29) :** à la demande explicite du client, l'Accueil reproduit un prototype immersif (scène WebGL Three.js/React Three Fiber — globe/eau/infrastructure —, défilement piloté GSAP/Lenis). Rendre ce décor au premier chargement serveur n'est ni possible ni souhaitable (dépendance à `window`/WebGL) : la page est donc un arbre Client Component complet (`components/home/home-experience.tsx`), à l'exception du `generateMetadata` du `page.tsx` qui reste serveur. Cette dérogation est scopée à cette seule page — toutes les autres pages publiques (`a-propos`, `services`, `realisations`, `actualites`, `documents`, `contact`) restent des Server Components conformes à la règle ci-dessus, sans décor WebGL. Utilisateur informé du compromis SEO/perf avant implémentation (voir `21_Backlog_and_Session_Handoff.md`, journal du 2026-09-29).
 
 # 3. Portail d'administration et espace documentaire privé
 

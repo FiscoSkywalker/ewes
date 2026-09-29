@@ -4,15 +4,506 @@
     "about": "À propos",
     "services": "Nos services",
     "realisations": "Nos réalisations",
-    "news": "Actualités & publications",
+    "news": "Actualités",
     "documents": "Documents",
     "contact": "Contact"
   },
-  "HomePage": {
-    "title": "EWES — Environnement, Eau, Travaux d'ingénierie",
-    "intro": "Site en cours de construction. Contenu institutionnel à venir."
-  },
   "Footer": {
-    "rights": "Tous droits réservés."
+    "identity": "Environnement, Eau et Services d’Ingénierie. Société à Responsabilité Limitée née de l’Interface Université-Société de l’Université de Lubumbashi.",
+    "officesTitle": "Nos bureaux en RD Congo",
+    "headquartersLabel": "Siège national",
+    "branchLabel": "Antenne",
+    "contactTitle": "Contacts directs",
+    "networkTitle": "Réseau académique & R&D",
+    "rights": "Tous droits réservés.",
+    "tagline": "Environnement · Eau · Travaux d’ingénierie",
+    "privateSpaceLink": "Espace documentaire privé"
+  },
+  "Hero": {
+    "eyebrow": "Bureau d’études et d’ingénierie en RD Congo",
+    "titleLine1": "La science au service du",
+    "titleHighlight": "vivant.",
+    "lead": "EWES transforme les enjeux d’environnement, d’eau et d’infrastructure en solutions durables, mesurables et adaptées aux réalités de la République Démocratique du Congo.",
+    "ctaExplore": "Découvrir notre expertise",
+    "shieldLabel": "Expertise académique & terrain",
+    "locationLabel": "Lubumbashi · Kinshasa",
+    "scrollLabel": "Faire défiler",
+    "expertise": [
+      "Études environnementales",
+      "Eau potable",
+      "Génie civil",
+      "Laboratoire & analyses"
+    ]
+  },
+  "World": {
+    "eyebrow": "01 · Notre histoire",
+    "title": "Une expertise née à l’université, éprouvée sur le terrain.",
+    "description": "Issue des recherches menées à la Faculté Polytechnique de l’Université de Lubumbashi, EWES réunit scientifiques, ingénieurs et experts de terrain autour d’une même exigence : produire des solutions utiles, vérifiables et durables.",
+    "hqLabel": "Siège national",
+    "hqCity": "Lubumbashi",
+    "hqRegion": "Haut-Katanga · RDC",
+    "addressLine1": "N° 3095/86, Avenue Araucarias, Quartier Hewa-Bora, Commune Kampemba.",
+    "addressLine2": "Antenne de coordination institutionnelle à Kinshasa.",
+    "networkLine": "Réseau scientifique : Université de Liège, Lorraine, Polytechnique Montréal et UQAT.",
+    "referenceMission": "Mission de référence",
+    "imageCaption": "Expertise multidisciplinaire · RD Congo",
+    "imageAlt": "Équipe d’ingénieurs EWES en mission de terrain",
+    "valuesTitle": "Ce qui guide nos missions",
+    "values": [
+      {
+        "title": "Rigueur scientifique",
+        "text": "Chaque diagnostic s’appuie sur une méthode vérifiable et des données mesurées, pas sur des estimations."
+      },
+      {
+        "title": "Ancrage local",
+        "text": "Une équipe basée en RD Congo, qui connaît le terrain, les filières minières et les réalités administratives locales."
+      },
+      {
+        "title": "Transfert de compétences",
+        "text": "Chaque mission renforce les capacités des équipes locales, pas seulement le livrable final."
+      }
+    ],
+    "teamTitle": "Équipe & experts",
+    "teamText": "EWES réunit professeurs polytechniciens, ingénieurs et techniciens de laboratoire. Les fiches individuelles de l’équipe seront publiées avec les contenus définitifs validés par EWES."
+  },
+  "Water": {
+    "eyebrow": "02 · Eau & hydraulique",
+    "title": "De la ressource à chaque usage.",
+    "description": "EWES conçoit des chaînes complètes et résilientes : études, captage, traitement, distribution, contrôle qualité et gestion des effluents.",
+    "services": [
+      {
+        "step": "01",
+        "title": "Études de Faisabilité AEP",
+        "desc": "Dimensionnement hydraulique informatisé, recherche de ressources et schémas directeurs d’alimentation en eau potable."
+      },
+      {
+        "step": "02",
+        "title": "Captage & Adduction",
+        "desc": "Aménagement de sources, forages profonds, stations de pompage solaire et réseaux gravitaires."
+      },
+      {
+        "step": "03",
+        "title": "Traitement & Potabilisation",
+        "desc": "Décantation, filtration sur sable, désinfection et potabilisation conforme aux directives de l’OMS."
+      },
+      {
+        "step": "04",
+        "title": "Épuration des Eaux Usées",
+        "desc": "Stations de neutralisation des effluents industriels, décanteurs et recyclage en circuit fermé."
+      },
+      {
+        "step": "05",
+        "title": "Analyses en Laboratoire",
+        "desc": "Contrôle physico-chimique et bactériologique continu de la qualité de l’eau de consommation."
+      },
+      {
+        "step": "06",
+        "title": "Eau en Milieu Minier",
+        "desc": "Gestion des eaux d’exhaure, bilans hydriques d’usines métallurgiques et valorisation des rejets."
+      }
+    ]
+  },
+  "Environment": {
+    "eyebrow": "03 · Environnement",
+    "title": "Comprendre les milieux. Protéger leur avenir.",
+    "description": "Dans un territoire soumis à une forte pression minière et industrielle, nous produisons une connaissance indépendante qui éclaire les décisions et accompagne la transition.",
+    "imageCaption": "Mesurer · Comprendre · Agir",
+    "imageAlt": "Analyse de la qualité de l’eau sur le terrain",
+    "services": [
+      {
+        "title": "Études d’impact & audits",
+        "text": "Diagnostics, PGEP et audits de conformité pour institutions et opérateurs industriels."
+      },
+      {
+        "title": "Mesurer pour décider",
+        "text": "Analyses des eaux et des sols, retombées de poussières et surveillance de la qualité de l’air."
+      },
+      {
+        "title": "Réhabiliter durablement",
+        "text": "Traitement des boues, neutralisation des rejets acides et remédiation des sites dégradés."
+      }
+    ]
+  },
+  "Engineering": {
+    "eyebrow": "04 · Travaux d’ingénierie",
+    "title": "Concevoir juste. Construire pour durer.",
+    "description": "De la modélisation numérique à la maîtrise d’œuvre, notre équipe sécurise chaque décision technique et accompagne le projet jusqu’à sa mise en service.",
+    "sectionLabel": "Une maîtrise d’œuvre intégrée",
+    "items": [
+      {
+        "title": "Conception & BIM",
+        "text": "Plans d’exécution, modélisation 3D et calculs de structures."
+      },
+      {
+        "title": "Suivi de chantier",
+        "text": "Supervision informatisée, qualité béton et maîtrise des délais."
+      },
+      {
+        "title": "Ouvrages hydrauliques",
+        "text": "Châteaux d’eau, stations, réseaux et canaux de drainage."
+      },
+      {
+        "title": "Instrumentation",
+        "text": "Équipements de mesure, laboratoire et transfert de compétences."
+      }
+    ]
+  },
+  "Projects": {
+    "eyebrow": "05 · Nos réalisations",
+    "title": "Des missions qui transforment les territoires.",
+    "description": "Des études et ouvrages de référence menés pour l’État, les collectivités et l’industrie.",
+    "imageCaption": "De la donnée scientifique à la décision technique",
+    "imageAlt": "Laboratoire moderne d’analyse environnementale",
+    "categories": [
+      { "key": "TOUS", "label": "Tous les projets" },
+      { "key": "EAU", "label": "Eau & AEP" },
+      { "key": "ENVIRONNEMENT", "label": "Environnement & Audits" },
+      { "key": "MINES_INDUSTRIE", "label": "Secteur Minier & Rejets" },
+      { "key": "INGENIERIE", "label": "Génie Civil & CAO" }
+    ],
+    "statusLabels": {
+      "REALISE": "Réalisé",
+      "EN_COURS": "En cours",
+      "SUIVI_CONTINU": "Suivi environnemental continu"
+    },
+    "items": [
+      {
+        "id": "eies-katanga-mining",
+        "title": "Étude d’Impact Environnemental et Social (EIES) & Gestion des Rejets Miniers",
+        "category": "MINES_INDUSTRIE",
+        "status": "REALISE",
+        "country": "RD Congo",
+        "region": "Haut-Katanga & Lualaba",
+        "year": "2021 - 2024",
+        "client": "Opérateurs miniers & Ministère des Mines",
+        "keyMetric": {
+          "value": "100% Conforme",
+          "label": "Normes environnementales RDC & Internationales"
+        },
+        "summary": "Caractérisation physico-chimique des rejets solides et liquides, modélisation de la dispersion et plan de gestion environnementale du projet (PGEP).",
+        "description": "Inventaire rigoureux et échantillonnage des effluents de traitement métallurgique. Évaluation des impacts sur les eaux de surface, les nappes phréatiques et les sols agricoles riverains, assortie d’un plan de remédiation et de confinement des résidus.",
+        "technicalDetails": {
+          "capacity": "Supervision de 3 sites d’extraction et concentrateurs",
+          "footprint": "Bassin versant minier de plus de 450 km²",
+          "impact": "Protection des sources d’eau potables villageoises et prévention du drainage minier acide",
+          "technologies": [
+            "Spectrométrie d’absorption atomique",
+            "Modélisation hydrogéologique des panaches",
+            "Analyses physico-chimiques en laboratoire certifié",
+            "Plan de Gestion Environnementale et Sociale (PGES)"
+          ]
+        }
+      },
+      {
+        "id": "adduction-eau-potable-collectivites",
+        "title": "Étude de Faisabilité & Adduction d’Eau Potable (AEP) par Énergie Solaire",
+        "category": "EAU",
+        "status": "EN_COURS",
+        "country": "RD Congo",
+        "region": "Grand Katanga & Territoires périurbains",
+        "year": "2022 - 2025",
+        "client": "Collectivités locales & Partenaires au développement",
+        "keyMetric": {
+          "value": "15 000 m³/j",
+          "label": "Volume d’eau potable sécurisé"
+        },
+        "summary": "Captage de sources d’eau, forages profonds, dimensionnement de châteaux d’eau et pose de réseaux de distribution gravitaire et solaire.",
+        "description": "Conception complète de schémas directeurs d’alimentation en eau potable pour désenclaver les populations vulnérables. Intégration de pompes solaires hybrides et d’unités compactes de chloration et filtration sur sable.",
+        "technicalDetails": {
+          "capacity": "15 000 m³/jour desservant plus de 180 000 habitants",
+          "footprint": "Réseau linéaire de 42 km de conduites PEHD et fonte",
+          "impact": "Éradication des épidémies d’origine hydrique dans les zones d’intervention",
+          "technologies": [
+            "Dimensionnement hydraulique informatisé (EPANET / WaterCAD)",
+            "Système de pompage photovoltaïque hybride",
+            "Filtration multicouche et désinfection automatisée",
+            "Bornes-fontaines communautaires à comptage"
+          ]
+        }
+      },
+      {
+        "id": "audit-environnemental-effluents",
+        "title": "Audit Environnemental & Neutralisation des Effluents Liquides Industriels",
+        "category": "ENVIRONNEMENT",
+        "status": "REALISE",
+        "country": "RD Congo",
+        "region": "Lubumbashi & Bassin minier",
+        "year": "2020 - 2023",
+        "client": "Industries de transformation et métallurgie",
+        "keyMetric": {
+          "value": "98,5%",
+          "label": "Taux de neutralisation des métaux lourds"
+        },
+        "summary": "Diagnostic environnemental complet des rejets liquides industriels et mise en place de stations de neutralisation avec recyclage en circuit fermé.",
+        "description": "Audit technique sur les procédés hydrométallurgiques générateurs d’acides. Conception de décanteurs lamellaires, traitement physico-chimique à la chaux et bassins de décantation des boues stabilisées permettant le recyclage de l’eau de procédé.",
+        "technicalDetails": {
+          "capacity": "Traitement de 8 500 m³/jour d’effluents acides",
+          "footprint": "Installation sur 2,5 hectares",
+          "impact": "Zéro rejet toxique dans le réseau hydrographique public",
+          "technologies": [
+            "Neutralisation pH automatisée",
+            "Précipitation des métaux lourds (Cu, Co, Fe, Mn)",
+            "Floculation et décantation lamellaire haute vitesse",
+            "Surveillance continue par capteurs télémétriques"
+          ]
+        }
+      },
+      {
+        "id": "laboratoire-analyse-eau-air-sol",
+        "title": "Surveillance Continue & Analyses de Laboratoire (Eaux, Sols & Qualité de l’Air)",
+        "category": "ENVIRONNEMENT",
+        "status": "SUIVI_CONTINU",
+        "country": "RD Congo",
+        "region": "National (RDC)",
+        "year": "2019 - 2026",
+        "client": "Entreprises privées, Organismes publics, Universités",
+        "keyMetric": {
+          "value": "12 000+",
+          "label": "Échantillons analysés et certifiés"
+        },
+        "summary": "Laboratoire de pointe pour le contrôle de la qualité de l’eau de consommation, des rejets industriels, de la poussière sédimentable et des gaz atmosphériques.",
+        "description": "Campagnes trimestrielles de prélèvements et analyses sous chaîne de froid contrôlée. Production de bilans écologiques détaillés aidant les industriels et les pouvoirs publics à prendre des décisions éclairées.",
+        "technicalDetails": {
+          "capacity": "Capacité de 450 analyses physico-chimiques complètes / mois",
+          "footprint": "Réseau de 24 stations de surveillance réparties en RDC",
+          "impact": "Production de données chiffrées de référence pour le Ministère de l’Environnement",
+          "technologies": [
+            "Chromatographie et photométrie avancée",
+            "Jauges de retombées de poussières (norme ASTM)",
+            "Analyseurs multigaz mobiles (SO₂, NOₓ, CO, PM2.5 / PM10)",
+            "Bactériologie sur membrane filtrante"
+          ]
+        }
+      },
+      {
+        "id": "formation-polytechnique-cadres",
+        "title": "Programme de Formation Continue des Cadres & Techniciens de l’Eau et des Mines",
+        "category": "INGENIERIE",
+        "status": "SUIVI_CONTINU",
+        "country": "RD Congo / Partenariats",
+        "region": "Lubumbashi (Campus Numérique & UNILU)",
+        "year": "Depuis 2013",
+        "client": "Entreprises minières du Katanga, Agents de l’État, Chercheurs",
+        "keyMetric": {
+          "value": "1 200+",
+          "label": "Cadres et ingénieurs formés"
+        },
+        "summary": "Transfert de compétences de haut niveau en gestion de l’environnement, audit environnemental et logiciels de modélisation hydraulique.",
+        "description": "Modules de formation certifiants animés par des professeurs d’université et experts d’EWES, en partenariat avec les facultés polytechniques de Lubumbashi (UNILU), de Liège (Belgique), de Lorraine (France) et de Montréal (Canada).",
+        "technicalDetails": {
+          "capacity": "12 sessions de formation spécialisées par an",
+          "footprint": "Pôle de compétences national",
+          "impact": "Autonomisation des équipes locales dans l’exploitation des infrastructures complexes",
+          "technologies": [
+            "Logiciels de calcul hydraulique et CAO/DAO",
+            "Méthodologies d’audit environnemental ISO 14001",
+            "Dépollution et restauration de sites miniers",
+            "Législation environnementale et code minier congolais"
+          ]
+        }
+      },
+      {
+        "id": "cao-suivi-chantier-ouvrages",
+        "title": "Conception Assistée par Ordinateur & Supervision de Chantiers de Génie Civil",
+        "category": "INGENIERIE",
+        "status": "EN_COURS",
+        "country": "RD Congo",
+        "region": "Provinces du Haut-Katanga, Lualaba et Kinshasa",
+        "year": "2021 - 2025",
+        "client": "Maîtres d’ouvrage institutionnels & Industriels",
+        "keyMetric": {
+          "value": "100%",
+          "label": "Assurance qualité et respect des délais"
+        },
+        "summary": "Études d’ingénierie civile, modélisation 3D/BIM, maquettes d’ouvrages d’art et contrôle rigoureux de l’exécution sur site.",
+        "description": "Assistance à maîtrise d’ouvrage pour la construction de réservoirs d’eau en béton armé, de dalots d’évacuation des eaux pluviales et de bâtiments administratifs et techniques.",
+        "technicalDetails": {
+          "capacity": "Suivi de plus de 18 chantiers simultanés",
+          "footprint": "Ouvrages d’art et plateformes industrielles",
+          "impact": "Durabilité garantie des infrastructures critiques sur 50 ans",
+          "technologies": [
+            "Modélisation BIM et maquettes numériques 3D",
+            "Essais sur béton frais et durci (scléromètre, carottage)",
+            "Contrôle topographique géoréférencé par GNSS",
+            "Rapports d’audit de conformité technique journaliers"
+          ]
+        }
+      }
+    ]
+  },
+  "ProjectModal": {
+    "close": "Fermer la fiche technique",
+    "closeAriaLabel": "Fermer la fenêtre",
+    "clientLabel": "Client",
+    "specTitle": "Spécifications Techniques & Résultats",
+    "capacityLabel": "Envergure du projet",
+    "footprintLabel": "Zone d’influence",
+    "impactLabel": "Impact environnemental & humain",
+    "expertiseNote": "Expertise scientifique et supervision d’ingénierie certifiée par EWES S.A.R.L."
+  },
+  "Impact": {
+    "eyebrow": "06 · Notre impact",
+    "title": "Une expertise qui produit des résultats visibles.",
+    "description": "Au-delà des études, nos interventions renforcent les territoires, les compétences locales et la qualité des décisions publiques comme industrielles.",
+    "badgeValue": "20",
+    "badgeLabel": "ans d’expertise",
+    "imageAlt": "Communauté bénéficiant d’une nouvelle infrastructure d’eau",
+    "cutoutAlt": "Ingénieure environnementale EWES"
+  },
+  "Metrics": {
+    "items": [
+      {
+        "value": 20,
+        "suffix": "+ ans",
+        "label": "D’Excellence Scientifique",
+        "subtext": "Fondé par des professeurs polytechniciens de l’UNILU depuis 2004"
+      },
+      {
+        "value": 80,
+        "suffix": "+",
+        "label": "Études EIES & Audits Réalisés",
+        "subtext": "Accompagnement de l’État congolais et des leaders de l’industrie"
+      },
+      {
+        "value": 12000,
+        "suffix": " k+",
+        "label": "Échantillons Analysés",
+        "subtext": "Analyses de laboratoire certifiées : eaux potables, rejets, sols et air"
+      },
+      {
+        "value": 1200,
+        "suffix": "+",
+        "label": "Cadres & Ingénieurs Formés",
+        "subtext": "Renforcement continu des compétences des acteurs du secteur minier et de l’eau"
+      },
+      {
+        "value": 4,
+        "suffix": " pays",
+        "label": "Réseau Académique International",
+        "subtext": "Collaborations actives : RD Congo, Belgique (Liège), France (INPL) et Canada (Montréal)"
+      },
+      {
+        "value": 100,
+        "suffix": "%",
+        "label": "Conformité & Éthique Environnementale",
+        "subtext": "Méthodologies conformes aux normes ISO 14001 et au Code Minier congolais"
+      }
+    ]
+  },
+  "Resources": {
+    "eyebrow": "07 · Actualités & ressources",
+    "title": "La connaissance prend de la valeur lorsqu’elle circule.",
+    "description": "Nos publications, nouvelles du terrain et documents institutionnels rendent l’expertise EWES plus accessible et plus utile.",
+    "facts": [
+      { "value": "FR / EN", "label": "Contenus bilingues" },
+      { "value": "PDF", "label": "Ressources téléchargeables" },
+      { "value": "Privé", "label": "Accès documentaire sécurisé" }
+    ],
+    "centerDocTitle": "Centre documentaire",
+    "centerDocText": "Présentations, fiches techniques et publications publiques.",
+    "exploreLabel": "Explorer",
+    "news": [
+      {
+        "type": "Publication",
+        "date": "Septembre 2026",
+        "title": "Vers une gestion intégrée des ressources en eau en RD Congo"
+      },
+      {
+        "type": "Expertise",
+        "date": "Août 2026",
+        "title": "Pourquoi l’audit environnemental est stratégique pour les sites industriels"
+      },
+      {
+        "type": "Formation",
+        "date": "Juillet 2026",
+        "title": "Renforcement des compétences en analyses environnementales"
+      }
+    ]
+  },
+  "Cta": {
+    "badgeLabel": "Partenaire Technique Privilégié en RD Congo",
+    "title": "Donnons une base solide à vos projets d’avenir.",
+    "description": "Études d’impact environnemental, alimentation en eau potable, audits miniers ou modélisation de génie civil : notre équipe d’experts universitaires et d’ingénieurs est à votre écoute.",
+    "ctaPrimary": "Demander une Consultation Technique",
+    "phoneLabel": "+243 81 81 53 110"
+  },
+  "AboutPage": {
+    "eyebrow": "À propos",
+    "title": "EWES, l’expertise scientifique au service du terrain.",
+    "description": "Une société née de l’Interface Université-Société de l’Université de Lubumbashi, qui réunit chercheurs, ingénieurs et techniciens autour d’une même mission : produire une connaissance environnementale et hydraulique utile, vérifiable et durable."
+  },
+  "ServicesPage": {
+    "eyebrow": "Nos services",
+    "title": "Trois pôles d’expertise, une seule exigence de rigueur.",
+    "description": "EWES intervient sur l’ensemble de la chaîne environnement–eau–ingénierie, de l’étude préalable à la mise en service de l’ouvrage."
+  },
+  "RealisationsPage": {
+    "eyebrow": "Nos réalisations",
+    "title": "Des missions qui transforment les territoires.",
+    "description": "Filtrez par domaine d’intervention pour explorer les études et ouvrages menés par EWES pour l’État, les collectivités et l’industrie.",
+    "emptyState": "Aucun projet ne correspond à ce filtre pour le moment."
+  },
+  "NewsPage": {
+    "eyebrow": "Actualités & publications",
+    "title": "Les nouvelles du terrain et de la recherche EWES.",
+    "description": "Communiqués, publications techniques, formations et événements — mis à jour au fil des missions.",
+    "emptyState": "Aucune actualité publiée pour le moment."
+  },
+  "DocumentsPage": {
+    "eyebrow": "Documents",
+    "title": "Documents publics & espace documentaire privé.",
+    "description": "Présentations institutionnelles, fiches techniques et publications publiques d’EWES, ainsi que l’accès à l’espace documentaire sécurisé.",
+    "publicListTitle": "Documents publics",
+    "publicListEmpty": "Aucun document public n’est disponible pour le moment. Cette section sera alimentée au fur et à mesure des publications d’EWES.",
+    "privateTitle": "Espace documentaire privé",
+    "privateText": "Réservé aux comptes autorisés d’EWES (dossiers, rapports et archives classés par confidentialité). L’accès se fait depuis le portail sécurisé.",
+    "privateCta": "Accéder à l’espace sécurisé"
+  },
+  "ContactPage": {
+    "eyebrow": "Contact",
+    "title": "Contactez nos experts.",
+    "description": "Échangez directement avec nos ingénieurs et professeurs d’université basés à Lubumbashi et Kinshasa.",
+    "quickContactTitle": "EWES S.A.R.L. · Consultation d’Ingénierie",
+    "formNote": "Le formulaire ouvre votre messagerie avec les informations saisies, le temps que le canal de soumission en ligne soit activé (Phase 2).",
+    "fields": {
+      "name": "Nom & Prénom",
+      "namePlaceholder": "ex. Ing. Jean Mukendi",
+      "organization": "Entreprise / Institution",
+      "organizationPlaceholder": "ex. Entreprise Minière / Ministère",
+      "email": "Email Professionnel",
+      "emailPlaceholder": "direction@entreprise.cd",
+      "phone": "Numéro de Téléphone",
+      "phonePlaceholder": "+243 ...",
+      "sector": "Pôle d’Expertise Concerné",
+      "message": "Détails de votre Projet ou Besoin",
+      "messagePlaceholder": "Décrivez l’objet de votre mission, localisation géographique, débit souhaité ou paramètres d’analyse..."
+    },
+    "sectors": [
+      {
+        "value": "EIES",
+        "label": "Étude d’Impact Environnemental et Social (EIES) & Audits"
+      },
+      {
+        "value": "EAU",
+        "label": "Adduction d’Eau Potable (AEP) & Forages Profonds"
+      },
+      {
+        "value": "LABO",
+        "label": "Analyses de Laboratoire (Eaux, Sols, Qualité de l’Air)"
+      },
+      {
+        "value": "EFFLUENTS",
+        "label": "Gestion des Effluents Liquides & Rejets Miniers"
+      },
+      {
+        "value": "GENIE_CIVIL",
+        "label": "Génie Civil, Modélisation CAO/BIM & Suivi de Chantier"
+      },
+      {
+        "value": "FORMATION",
+        "label": "Formation Continue des Cadres & Techniciens"
+      }
+    ],
+    "submitLabel": "Envoyer la Demande"
   }
 }

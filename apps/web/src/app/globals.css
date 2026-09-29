@@ -2,67 +2,300 @@
 
 /*
  * Tokens de design — blueprint/05_UI_UX_System.md §3.
- * Couleurs sémantiques uniquement (jamais de couleur "brute" dans les
- * composants) ; rayons différenciés contrôle/carte/panneau ; espacement
- * laissé à l'échelle par défaut de Tailwind (4/8/12/16/24/32/48 px via
- * p-1/p-2/p-3/p-4/p-6/p-8/p-12), déjà alignée sur le blueprint.
+ * Palette institutionnelle EWES (environnement/eau/ingénierie, RD Congo) :
+ * "sand" et "water" sont les noms de marque des tokens sémantiques texte/accent
+ * (pas des couleurs brutes ad hoc) — repris tels quels du prototype validé pour
+ * limiter les écarts de portage. Rayons différenciés contrôle/carte/panneau ;
+ * espacement laissé à l'échelle par défaut de Tailwind (4/8/12/16/24/32/48 px),
+ * déjà alignée sur le blueprint. Thème unique (pas de mode sombre) : la charte
+ * cinématique (dégradés, photos) est calibrée pour ce fond clair précis.
  */
 :root {
-  --color-primary: #0f5d52;
+  --color-primary: #397187;
+  --color-primary-hover: #285b70;
+  --color-primary-deep: #173c4d;
   --color-primary-foreground: #ffffff;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f4f6f5;
-  --color-text: #14181a;
-  --color-text-muted: #52605c;
+
+  --color-background: #d5e4ea;
+  --color-surface: #e9f1f4;
+  --color-surface-elevated: #f8fbfc;
+  --color-surface-muted: #eef4f6;
+
+  --color-sand: #153442;
+  --color-muted: #607986;
+  --color-water: #79adc1;
+
   --color-success: #1e7a3d;
   --color-warning: #b7791f;
   --color-danger: #b3261e;
   --color-disabled: #9aa5a1;
-  --color-border: #dfe5e3;
+
+  --color-border: rgba(21, 52, 66, 0.16);
+  --color-border-subtle: rgba(21, 52, 66, 0.09);
 
   --radius-control: 8px;
   --radius-card: 12px;
   --radius-sheet: 16px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-primary: #3fa896;
-    --color-primary-foreground: #05201c;
-    --color-surface: #101513;
-    --color-surface-muted: #171d1b;
-    --color-text: #edf2f0;
-    --color-text-muted: #a9b6b1;
-    --color-success: #4caf6f;
-    --color-warning: #d99a3a;
-    --color-danger: #e5645c;
-    --color-disabled: #4b5652;
-    --color-border: #2a332f;
-  }
-}
-
 @theme inline {
   --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-deep: var(--color-primary-deep);
   --color-primary-foreground: var(--color-primary-foreground);
+
+  --color-background: var(--color-background);
   --color-surface: var(--color-surface);
+  --color-surface-elevated: var(--color-surface-elevated);
   --color-surface-muted: var(--color-surface-muted);
-  --color-text: var(--color-text);
-  --color-text-muted: var(--color-text-muted);
+
+  --color-sand: var(--color-sand);
+  --color-muted: var(--color-muted);
+  --color-water: var(--color-water);
+
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-danger: var(--color-danger);
   --color-disabled: var(--color-disabled);
+
   --color-border: var(--color-border);
+  --color-border-subtle: var(--color-border-subtle);
 
   --radius-control: var(--radius-control);
   --radius-card: var(--radius-card);
   --radius-sheet: var(--radius-sheet);
 
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: var(--color-background);
+  color: var(--color-sand);
+}
+
+/* --- Identité visuelle du site public immersif (blueprint/15/16) --- */
+
+.section-shell {
+  position: relative;
+  min-height: 100svh;
+  padding: 7rem 1.5rem 5rem;
+}
+
+.section-title {
+  font-family: var(--font-heading), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: '';
+  width: 1.75rem;
+  height: 1px;
+  background: currentColor;
+}
+
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  min-height: 3rem;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  background: var(--color-sand);
+  color: var(--color-surface-elevated);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-2px);
+  background: var(--color-primary-hover);
+}
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+}
+
+.hero-cinematic-image {
+  transform: scale(1.08);
+  animation: heroCameraDrift 18s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.hero-cloud {
+  position: absolute;
+  width: 52vw;
+  height: 24vw;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.28;
+  filter: blur(34px);
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.9),
+    rgba(220, 236, 243, 0.3) 48%,
+    transparent 72%
+  );
+  will-change: transform;
+}
+
+.hero-cloud-one {
+  left: -18vw;
+  top: -5vw;
+  animation: cloudPass 24s linear infinite alternate;
+}
+
+.hero-cloud-two {
+  right: -24vw;
+  top: 4vw;
+  opacity: 0.2;
+  animation: cloudPassReverse 31s linear infinite alternate;
+}
+
+.hero-water-shimmer {
+  position: absolute;
+  left: 8%;
+  bottom: -7%;
+  width: 58%;
+  height: 70%;
+  pointer-events: none;
+  opacity: 0.2;
+  clip-path: polygon(18% 0, 58% 0, 100% 100%, 0 100%);
+  filter: blur(9px);
+  mix-blend-mode: screen;
+  background: repeating-linear-gradient(
+    102deg,
+    transparent 0 15px,
+    rgba(255, 255, 255, 0.72) 17px,
+    transparent 21px 38px
+  );
+  background-size: 160% 160%;
+  animation: waterGlint 8s ease-in-out infinite alternate;
+}
+
+[data-image-reveal] {
+  position: relative;
+}
+
+[data-image-reveal]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  transform: translateX(-130%) skewX(-16deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.34),
+    transparent
+  );
+  transition: transform 900ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+[data-image-reveal]:hover::after {
+  transform: translateX(130%) skewX(-16deg);
+}
+
+@keyframes heroCameraDrift {
+  0% {
+    transform: scale(1.08) translate3d(-0.6%, -0.4%, 0);
+  }
+  100% {
+    transform: scale(1.14) translate3d(0.8%, 0.5%, 0);
+  }
+}
+
+@keyframes cloudPass {
+  from {
+    transform: translate3d(-4vw, 0, 0) scale(0.9);
+  }
+  to {
+    transform: translate3d(27vw, 3vw, 0) scale(1.12);
+  }
+}
+
+@keyframes cloudPassReverse {
+  from {
+    transform: translate3d(8vw, -1vw, 0) scale(1.1);
+  }
+  to {
+    transform: translate3d(-24vw, 4vw, 0) scale(0.92);
+  }
+}
+
+@keyframes waterGlint {
+  from {
+    transform: translate3d(-2%, 0, 0) scaleY(0.97);
+    background-position: 0% 0%;
+  }
+  to {
+    transform: translate3d(3%, 1%, 0) scaleY(1.04);
+    background-position: 100% 70%;
+  }
+}
+
+@media (min-width: 768px) {
+  .section-shell {
+    padding: 9rem 4rem 6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7899a7;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+::selection {
+  background: var(--color-primary);
+  color: #ffffff;
 }
