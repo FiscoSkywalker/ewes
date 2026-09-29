@@ -1,17 +1,13 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { SectionHeading } from '@/components/public/section-heading';
-import { CheckCircle2 } from 'lucide-react';
-import { WaterServicesList } from '@/components/public/water-services-list';
-import { EnvironmentServicesList } from '@/components/public/environment-services-list';
-import { EngineeringItemsList } from '@/components/public/engineering-items-list';
+import { ServicesStrata } from '@/components/public/services-strata';
 
 /**
  * Page Nos services (blueprint/15_Public_Site_Pages.md) — SSG/ISR, Server
- * Component. Empile les trois pôles (Eau, Environnement, Ingénierie) déjà
- * détaillés à l'Accueil, puis le volet Formation, sans le décor WebGL
- * réservé à la page d'Accueil.
+ * Component. Les trois pôles en colonne stratigraphique dépliable
+ * (`ServicesStrata`, seul composant client), puis les publics servis et le
+ * volet Formation, sans le décor WebGL réservé à la page d'Accueil.
  */
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('ServicesPage');
@@ -20,99 +16,84 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ServicesPage() {
   const tPage = await getTranslations('ServicesPage');
-  const tWater = await getTranslations('Water');
-  const tEnvironment = await getTranslations('Environment');
-  const tEngineering = await getTranslations('Engineering');
+  const tOverview = await getTranslations('ServicesOverview');
+  const tExpertises = await getTranslations('Expertises');
   const tTraining = await getTranslations('Training');
+  const audiences = tExpertises.raw('items') as {
+    title: string;
+    text: string;
+  }[];
   const topics = tTraining.raw('topics') as string[];
 
   return (
     <div className="text-sand">
-      <section className="px-6 pb-16 pt-28 md:px-16 md:pt-36">
-        <SectionHeading
-          eyebrow={tPage('eyebrow')}
-          title={tPage('title')}
-          description={tPage('description')}
-        />
-      </section>
+      <section className="bg-paper-muted px-6 pb-20 pt-28 md:px-16 md:pt-36">
+        <div className="mx-auto w-full max-w-[1440px]">
+          <div className="mb-14 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
+            <SectionHeading eyebrow={tPage('eyebrow')} title={tPage('title')} />
+            <p
+              className="max-w-md text-sm leading-7 text-sand/72 md:justify-self-end"
+              data-reveal
+            >
+              {tPage('description')}
+            </p>
+          </div>
 
-      <section className="bg-surface px-6 py-16 md:px-16">
-        <div className="mx-auto max-w-[1440px]">
-          <SectionHeading
-            eyebrow={tWater('eyebrow')}
-            title={tWater('title')}
-            description={tWater('description')}
-            className="max-w-3xl"
-          />
-          <WaterServicesList />
-        </div>
-      </section>
+          <ServicesStrata />
 
-      <section className="px-6 py-16 md:px-16">
-        <div className="mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[.82fr_1.18fr]">
-          <figure className="relative min-h-[360px] overflow-hidden lg:min-h-[520px]">
-            <Image
-              src="/assets/images/ewes-environment-field.png"
-              alt={tEnvironment('imageAlt')}
-              fill
-              sizes="(min-width: 1024px) 42vw, 100vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary-deep/35 via-transparent to-white/10" />
-            <figcaption className="absolute bottom-0 right-0 bg-surface-elevated/92 px-5 py-4 text-[10px] font-bold uppercase tracking-[0.14em] text-sand">
-              {tEnvironment('imageCaption')}
-            </figcaption>
-          </figure>
-          <div className="ml-auto max-w-3xl">
-            <SectionHeading
-              eyebrow={tEnvironment('eyebrow')}
-              title={tEnvironment('title')}
-              description={tEnvironment('description')}
-            />
-            <EnvironmentServicesList />
+          <h2 className="mt-16 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+            {tOverview('audiencesTitle')}
+          </h2>
+          <div
+            className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-4"
+            data-stagger
+          >
+            {audiences.map((item) => (
+              <article
+                key={item.title}
+                className="border-t border-sand/30 pt-5"
+              >
+                <h3 className="font-mono text-[11px] uppercase tracking-[0.1em] text-sand">
+                  {item.title}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-sand/70">
+                  {item.text}
+                </p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-surface px-6 py-16 md:px-16">
-        <div className="mx-auto max-w-[1440px]">
-          <div className="max-w-3xl">
-            <SectionHeading
-              eyebrow={tEngineering('eyebrow')}
-              title={tEngineering('title')}
-              description={tEngineering('description')}
-            />
-            <EngineeringItemsList />
-          </div>
-        </div>
-      </section>
-
-      <section className="px-6 py-16 md:px-16">
-        <div className="mx-auto grid max-w-[1440px] gap-12 lg:grid-cols-[1.1fr_.9fr]">
+      <section className="tone-night bg-night px-6 py-20 md:px-16 md:py-28">
+        <div className="mx-auto grid w-full max-w-[1440px] gap-12 lg:grid-cols-[1.1fr_.9fr] lg:gap-24">
           <div>
             <SectionHeading
-              eyebrow={tTraining('eyebrow')}
+              eyebrow={tTraining('homeEyebrow')}
               title={tTraining('title')}
               description={tTraining('description')}
+              tone="night"
             />
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-sand/65">
+            <p className="mt-5 max-w-2xl text-sm leading-7" data-reveal>
               {tTraining('text')}
             </p>
           </div>
-          <div className="self-end border-y border-sand/20 py-6" data-reveal>
-            <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
+          <div className="self-end" data-reveal>
+            <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-malachite-bright">
               {tTraining('topicsTitle')}
             </h3>
-            <ul className="mt-5 space-y-3">
+            <ul className="mt-4">
               {topics.map((topic) => (
                 <li
                   key={topic}
-                  className="flex items-start gap-3 text-sm leading-6 text-sand/75"
+                  className="flex items-baseline gap-3 border-b border-on-night/12 py-3 text-sm text-on-night"
                 >
-                  <CheckCircle2
-                    size={16}
-                    className="mt-1 shrink-0 text-primary"
-                  />
+                  <span
+                    className="text-xs text-malachite-bright"
+                    aria-hidden="true"
+                  >
+                    ✳
+                  </span>
                   {topic}
                 </li>
               ))}

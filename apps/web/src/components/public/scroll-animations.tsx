@@ -3,10 +3,11 @@
 import { useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
 import { usePathname } from '@/i18n/navigation';
 
 if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(ScrollTrigger, SplitText);
   // Sur mobile, la barre d'adresse qui se replie déclenche des `resize` qui
   // recalculaient toutes les positions en plein défilement (sauts visibles).
   ScrollTrigger.config({ ignoreMobileResize: true });
@@ -21,8 +22,10 @@ function isInInitialView(element: Element) {
 }
 
 /**
- * Anime au défilement les éléments marqués `data-reveal` / `data-stagger` /
- * `data-image-reveal` / `data-counter` sur l'ensemble du site public. Monté
+ * Anime au défilement les éléments marqués `data-reveal` / `data-split` /
+ * `data-stagger` / `data-image-reveal` / `data-counter` sur l'ensemble du
+ * site public (`data-counter-plain` : sans séparateur de milliers, pour les
+ * années). Monté
  * une seule fois dans la coquille publique ; ne rend rien lui-même.
  *
  * Les animations sont recréées à chaque changement de page : la coquille
@@ -59,6 +62,26 @@ export function ScrollAnimations() {
             scrollTrigger: { trigger: element, start: 'top 88%', once: true },
           },
         );
+      });
+
+      // Titres révélés ligne par ligne, chaque ligne sortant de son masque.
+      // `autoSplit` re-découpe au redimensionnement (polices, largeur).
+      gsap.utils.toArray<HTMLElement>('[data-split]').forEach((element) => {
+        if (isInInitialView(element)) return;
+        SplitText.create(element, {
+          type: 'lines',
+          mask: 'lines',
+          linesClass: 'split-line',
+          autoSplit: true,
+          onSplit: (self) =>
+            gsap.from(self.lines, {
+              yPercent: 110,
+              duration: 1.1,
+              stagger: 0.09,
+              ease: 'expo.out',
+              scrollTrigger: { trigger: element, start: 'top 88%', once: true },
+            }),
+        });
       });
 
       gsap.utils
@@ -132,10 +155,16 @@ export function ScrollAnimations() {
       gsap.utils.toArray<HTMLElement>('[data-counter]').forEach((element) => {
         const target = Number(element.dataset.counter ?? 0);
         const finalText = element.textContent ?? '';
-        const counter = { value: 0 };
+        const plain = element.hasAttribute('data-counter-plain');
+        // Une année compte depuis un point proche (2008 → pas depuis 0).
+        const counter = { value: plain ? Math.floor(target * 0.985) : 0 };
         // Le texte serveur affiche déjà la valeur finale : on repart de 0
         // seulement au moment où le compteur entre à l'écran.
-        element.textContent = '0';
+        const format = (value: number) =>
+          plain
+            ? String(Math.round(value))
+            : Math.round(value).toLocaleString(locale);
+        element.textContent = format(counter.value);
         counterRestorers.push(() => {
           element.textContent = finalText;
         });
@@ -144,9 +173,7 @@ export function ScrollAnimations() {
           duration: 1.5,
           ease: 'power2.out',
           onUpdate: () => {
-            element.textContent = Math.round(counter.value).toLocaleString(
-              locale,
-            );
+            element.textContent = format(counter.value);
           },
           scrollTrigger: { trigger: element, start: 'top 90%', once: true },
         });

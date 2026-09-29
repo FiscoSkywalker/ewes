@@ -44,7 +44,7 @@ export default async function AboutPage() {
         />
       </section>
 
-      <section className="bg-surface px-6 py-16 md:px-16">
+      <section className="bg-paper px-6 py-16 md:px-16">
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[.92fr_1.08fr]">
           <div>
             <SectionHeading
@@ -124,7 +124,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-surface px-6 py-16 md:px-16">
+      <section className="bg-paper px-6 py-16 md:px-16">
         <div className="mx-auto max-w-[1440px]">
           <h2 className="section-title text-3xl text-sand sm:text-4xl">
             {t('teamTitle')}
@@ -156,7 +156,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-surface px-6 py-16 md:px-16">
+      <section className="bg-paper px-6 py-16 md:px-16">
         <div className="mx-auto max-w-[1440px]">
           <SectionHeading
             eyebrow={tExpertises('eyebrow')}

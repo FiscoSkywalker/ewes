@@ -1,20 +1,41 @@
 export type ProjectCategory =
-  'ETUDES_AUDITS' | 'AGREMENTS' | 'FORMATION' | 'RECHERCHE';
+  'EIES' | 'AUDIT' | 'MONITORING' | 'AGREMENT' | 'FORMATION' | 'ETUDE';
 
 /**
- * Référence de réalisation (source : `raw/PROFIL_EWES.md` §5). Les champs se
- * limitent à ce que le profil établit : pas de métrique ni de détail
- * technique non documenté.
+ * Référence de réalisation (source : `raw/PROFIL_EWES.md` §5 et « Autres
+ * réalisations »). Les champs se limitent à ce que le profil établit :
+ * année(s), client ou partenaire, nature de la mission — pas de métrique ni
+ * de détail technique non documenté.
  */
 export interface Project {
   id: string;
   category: ProjectCategory;
-  year: string;
-  title: string;
-  detail: string;
+  year: number;
+  /** Missions pluriannuelles (ex. SGS 2019–2021), sinon `null`. */
+  yearEnd: number | null;
+  client: string;
+  mission: string;
 }
 
 export interface ProjectCategoryOption {
-  key: ProjectCategory | 'TOUS';
+  key: ProjectCategory;
+  /** Libellé du filtre (« Audits »). */
   label: string;
+  /** Libellé court de l'étiquette dans le registre (« Audit »). */
+  tag: string;
 }
+
+/** Année de rattachement d'une mission (fin de mission si pluriannuelle). */
+export function projectYear(project: Project) {
+  return project.yearEnd ?? project.year;
+}
+
+/** Classes de couleur de l'étiquette de chaque type de mission. */
+export const PROJECT_CATEGORY_TONE: Record<ProjectCategory, string> = {
+  EIES: 'text-malachite',
+  AUDIT: 'text-copper',
+  MONITORING: 'text-primary',
+  AGREMENT: 'text-primary-deep',
+  FORMATION: 'text-malachite',
+  ETUDE: 'text-copper',
+};

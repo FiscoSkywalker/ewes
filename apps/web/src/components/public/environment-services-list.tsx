@@ -45,11 +45,11 @@ export function EnvironmentServicesList() {
             key={title}
             className="group grid grid-cols-[42px_1fr] gap-4 border-t border-sand/20 py-6 sm:grid-cols-[62px_230px_1fr] sm:items-start"
           >
-            <span className="pt-1 text-primary">
+            <span className="pt-1 text-pole">
               <Icon size={18} />
             </span>
             <h3 className="font-heading text-xl font-semibold leading-tight text-sand">
-              <span className="mr-2 font-sans text-[10px] text-primary">
+              <span className="mr-2 font-sans text-[10px] text-pole">
                 0{index + 1}
               </span>
               {title}

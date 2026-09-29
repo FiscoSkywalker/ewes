@@ -22,6 +22,8 @@ Direction artistique institutionnelle et technique : élégante, sobre, moderne,
 | Typographie | Échelle centralisée, hiérarchie distincte titres/corps de texte, lisible en FR et EN |
 | Icônes | Icône reconnaissable accompagnée d'un libellé texte pour toute action critique |
 
+> Note (2026-09-29) — palette du site public (`apps/web/src/app/globals.css`) : le bleu acier reste la couleur primaire (pôle Eau, sections immersives) ; chaque pôle a un accent minéral nommé — malachite (Environnement), bleu primaire (Eau), cuivre (Travaux d'ingénierie) — exposé par la variable contextuelle `--pole` (classes `pole-env|eau|ing`, utilitaires `text-pole`/`bg-pole`/`border-pole`). Surfaces : `paper`/`paper-muted` pour les sections de lecture, `night`/`night-deep` pour les sections d'impact (Formation, Contact, footer), avec variantes `*-bright` réservées aux fonds nuit. Contrastes vérifiés : ≥ 4,5:1 sur papier, ≥ 7:1 sur nuit. Chaque pôle a aussi un motif de légende cartographique (`--pattern-env|eau|ing`), jamais utilisé seul pour porter une information (toujours accompagné du nom du pôle).
+
 # 4. Composants partagés requis
 
 Coquille de site (header/footer/sélecteur de langue), bouton primaire/secondaire/destructif, champ de texte, champ de recherche, carte réalisation, carte actualité, filtre de portfolio, chip de statut (publié/brouillon), fil d'ariane, état vide, état d'erreur, squelette de chargement, boîte de dialogue de confirmation, notification toast, bannière hors-ligne/erreur réseau.

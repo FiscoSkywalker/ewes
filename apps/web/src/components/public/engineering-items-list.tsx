@@ -17,7 +17,7 @@ export function EngineeringItemsList() {
 
   return (
     <div className="pointer-events-auto mt-10 border-y border-sand/20">
-      <div className="flex items-center gap-2 py-5 text-xs font-bold uppercase tracking-[0.14em] text-primary">
+      <div className="flex items-center gap-2 py-5 text-xs font-bold uppercase tracking-[0.14em] text-pole">
         <Compass size={14} />
         {t('sectionLabel')}
       </div>
@@ -30,7 +30,7 @@ export function EngineeringItemsList() {
               key={title}
               className="border-t border-sand/20 py-5 sm:odd:pr-7 sm:even:border-l sm:even:pl-7"
             >
-              <Icon size={16} className="text-primary" />
+              <Icon size={16} className="text-pole" />
               <strong className="mt-3 block font-heading text-lg font-semibold text-sand">
                 {title}
               </strong>

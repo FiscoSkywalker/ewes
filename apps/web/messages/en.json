@@ -30,7 +30,12 @@
     ],
     "rights": "All rights reserved.",
     "tagline": "Environment · Water · Engineering Works",
-    "privateSpaceLink": "Private document space"
+    "privateSpaceLink": "Private document space",
+    "sitemapTitle": "Site map",
+    "polesTitle": "Areas",
+    "reachTitle": "Get in touch",
+    "training": "Training",
+    "backToTop": "Back to top"
   },
   "Hero": {
     "eyebrow": "Environment, water and engineering works",
@@ -49,7 +54,9 @@
       "Water, soil and air analysis",
       "Engineering works",
       "Executive training"
-    ]
+    ],
+    "coordinates": "11°37′ S · 27°31′ E",
+    "localTime": "Local time"
   },
   "World": {
     "eyebrow": "01 · Who we are",
@@ -141,7 +148,7 @@
     ]
   },
   "Water": {
-    "eyebrow": "02 · Water",
+    "eyebrow": "H₂O · Water",
     "title": "The whole water chain, from resource to use.",
     "description": "From feasibility study to training of stakeholders, EWES supports the sustainable management of water resources, including in industrial settings.",
     "services": [
@@ -185,10 +192,11 @@
         "title": "Industrial water management",
         "desc": "Water management within industrial processes."
       }
-    ]
+    ],
+    "imageAlt": "Public standpipe supplying drinking water"
   },
   "Environment": {
-    "eyebrow": "03 · Environment",
+    "eyebrow": "ENV · Environment",
     "title": "Measure, assess, protect.",
     "description": "Studies, audits, monitoring and analyses: EWES supports industrial operators and institutions in controlling their environmental impact.",
     "imageCaption": "Measure · Understand · Act",
@@ -229,7 +237,7 @@
     ]
   },
   "Engineering": {
-    "eyebrow": "04 · Engineering works",
+    "eyebrow": "ING · Engineering works",
     "title": "Design, equip, support.",
     "description": "Alongside the environment and water activities, EWES carries out engineering works: analytical instruments, building construction, IT and electricity.",
     "sectionLabel": "Our engineering activities",
@@ -250,7 +258,8 @@
         "title": "Electricity",
         "text": "Engineering works in the field of electricity."
       }
-    ]
+    ],
+    "imageAlt": "Analysis laboratory equipped with measuring instruments"
   },
   "Training": {
     "eyebrow": "Training",
@@ -263,287 +272,347 @@
       "Environmental risk management",
       "Current standards and regulations",
       "Post-mining management",
-      "Remediation of contaminated sites"
-    ]
+      "Remediation of contaminated sites",
+      "Environmental monitoring",
+      "Carbon assessment in mining",
+      "Environmental and social inspections"
+    ],
+    "homeEyebrow": "✳ Training",
+    "homeTitle": "Passing on expertise to those who manage the field.",
+    "counterLabel": "training courses and seminars referenced since {year}",
+    "cta": "Request a tailored programme",
+    "imageAlt": "Training session on the mining environment"
   },
   "Projects": {
-    "eyebrow": "05 · Our projects",
-    "title": "References in the mining and environment sectors.",
-    "description": "Audits, impact studies, approvals, training and surveys: an overview of the missions carried out by EWES.",
-    "imageCaption": "From scientific data to technical decisions",
-    "imageAlt": "Modern environmental analysis laboratory",
+    "eyebrow": "03 · Our projects",
+    "title": "The register of our assignments.",
+    "description": "From the first impact assessment in 2008 to the 2025 CSR barometer. Filter by type of assignment or click a year.",
+    "histogramLabel": "Number of assignments per year",
+    "yearBar": "{year}: {count, plural, =0 {no assignments} =1 {# assignment} other {# assignments}}",
+    "filtersLabel": "Filter by type of assignment",
+    "all": "All",
+    "columns": {
+      "year": "Year",
+      "client": "Client / partner",
+      "mission": "Assignment",
+      "type": "Type"
+    },
+    "status": "{count, plural, =0 {No assignments} =1 {# assignment} other {# assignments}}",
+    "showAll": "Show the full register ({count})",
+    "showLess": "Collapse the register",
     "viewAll": "See all projects",
+    "emptyState": "No assignment matches these filters.",
     "categories": [
       {
-        "key": "TOUS",
-        "label": "All"
+        "key": "EIES",
+        "label": "Impact assessments",
+        "tag": "ESIA"
       },
       {
-        "key": "ETUDES_AUDITS",
-        "label": "Impact studies & audits"
+        "key": "AUDIT",
+        "label": "Audits",
+        "tag": "Audit"
       },
       {
-        "key": "AGREMENTS",
-        "label": "Approvals & certifications"
+        "key": "MONITORING",
+        "label": "Monitoring & reports",
+        "tag": "Monitoring"
+      },
+      {
+        "key": "AGREMENT",
+        "label": "Approvals & certificates",
+        "tag": "Approval"
       },
       {
         "key": "FORMATION",
-        "label": "Training"
+        "label": "Training",
+        "tag": "Training"
       },
       {
-        "key": "RECHERCHE",
-        "label": "Research & surveys"
+        "key": "ETUDE",
+        "label": "Studies & research",
+        "tag": "Study"
       }
     ],
     "items": [
       {
         "id": "barometre-rse-2025",
-        "category": "RECHERCHE",
-        "year": "2025",
-        "title": "National barometer of mining companies’ CSR",
-        "detail": "Survey carried out in the Haut-Katanga and Lualaba regions."
+        "category": "ETUDE",
+        "year": 2025,
+        "yearEnd": null,
+        "client": "Mining companies in Haut-Katanga and Lualaba",
+        "mission": "Survey for the national CSR barometer of mining companies"
       },
       {
         "id": "metalkol-carbone-2024",
         "category": "FORMATION",
-        "year": "2024",
-        "title": "Métalkol",
-        "detail": "Training course “Carbon assessment in mining: measure, minimise and act for the climate”."
+        "year": 2024,
+        "yearEnd": null,
+        "client": "Metalkol",
+        "mission": "Training course “Carbon assessment in mining: measure, minimise and act for the climate”"
       },
       {
         "id": "inspecteurs-2023",
         "category": "FORMATION",
-        "year": "2023",
-        "title": "Capacity building for inspectors (DPEM, ACE and FNPSS)",
-        "detail": "Carrying out environmental and social inspections in the mining sector."
+        "year": 2023,
+        "yearEnd": null,
+        "client": "DPEM, ACE and FNPSS",
+        "mission": "Capacity building for inspectors: environmental and social inspections in the mining sector"
       },
       {
         "id": "ruashi-formation-2022",
         "category": "FORMATION",
-        "year": "2022",
-        "title": "Ruashi Mining",
-        "detail": "Awareness training in mining environment."
+        "year": 2022,
+        "yearEnd": null,
+        "client": "Ruashi Mining",
+        "mission": "Awareness training in mining environment"
       },
       {
         "id": "lae-formation-2022",
         "category": "FORMATION",
-        "year": "2022",
-        "title": "Environmental Analysis Laboratories",
-        "detail": "Accelerated training in mining environment."
+        "year": 2022,
+        "yearEnd": null,
+        "client": "Environmental Analysis Laboratories",
+        "mission": "Accelerated training in mining environment"
       },
       {
         "id": "formation-environnement-minier-2022",
         "category": "FORMATION",
-        "year": "2022",
-        "title": "Mining environment training",
-        "detail": "Modules: environmental monitoring; environmental and societal obligations of the mining sector."
+        "year": 2022,
+        "yearEnd": null,
+        "client": "Mining sector",
+        "mission": "Mining environment training: environmental monitoring, environmental and societal obligations"
       },
       {
         "id": "fmr-audit-2021",
-        "category": "ETUDES_AUDITS",
-        "year": "2021",
-        "title": "FMR Development SARL",
-        "detail": "Environmental and social audit."
+        "category": "AUDIT",
+        "year": 2021,
+        "yearEnd": null,
+        "client": "FMR Development SARL",
+        "mission": "Environmental and social audit"
       },
       {
         "id": "paragon-agrement-2021",
-        "category": "AGREMENTS",
-        "year": "2021",
-        "title": "Paragon Mining Sarlu",
-        "detail": "Renewal of the processing entity approval (category B)."
+        "category": "AGREMENT",
+        "year": 2021,
+        "yearEnd": null,
+        "client": "Paragon Mining SARLU",
+        "mission": "Renewal of the processing entity approval (category B)"
       },
       {
         "id": "lae-unilu-agrement-2021",
-        "category": "AGREMENTS",
-        "year": "2021",
-        "title": "LAE/UNILU Environmental Analysis Laboratory",
-        "detail": "Obtaining approval and accreditation."
+        "category": "AGREMENT",
+        "year": 2021,
+        "yearEnd": null,
+        "client": "LAE/UNILU Environmental Analysis Laboratory",
+        "mission": "Obtaining approval and accreditation"
       },
       {
         "id": "nmi-eies-2021",
-        "category": "ETUDES_AUDITS",
-        "year": "2021",
-        "title": "New Minerals Investment",
-        "detail": "ESIA and project environmental management plan (EIES-PGEP); annual environmental report."
+        "category": "EIES",
+        "year": 2021,
+        "yearEnd": null,
+        "client": "New Minerals Investment",
+        "mission": "ESIA and environmental management plan (EIES-PGEP); annual environmental report"
       },
       {
         "id": "giz-code-minier-2021",
         "category": "FORMATION",
-        "year": "2021",
-        "title": "GIZ",
-        "detail": "Awareness campaign on the revised mining code and regulations."
+        "year": 2021,
+        "yearEnd": null,
+        "client": "GIZ",
+        "mission": "Awareness campaign on the revised mining code and regulations"
       },
       {
         "id": "sgs-monitoring",
-        "category": "ETUDES_AUDITS",
-        "year": "2019 · 2020 · 2021",
-        "title": "SGS",
-        "detail": "Environmental monitoring reports."
+        "category": "MONITORING",
+        "year": 2019,
+        "yearEnd": 2021,
+        "client": "SGS",
+        "mission": "Environmental monitoring reports"
       },
       {
         "id": "jinxing-eies-2020",
-        "category": "ETUDES_AUDITS",
-        "year": "2020",
-        "title": "Jinxing Mining",
-        "detail": "Environmental and social impact assessment."
+        "category": "EIES",
+        "year": 2020,
+        "yearEnd": null,
+        "client": "Jinxing Mining",
+        "mission": "Environmental and social impact assessment"
       },
       {
         "id": "obligations-environnementales-2020",
         "category": "FORMATION",
-        "year": "2020",
-        "title": "Environmental obligations of the mining sector",
-        "detail": "Training organised by the Polytechnic Faculty of the University of Lubumbashi."
+        "year": 2020,
+        "yearEnd": null,
+        "client": "Polytechnic Faculty, UNILU",
+        "mission": "Training on the environmental obligations of the mining sector"
       },
       {
         "id": "kcc-audit-2019",
-        "category": "ETUDES_AUDITS",
-        "year": "2019",
-        "title": "KCC",
-        "detail": "Environmental and social audit."
+        "category": "AUDIT",
+        "year": 2019,
+        "yearEnd": null,
+        "client": "KCC",
+        "mission": "Environmental and social audit"
       },
       {
         "id": "stl-certificat-2019",
-        "category": "AGREMENTS",
-        "year": "2019",
-        "title": "STL",
-        "detail": "Obtaining the environmental certificate."
+        "category": "AGREMENT",
+        "year": 2019,
+        "yearEnd": null,
+        "client": "STL",
+        "mission": "Obtaining the environmental certificate"
       },
       {
         "id": "ssm-eies-2019",
-        "category": "ETUDES_AUDITS",
-        "year": "2019",
-        "title": "SSM (Likasi and Kolwezi)",
-        "detail": "Environmental and social impact assessment."
+        "category": "EIES",
+        "year": 2019,
+        "yearEnd": null,
+        "client": "SSM (Likasi and Kolwezi)",
+        "mission": "Environmental and social impact assessment"
       },
       {
         "id": "sarw-kansanshi-2019",
-        "category": "RECHERCHE",
-        "year": "2019",
-        "title": "SARW",
-        "detail": "Assessment of the social and environmental responsibility of First Quantum Minerals — Kansanshi mine (Zambia)."
+        "category": "ETUDE",
+        "year": 2019,
+        "yearEnd": null,
+        "client": "SARW",
+        "mission": "Assessment of the social and environmental responsibility of First Quantum Minerals, Kansanshi mine (Zambia)"
       },
       {
         "id": "kambove-eies-2018",
-        "category": "ETUDES_AUDITS",
-        "year": "2018",
-        "title": "Kambove Mining",
-        "detail": "Environmental and social impact assessment."
+        "category": "EIES",
+        "year": 2018,
+        "yearEnd": null,
+        "client": "Kambove Mining",
+        "mission": "Environmental and social impact assessment"
       },
       {
         "id": "nmi-eies-2018",
-        "category": "ETUDES_AUDITS",
-        "year": "2018",
-        "title": "New Minerals Investment",
-        "detail": "ESIA and project environmental management plan (EIES-PGEP); annual environmental report."
+        "category": "EIES",
+        "year": 2018,
+        "yearEnd": null,
+        "client": "New Minerals Investment",
+        "mission": "ESIA and environmental management plan (EIES-PGEP); annual environmental report"
       },
       {
         "id": "legislation-miniere-2018",
         "category": "FORMATION",
-        "year": "2018",
-        "title": "Mining legislation in the DRC: challenges and prospects",
-        "detail": "Training organised by the Polytechnic Faculty of the University of Lubumbashi."
+        "year": 2018,
+        "yearEnd": null,
+        "client": "Polytechnic Faculty, UNILU",
+        "mission": "Training on mining legislation in the DRC: challenges and prospects"
       },
       {
         "id": "robinson-agrement-2017",
-        "category": "AGREMENTS",
-        "year": "2017",
-        "title": "Robinson International Afrique Sarl Laboratory",
-        "detail": "Renewal of the laboratory approval."
+        "category": "AGREMENT",
+        "year": 2017,
+        "yearEnd": null,
+        "client": "Robinson International Afrique SARL Laboratory",
+        "mission": "Renewal of the laboratory approval"
       },
       {
         "id": "somika-audit-2016",
-        "category": "ETUDES_AUDITS",
-        "year": "2016",
-        "title": "SOMIKA",
-        "detail": "Environmental and social audit; annual environmental report."
+        "category": "AUDIT",
+        "year": 2016,
+        "yearEnd": null,
+        "client": "SOMIKA",
+        "mission": "Environmental and social audit; annual environmental report"
       },
       {
         "id": "mkm-rapport-2015",
-        "category": "ETUDES_AUDITS",
-        "year": "2015",
-        "title": "Minière de Kalumbwe Myunga (MKM)",
-        "detail": "Annual environmental report."
+        "category": "MONITORING",
+        "year": 2015,
+        "yearEnd": null,
+        "client": "Minière de Kalumbwe Myunga (MKM)",
+        "mission": "Annual environmental report"
       },
       {
         "id": "interface-obligations-2015",
-        "category": "RECHERCHE",
-        "year": "2015",
-        "title": "Interface Unilu-Société",
-        "detail": "Challenges and prospects of the new environmental and safety obligations of the mining sector in the DRC."
+        "category": "ETUDE",
+        "year": 2015,
+        "yearEnd": null,
+        "client": "UNILU–Society Interface",
+        "mission": "Challenges and prospects of the new environmental and safety obligations of the mining sector in the DRC"
       },
       {
         "id": "ssm-eies-2014",
-        "category": "ETUDES_AUDITS",
-        "year": "2014",
-        "title": "Société de Surveillance Minière",
-        "detail": "Environmental and social impact assessment (EIES)."
+        "category": "EIES",
+        "year": 2014,
+        "yearEnd": null,
+        "client": "Société de Surveillance Minière",
+        "mission": "Environmental and social impact assessment"
       },
       {
         "id": "wwf-investissements-chinois-2014",
-        "category": "RECHERCHE",
-        "year": "2014",
-        "title": "WWF",
-        "detail": "Inventory of Chinese investments in the mining sector in Katanga and Kasaï Oriental."
+        "category": "ETUDE",
+        "year": 2014,
+        "yearEnd": null,
+        "client": "WWF",
+        "mission": "Inventory of Chinese investments in the mining sector in Katanga and Kasaï Oriental"
       },
       {
         "id": "code-minier-2014",
         "category": "FORMATION",
-        "year": "2014",
-        "title": "Revision of the mining code",
-        "detail": "Training organised by the Directorate of the University of Lubumbashi–Society Interface and EWES."
+        "year": 2014,
+        "yearEnd": null,
+        "client": "UNILU–Society Interface",
+        "mission": "Training on the revision of the mining code, co-organised with EWES"
       },
       {
         "id": "management-environnement-2014",
         "category": "FORMATION",
-        "year": "2014",
-        "title": "Environmental management, environmental inspection, occupational health and safety",
-        "detail": "Training course."
+        "year": 2014,
+        "yearEnd": null,
+        "client": "Mining sector",
+        "mission": "Training: environmental management and inspection, occupational health and safety"
       },
       {
         "id": "seminaire-interface-2013",
         "category": "FORMATION",
-        "year": "2013 – 2014",
-        "title": "Interface Unilu-Société",
-        "detail": "Training seminar in mining environment."
+        "year": 2013,
+        "yearEnd": 2014,
+        "client": "UNILU–Society Interface",
+        "mission": "Training seminar in mining environment"
       },
       {
         "id": "ruashi-audit-2012",
-        "category": "ETUDES_AUDITS",
-        "year": "2012",
-        "title": "Ruashi Mining",
-        "detail": "Environmental and social audit; annual environmental report."
+        "category": "AUDIT",
+        "year": 2012,
+        "yearEnd": null,
+        "client": "Ruashi Mining",
+        "mission": "Environmental and social audit; annual environmental report"
       },
       {
         "id": "stl-eies-2011",
-        "category": "ETUDES_AUDITS",
-        "year": "2011",
-        "title": "STL",
-        "detail": "ESIA and project environmental management plan (EIES-PGEP)."
+        "category": "EIES",
+        "year": 2011,
+        "yearEnd": null,
+        "client": "STL",
+        "mission": "ESIA and environmental management plan (EIES-PGEP)"
       },
       {
         "id": "somika-audit-2010",
-        "category": "ETUDES_AUDITS",
-        "year": "2010",
-        "title": "SOMIKA",
-        "detail": "Environmental and social audit; annual environmental report."
+        "category": "AUDIT",
+        "year": 2010,
+        "yearEnd": null,
+        "client": "SOMIKA",
+        "mission": "Environmental and social audit; annual environmental report"
       },
       {
         "id": "kisenge-eies-2008",
-        "category": "ETUDES_AUDITS",
-        "year": "2008",
-        "title": "Kisenge Manganèse",
-        "detail": "ESIA and project environmental management plan (EIES-PGEP)."
+        "category": "EIES",
+        "year": 2008,
+        "yearEnd": null,
+        "client": "Kisenge Manganèse",
+        "mission": "ESIA and environmental management plan (EIES-PGEP)"
       }
     ]
   },
   "Impact": {
     "eyebrow": "06 · Our references",
     "title": "Expertise proven in the field.",
-    "description": "Mining operators, laboratories and institutions call on EWES for their studies, audits and team training.",
-    "badgeValue": "26",
-    "badgeLabel": "detailed references",
-    "imageAlt": "Community benefiting from a new water infrastructure",
-    "cutoutAlt": "EWES environmental engineer"
+    "description": "Mining operators, laboratories and institutions call on EWES for their studies, audits and team training."
   },
   "Metrics": {
     "items": [
@@ -572,52 +641,6 @@
         "subtext": "From the first referenced ESIA-PGEP (2008) to the 2025 CSR survey"
       }
     ]
-  },
-  "Resources": {
-    "eyebrow": "07 · Recent activities",
-    "title": "Train, survey, share.",
-    "description": "Training courses, field surveys and publications: an overview of EWES’s most recent activities.",
-    "imageAlt": "EWES engineer presenting technical resources",
-    "facts": [
-      {
-        "value": "FR / EN",
-        "label": "Bilingual content"
-      },
-      {
-        "value": "PDF",
-        "label": "Downloadable resources"
-      },
-      {
-        "value": "Private",
-        "label": "Secured document access"
-      }
-    ],
-    "centerDocTitle": "Document centre",
-    "centerDocText": "Presentations, technical fact sheets and public publications.",
-    "exploreLabel": "Explore",
-    "news": [
-      {
-        "type": "Survey",
-        "date": "2025",
-        "title": "National barometer of mining companies’ CSR (Haut-Katanga and Lualaba)"
-      },
-      {
-        "type": "Training",
-        "date": "2024",
-        "title": "Métalkol: carbon assessment in mining"
-      },
-      {
-        "type": "Training",
-        "date": "2023",
-        "title": "Capacity building for DPEM, ACE and FNPSS inspectors"
-      }
-    ]
-  },
-  "Cta": {
-    "badgeLabel": "Let’s talk about your project",
-    "title": "A project in environment, water or engineering?",
-    "description": "Impact study, environmental audit, water supply, analyses or training: whatever the nature of your project, the EWES team is ready to listen.",
-    "ctaPrimary": "Contact us"
   },
   "AboutPage": {
     "eyebrow": "About",
@@ -673,33 +696,195 @@
     "sectors": [
       {
         "value": "ENVIRONNEMENT",
-        "label": "Environmental impact study or audit"
+        "label": "Environmental impact study or audit",
+        "short": "Impact study / audit"
       },
       {
         "value": "EAU",
-        "label": "Water supply, treatment or purification"
+        "label": "Water supply, treatment or purification",
+        "short": "Water"
       },
       {
         "value": "ANALYSES",
-        "label": "Analyses (water, air, soil, materials)"
+        "label": "Analyses (water, air, soil, materials)",
+        "short": "Analyses"
       },
       {
         "value": "GESTION",
-        "label": "Effluent and waste management"
+        "label": "Effluent and waste management",
+        "short": "Effluents & waste"
       },
       {
         "value": "INGENIERIE",
-        "label": "Engineering works (buildings, analytical instruments, electricity, IT)"
+        "label": "Engineering works (buildings, analytical instruments, electricity, IT)",
+        "short": "Engineering"
       },
       {
         "value": "FORMATION",
-        "label": "Training"
+        "label": "Training",
+        "short": "Training"
       },
       {
         "value": "AUTRE",
-        "label": "Other request"
+        "label": "Other request",
+        "short": "Other"
       }
     ],
-    "submitLabel": "Send the Request"
+    "submitLabel": "Send the Request",
+    "needLegend": "Your need"
+  },
+  "HomeAbout": {
+    "eyebrow": "01 · About us",
+    "title": "Born at the university, proven in the field.",
+    "lead": "EWES grew out of the Environment Centre of the University of Lubumbashi–Society Interface, working with Belgian, French and Canadian partners. Its team brings together Congolese and international experts.",
+    "text": "The company has established itself in drawing up and assessing the environmental plans of mining and oil projects. It studies natural and man-made risks, develops sites, supports environmental compliance and trains the sector’s managers and technicians.",
+    "imageAlt": "EWES engineering team on a field mission",
+    "imageCaption": "Multidisciplinary team · DR Congo",
+    "timelineTitle": "Milestones",
+    "timeline": [
+      {
+        "year": "2008",
+        "text": "First referenced impact assessment (EIES-PGEP), for Kisenge Manganèse."
+      },
+      {
+        "year": "2013",
+        "text": "First training seminar on the mining environment, with the UNILU–Society Interface."
+      },
+      {
+        "year": "2021",
+        "text": "Support for the LAE/UNILU Environmental Analysis Laboratory in obtaining its approval and accreditation."
+      },
+      {
+        "year": "2025",
+        "text": "Survey for the national CSR barometer of mining companies in Haut-Katanga and Lualaba."
+      }
+    ],
+    "objectivesTitle": "Our research objectives",
+    "stats": {
+      "firstStudy": "First referenced impact assessment",
+      "missions": "Referenced assignments",
+      "operators": "Mining operators supported",
+      "poles": "Areas of expertise"
+    },
+    "moreLink": "Learn more about EWES"
+  },
+  "Clients": {
+    "label": "They have trusted us"
+  },
+  "ServicesOverview": {
+    "eyebrow": "02 · Our services",
+    "title": "Three areas, one scientific standard.",
+    "aside": "Each area builds on the previous one: environmental data shape water management, which in turn guides our engineering works.",
+    "indexLabel": "EWES’s three areas of expertise",
+    "services": "{count} services",
+    "fields": "{count} fields",
+    "poles": {
+      "env": "Environment",
+      "eau": "Water",
+      "ing": "Engineering works"
+    },
+    "audiencesTitle": "Who we work for"
+  },
+  "Method": {
+    "eyebrow": "↳ Method",
+    "title": "From sampling to report.",
+    "text": "We measure before we conclude: our recommendations rest on data collected, analysed and modelled locally.",
+    "steps": [
+      {
+        "title": "Regulatory scoping",
+        "text": "Analysis of the project and the applicable environmental obligations, then definition of the study scope."
+      },
+      {
+        "title": "Fieldwork & sampling",
+        "text": "On-site surveys and sampling of water, soil and air."
+      },
+      {
+        "title": "Laboratory & modelling",
+        "text": "Analyses, data processing and modelling of how the environment may evolve under different scenarios."
+      },
+      {
+        "title": "Report, compliance & transfer",
+        "text": "Impact assessments, management plans, annual reports and remediation plans, followed by training for your teams so the results last."
+      }
+    ]
+  },
+  "News": {
+    "eyebrow": "04 · News & publications",
+    "title": "The logbook.",
+    "viewAll": "All news",
+    "items": [
+      {
+        "id": "barometre-rse-2025",
+        "type": "Survey",
+        "date": "2025",
+        "context": "Haut-Katanga & Lualaba",
+        "title": "National CSR barometer of mining companies",
+        "excerpt": "EWES carried out the survey for the national barometer of mining companies’ corporate social responsibility in the Haut-Katanga and Lualaba regions.",
+        "imageAlt": "EWES surveyors talking with residents of a mining area"
+      },
+      {
+        "id": "metalkol-carbone-2024",
+        "type": "Training",
+        "date": "2024",
+        "context": "Metalkol",
+        "title": "Carbon assessment in mining: measure, minimise and act for the climate",
+        "excerpt": "A training course on carbon assessment in mining operations, delivered at Metalkol.",
+        "imageAlt": "Environmental analysis laboratory"
+      },
+      {
+        "id": "inspecteurs-2023",
+        "type": "Training",
+        "date": "2023",
+        "context": "DPEM, ACE, FNPSS",
+        "title": "Building inspectors’ capacity for environmental and social inspections",
+        "excerpt": "A session on carrying out environmental and social inspections in the mining sector.",
+        "imageAlt": "Water quality analysis in the field"
+      }
+    ]
+  },
+  "HomeDocuments": {
+    "eyebrow": "05 · Documents",
+    "title": "Public for everyone, private for authorised users.",
+    "publicTitle": "Public documents",
+    "publicLink": "See the Documents page",
+    "vault": {
+      "windowLabel": "EWES document space",
+      "secure": "HTTPS",
+      "search": "Search for a report, a project, a year…",
+      "illustration": "Illustrative preview",
+      "folders": [
+        {
+          "name": "Study reports / 2025",
+          "role": "admin"
+        },
+        {
+          "name": "Laboratory / Analysis reports",
+          "role": "manager"
+        },
+        {
+          "name": "Projects / Environmental management plans",
+          "role": "manager"
+        },
+        {
+          "name": "Training / Materials",
+          "role": "user"
+        }
+      ],
+      "roles": {
+        "admin": "Administrator",
+        "manager": "Manager",
+        "user": "User"
+      },
+      "note": "Classified folders and files, search, role-based access rights and an activity log: a space reserved for staff and authorised accounts.",
+      "cta": "Sign in to the space"
+    }
+  },
+  "ContactBlock": {
+    "eyebrow": "06 · Contact",
+    "title": "Let’s talk about your project.",
+    "lead": "Impact study, environmental audit, water supply, analyses or training: whatever the nature of your project, the EWES team is ready to listen.",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email"
   }
 }
