@@ -83,11 +83,28 @@ export function WaterSurface({ reducedMotion = false }: WaterSurfaceProps) {
       uSpeed: { value: 0.65 },
       uWaveHeight: { value: 0.18 },
       uFrequency: { value: 1.1 },
-      uDeepColor: { value: new THREE.Color('#061a29') },
-      uSurfaceColor: { value: new THREE.Color('#184e68') },
-      uFoamColor: { value: new THREE.Color('#e2eff5') },
+      // Couleurs en sRGB « brut » (pas de conversion linéaire) : le shader
+      // travaille directement en espace d'affichage.
+      uDeepColor: {
+        value: new THREE.Color().setStyle(
+          '#0b6a94',
+          THREE.LinearSRGBColorSpace,
+        ),
+      },
+      uSurfaceColor: {
+        value: new THREE.Color().setStyle(
+          '#2fb0cc',
+          THREE.LinearSRGBColorSpace,
+        ),
+      },
+      uFoamColor: {
+        value: new THREE.Color().setStyle(
+          '#f4fcfe',
+          THREE.LinearSRGBColorSpace,
+        ),
+      },
       uElevationMultiplier: { value: 1.8 },
-      uOpacity: { value: 0.94 },
+      uOpacity: { value: 1 },
       uLightPosition: { value: new THREE.Vector3(6, 10, 4) },
       uHeightMap: { value: null as THREE.Texture | null },
       uNormalMap: { value: normalTexture },
