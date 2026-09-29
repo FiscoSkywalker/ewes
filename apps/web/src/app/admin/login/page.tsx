@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { BrandLogo } from '@/components/public/brand-logo';
 import { safeAdminRedirect } from '@/lib/auth/safe-redirect';
+import { CardDecor } from './card-decor';
 import { LoginForm } from './login-form';
 
 export const metadata: Metadata = {
@@ -44,12 +45,15 @@ export default async function AdminLoginPage({
       </div>
 
       <div className="relative w-full max-w-[400px]">
-        <div className="rounded-sheet border border-white/70 bg-surface-elevated/80 p-8 shadow-[0_30px_90px_rgba(23,60,77,.22)] backdrop-blur-xl sm:p-10">
-          <div className="mb-8 flex justify-center">
-            <BrandLogo priority className="h-20" />
+        <div className="relative flex min-h-[640px] flex-col justify-center rounded-sheet border border-white/70 bg-surface-elevated/80 px-8 pb-40 pt-16 shadow-[0_30px_90px_rgba(23,60,77,.22)] backdrop-blur-xl sm:px-10">
+          <CardDecor />
+          <div className="relative">
+            <div className="mb-10 flex justify-center">
+              <BrandLogo priority className="h-24" />
+            </div>
+            <h1 className="sr-only">Connexion au portail EWES</h1>
+            <LoginForm redirectTo={redirectTo} />
           </div>
-          <h1 className="sr-only">Connexion au portail EWES</h1>
-          <LoginForm redirectTo={redirectTo} />
         </div>
 
         <Link
