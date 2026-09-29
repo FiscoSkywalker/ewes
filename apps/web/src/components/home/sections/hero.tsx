@@ -3,7 +3,10 @@
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ArrowUpRight, ChevronDown, MapPin, ShieldCheck } from 'lucide-react';
+import { LocalClock } from '@/components/public/local-clock';
 import { useSectionActivity } from '@/hooks/useSectionActivity';
+
+const POLES = ['env', 'eau', 'ing'] as const;
 
 interface HeroProps {
   onExplore: () => void;
@@ -12,6 +15,7 @@ interface HeroProps {
 /** Premier écran de l'Accueil — homepage uniquement. */
 export function Hero({ onExplore }: HeroProps) {
   const t = useTranslations('Hero');
+  const tServices = useTranslations('ServicesOverview');
   const expertise = t.raw('expertise') as string[];
   const { ref, active } = useSectionActivity<HTMLElement>();
 
@@ -67,19 +71,41 @@ export function Hero({ onExplore }: HeroProps) {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto mt-8 flex w-full max-w-[1440px] items-center justify-between border-t border-sand/12 pt-5 text-[11px] uppercase tracking-[0.16em] text-sand/55">
+      <div className="relative z-10 mx-auto mt-8 flex w-full max-w-[1440px] items-center justify-between gap-6 border-t border-sand/12 pt-5 text-[11px] uppercase tracking-[0.16em] text-sand/55">
         <div className="flex items-center gap-2">
           <MapPin size={13} className="text-primary" />
           {t('locationLabel')}
+          <span className="hidden font-mono normal-case tracking-normal text-sand/45 md:inline">
+            · {t('coordinates')}
+          </span>
         </div>
-        <button
-          type="button"
-          onClick={onExplore}
-          className="pointer-events-auto hidden items-center gap-2 transition-colors hover:text-primary sm:flex"
+        <ul
+          className="hidden items-center gap-6 normal-case tracking-normal text-sand/70 lg:flex"
+          aria-label={tServices('indexLabel')}
         >
-          {t('scrollLabel')}
-          <ChevronDown size={14} />
-        </button>
+          {POLES.map((pole) => (
+            <li key={pole} className={`pole-${pole} flex items-center gap-2`}>
+              <span className="pattern-swatch h-3.5 w-6 border border-sand/20" />
+              {tServices(`poles.${pole}`)}
+            </li>
+          ))}
+        </ul>
+        <div className="flex items-center gap-6">
+          <span className="hidden font-mono normal-case tracking-normal sm:inline">
+            {t('localTime')}{' '}
+            <b className="font-medium text-sand/80">
+              <LocalClock />
+            </b>
+          </span>
+          <button
+            type="button"
+            onClick={onExplore}
+            className="pointer-events-auto hidden items-center gap-2 transition-colors hover:text-primary sm:flex"
+          >
+            {t('scrollLabel')}
+            <ChevronDown size={14} />
+          </button>
+        </div>
       </div>
 
       <div className="relative z-10 -mx-6 mt-8 overflow-hidden border-y border-primary/15 bg-primary/95 py-3 text-background md:-mx-16">

@@ -43,3 +43,16 @@ Visuels originaux générés pour la maquette EWES avec une direction colorimét
 bleu acier. Ils ne proviennent pas du template Greenx et devront être remplacés
 par les photographies documentaires validées par le client lorsqu’elles seront
 disponibles.
+
+## Visuels repris du prototype « storytelling » (`prototype/`)
+
+- `images/ewes-training-session.jpg` (formation en salle)
+- `images/ewes-news-rse-survey.jpg` (enquête de terrain, actualité RSE 2025)
+- `images/ewes-water-standpipe.jpg` (borne-fontaine, page Nos services)
+- `images/ewes-texture-malachite.jpg` (texture de fond de la section Formation)
+- `brand/ewes-logo-light.png` (logo officiel, lettres claires pour fonds sombres)
+
+Visuels générés pour la maquette, au même titre que les précédents : à
+remplacer par les photographies validées par EWES. Le visuel « ingénierie » du
+prototype n'a volontairement pas été repris (il montre un faux logo « EWS »
+sur les casques).

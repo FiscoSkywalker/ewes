@@ -33,9 +33,66 @@
   --color-border: rgba(21, 52, 66, 0.16);
   --color-border-subtle: rgba(21, 52, 66, 0.09);
 
+  /*
+   * « Minéraux du Katanga » : le bleu acier reste la couleur de marque (pôle
+   * Eau, sections immersives) ; deux accents minéraux distinguent les autres
+   * pôles — malachite (Environnement) et cuivre (Travaux d'ingénierie). Les
+   * sections de lecture passent sur un papier clair neutre et les sections
+   * d'impact sur une nuit pétrole, pour rompre le tout-bleu. Variantes
+   * « bright » réservées aux fonds nuit (contraste ≥ 7:1) ; variantes de base
+   * ≥ 4,5:1 sur papier.
+   */
+  --color-paper: #f4f7f5;
+  --color-paper-muted: #e9f0ec;
+  --color-night: #0a2026;
+  --color-night-deep: #06161b;
+  --color-on-night: #e8f1ef;
+  --color-on-night-muted: #a9bec6;
+  --color-malachite: #1c7a57;
+  --color-malachite-bright: #5ad1a1;
+  --color-copper: #a8561f;
+  --color-copper-bright: #eba36f;
+  --color-water-bright: #8cc3d6;
+
+  /* Motifs de légende cartographique, un par pôle (colonne stratigraphique). */
+  --pattern-env: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Ccircle cx='3' cy='3' r='1.3' fill='%231c7a57'/%3E%3Ccircle cx='10' cy='10' r='1.3' fill='%231c7a57'/%3E%3C/svg%3E");
+  --pattern-eau: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='12'%3E%3Cpath d='M0 6 Q7 1 14 6 T28 6' fill='none' stroke='%23397187' stroke-width='1.4'/%3E%3C/svg%3E");
+  --pattern-ing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='M0 12 L12 0 M-3 3 L3 -3 M9 15 L15 9' stroke='%23a8561f' stroke-width='1.3'/%3E%3C/svg%3E");
+
   --radius-control: 8px;
   --radius-card: 12px;
   --radius-sheet: 16px;
+}
+
+/*
+ * Couleur d'accent contextuelle : chaque pôle (et les sections nuit) redéfinit
+ * `--pole`, repris par `.eyebrow`, `text-pole`, `bg-pole`, etc.
+ */
+.pole-env {
+  --pole: var(--color-malachite);
+  --pole-pattern: var(--pattern-env);
+}
+.pole-eau {
+  --pole: var(--color-primary);
+  --pole-pattern: var(--pattern-eau);
+}
+.pole-ing {
+  --pole: var(--color-copper);
+  --pole-pattern: var(--pattern-ing);
+}
+.tone-night {
+  --pole: var(--color-malachite-bright);
+  color: var(--color-on-night-muted);
+}
+
+@utility text-pole {
+  color: var(--pole, var(--color-primary));
+}
+@utility bg-pole {
+  background-color: var(--pole, var(--color-primary));
+}
+@utility border-pole {
+  border-color: var(--pole, var(--color-primary));
 }
 
 @theme inline {
@@ -60,6 +117,18 @@
 
   --color-border: var(--color-border);
   --color-border-subtle: var(--color-border-subtle);
+
+  --color-paper: var(--color-paper);
+  --color-paper-muted: var(--color-paper-muted);
+  --color-night: var(--color-night);
+  --color-night-deep: var(--color-night-deep);
+  --color-on-night: var(--color-on-night);
+  --color-on-night-muted: var(--color-on-night-muted);
+  --color-malachite: var(--color-malachite);
+  --color-malachite-bright: var(--color-malachite-bright);
+  --color-copper: var(--color-copper);
+  --color-copper-bright: var(--color-copper-bright);
+  --color-water-bright: var(--color-water-bright);
 
   --radius-control: var(--radius-control);
   --radius-card: var(--radius-card);
@@ -94,7 +163,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  color: var(--color-primary);
+  color: var(--pole, var(--color-primary));
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -130,6 +199,16 @@ body {
 .primary-button:hover {
   transform: translateY(-2px);
   background: var(--color-primary-hover);
+}
+
+/* Variante pour fonds nuit : clair, survol malachite. */
+.primary-button.on-night {
+  background: var(--color-on-night);
+  color: var(--color-night);
+}
+
+.primary-button.on-night:hover {
+  background: var(--color-malachite-bright);
 }
 
 .hero-cinematic-image {
@@ -305,6 +384,122 @@ body {
 @media (min-width: 768px) {
   .section-shell {
     padding: 9rem 4rem 6rem;
+  }
+}
+
+/* --- Storytelling (prototype « Malachite × Laboratoire », adapté) --- */
+
+/*
+ * Carotte stratigraphique : bande à motif le long du bord gauche d'un pôle,
+ * pour que la descente dans les services se lise comme une colonne
+ * géologique (ENV → H₂O → ING).
+ */
+.strata-core {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  z-index: 5;
+  display: none;
+  width: 18px;
+  pointer-events: none;
+  background-color: var(--color-paper);
+  background-image: var(--pole-pattern);
+  background-size: auto 10px;
+  border-right: 1px solid color-mix(in srgb, var(--pole) 45%, transparent);
+}
+
+@media (min-width: 768px) {
+  .strata-core {
+    display: block;
+  }
+}
+
+.pattern-swatch {
+  background-color: var(--color-paper);
+  background-image: var(--pole-pattern);
+  background-size: auto 8px;
+}
+
+/* Masques de lignes SplitText : marge pour les accents des capitales. */
+.split-line-mask {
+  padding-block: 0.12em;
+  margin-block: -0.12em;
+}
+
+.marquee-track {
+  animation: scrollTicker 60s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Canalisation de la méthode : se remplit avec le défilement (`--progress`). */
+.method-pipe {
+  --progress: 0;
+}
+
+.method-pipe::before,
+.method-pipe::after {
+  content: '';
+  position: absolute;
+  left: 23px;
+  top: 24px;
+  bottom: 24px;
+  width: 3px;
+}
+
+.method-pipe::before {
+  background: var(--color-paper-muted);
+}
+
+.method-pipe::after {
+  background: linear-gradient(
+    var(--color-primary),
+    var(--color-malachite) 70%,
+    var(--color-copper)
+  );
+  transform: scaleY(var(--progress));
+  transform-origin: top;
+}
+
+.register-row {
+  animation: registerRowIn 0.6s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+}
+
+@keyframes registerRowIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.pulse-dot {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--pole) 18%, transparent);
+  animation: pulseDot 2.4s cubic-bezier(0.2, 0.7, 0.1, 1) infinite;
+}
+
+@keyframes pulseDot {
+  50% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    width: auto;
+    justify-content: center;
+    animation: none;
+  }
+
+  .marquee-track > ul {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.5rem;
+  }
+
+  .marquee-track > [aria-hidden] {
+    display: none;
   }
 }
 

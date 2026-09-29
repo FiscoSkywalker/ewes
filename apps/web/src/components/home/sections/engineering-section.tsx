@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/public/section-heading';
 import { EngineeringItemsList } from '@/components/public/engineering-items-list';
 import { useSectionActivity } from '@/hooks/useSectionActivity';
+import { POLE_ANCHORS } from './services-overview';
 
 const EngineeringCanvas = dynamic(
   () =>
@@ -20,7 +21,7 @@ interface EngineeringSectionProps {
   webglAvailable: boolean;
 }
 
-/** Section "Travaux d'ingénierie" de l'Accueil, avec maquette 3D WebGL — homepage uniquement. */
+/** Chapitre ING (Travaux d'ingénierie) de l'Accueil, accent cuivre, avec maquette 3D WebGL — homepage uniquement. */
 export function EngineeringSection({
   reducedMotion,
   dpr,
@@ -32,8 +33,10 @@ export function EngineeringSection({
   return (
     <section
       ref={ref}
-      className="section-shell flex items-center overflow-hidden pointer-events-none"
+      id={POLE_ANCHORS.ing}
+      className="pole-ing section-shell flex items-center overflow-hidden pointer-events-none"
     >
+      <div className="strata-core" />
       {webglAvailable && mounted && (
         <EngineeringCanvas
           active={active}

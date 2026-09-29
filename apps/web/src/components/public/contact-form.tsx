@@ -8,6 +8,8 @@ import { EWES_CONTACT } from '@/data/contact';
 interface Sector {
   value: string;
   label: string;
+  /** Libellé court affiché dans le choix du besoin. */
+  short: string;
 }
 
 /**
@@ -17,6 +19,9 @@ interface Sector {
  * vérifiée (interdit par blueprint/19_AI_Coding_Rules.md §7), le formulaire
  * ouvre la messagerie de l'utilisateur avec le message pré-rempli. À
  * remplacer par un POST vers l'API une fois le module disponible.
+ *
+ * Style « nuit » : le formulaire vit dans le bloc Contact (`ContactBlock`),
+ * sur fond nuit, à l'Accueil comme sur /contact.
  */
 export function ContactForm() {
   const t = useTranslations('ContactPage');
@@ -54,96 +59,100 @@ export function ContactForm() {
     window.location.href = `mailto:${EWES_CONTACT.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4 text-xs font-sans">
-      <p className="border border-border-subtle bg-surface p-3 text-[11px] leading-5 text-sand/55">
-        {t('formNote')}
-      </p>
+  const fieldClass =
+    'w-full rounded-none border-0 border-b border-on-night/20 bg-transparent py-2.5 text-sm text-on-night placeholder:text-on-night-muted/45 focus:border-malachite-bright focus:outline-none';
+  const labelClass =
+    'font-mono text-[10px] uppercase tracking-[0.12em] text-on-night-muted';
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-muted">
-            {t('fields.name')}
-          </label>
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="grid content-start gap-6 border border-on-night/12 bg-night-deep/60 p-5 backdrop-blur-md sm:p-8 lg:p-10"
+    >
+      <fieldset>
+        <legend className={`${labelClass} mb-3`}>{t('needLegend')}</legend>
+        <div className="flex flex-wrap gap-2">
+          {sectors.map((sector) => (
+            <label key={sector.value} className="relative" title={sector.label}>
+              <input
+                type="radio"
+                name="sector"
+                value={sector.value}
+                checked={formData.sector === sector.value}
+                onChange={() =>
+                  setFormData({ ...formData, sector: sector.value })
+                }
+                className="peer absolute inset-0 cursor-pointer opacity-0"
+              />
+              <span className="inline-block border border-on-night/20 px-3.5 py-2 text-[13px] text-on-night transition-colors peer-checked:border-malachite-bright peer-checked:bg-malachite-bright peer-checked:text-night peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-water-bright">
+                {sector.short}
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <label className="grid gap-1.5">
+          <span className={labelClass}>{t('fields.name')}</span>
           <input
             type="text"
             required
+            autoComplete="name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder={t('fields.namePlaceholder')}
-            className="w-full border border-border bg-surface px-3 py-2.5 text-sand focus:border-primary focus:outline-none"
+            className={fieldClass}
           />
-        </div>
-        <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-muted">
-            {t('fields.organization')}
-          </label>
+        </label>
+        <label className="grid gap-1.5">
+          <span className={labelClass}>{t('fields.organization')}</span>
           <input
             type="text"
             required
+            autoComplete="organization"
             value={formData.organization}
             onChange={(e) =>
               setFormData({ ...formData, organization: e.target.value })
             }
             placeholder={t('fields.organizationPlaceholder')}
-            className="w-full border border-border bg-surface px-3 py-2.5 text-sand focus:border-primary focus:outline-none"
+            className={fieldClass}
           />
-        </div>
+        </label>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-muted">
-            {t('fields.email')}
-          </label>
+      <div className="grid gap-6 md:grid-cols-2">
+        <label className="grid gap-1.5">
+          <span className={labelClass}>{t('fields.email')}</span>
           <input
             type="email"
             required
+            autoComplete="email"
             value={formData.email}
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
             placeholder={t('fields.emailPlaceholder')}
-            className="w-full border border-border bg-surface px-3 py-2.5 text-sand focus:border-primary focus:outline-none"
+            className={fieldClass}
           />
-        </div>
-        <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-muted">
-            {t('fields.phone')}
-          </label>
+        </label>
+        <label className="grid gap-1.5">
+          <span className={labelClass}>{t('fields.phone')}</span>
           <input
             type="tel"
+            autoComplete="tel"
             value={formData.phone}
             onChange={(e) =>
               setFormData({ ...formData, phone: e.target.value })
             }
             placeholder={t('fields.phonePlaceholder')}
-            className="w-full border border-border bg-surface px-3 py-2.5 text-sand focus:border-primary focus:outline-none"
+            className={fieldClass}
           />
-        </div>
+        </label>
       </div>
 
-      <div>
-        <label className="mb-1 block font-mono text-[11px] uppercase text-muted">
-          {t('fields.sector')}
-        </label>
-        <select
-          value={formData.sector}
-          onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
-          className="w-full border border-border bg-surface px-3 py-2.5 font-sans text-sand focus:border-primary focus:outline-none"
-        >
-          {sectors.map((sector) => (
-            <option key={sector.value} value={sector.value}>
-              {sector.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="mb-1 block font-mono text-[11px] uppercase text-muted">
-          {t('fields.message')}
-        </label>
+      <label className="grid gap-1.5">
+        <span className={labelClass}>{t('fields.message')}</span>
         <textarea
           rows={4}
           required
@@ -152,17 +161,19 @@ export function ContactForm() {
             setFormData({ ...formData, message: e.target.value })
           }
           placeholder={t('fields.messagePlaceholder')}
-          className="w-full resize-none border border-border bg-surface px-3 py-2.5 font-sans text-sand focus:border-primary focus:outline-none"
+          className={`${fieldClass} resize-y`}
         />
-      </div>
+      </label>
 
-      <button
-        type="submit"
-        className="mt-4 flex w-full items-center justify-center gap-2 bg-primary py-3 font-mono font-bold uppercase tracking-wider text-white transition-colors hover:bg-primary-hover"
-      >
-        <Send size={14} />
-        {t('submitLabel')}
-      </button>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-2">
+        <button type="submit" className="primary-button on-night">
+          {t('submitLabel')}
+          <Send size={14} />
+        </button>
+        <p className="max-w-sm text-[11px] leading-5 text-on-night-muted/80">
+          {t('formNote')}
+        </p>
+      </div>
     </form>
   );
 }

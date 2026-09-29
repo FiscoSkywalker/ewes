@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/public/section-heading';
 import { WaterServicesList } from '@/components/public/water-services-list';
 import { useSectionActivity } from '@/hooks/useSectionActivity';
+import { POLE_ANCHORS } from './services-overview';
 
 const WaterCanvas = dynamic(
   () =>
@@ -21,7 +22,7 @@ interface WaterSectionProps {
   webglAvailable: boolean;
 }
 
-/** Section "Eau & hydraulique" de l'Accueil, avec simulation d'eau WebGL — homepage uniquement. */
+/** Chapitre H₂O (Eau) de l'Accueil, avec simulation d'eau WebGL — homepage uniquement. */
 export function WaterSection({
   reducedMotion,
   dpr,
@@ -34,8 +35,10 @@ export function WaterSection({
   return (
     <section
       ref={ref}
-      className="section-shell flex items-center overflow-hidden pointer-events-none"
+      id={POLE_ANCHORS.eau}
+      className="pole-eau section-shell flex items-center overflow-hidden pointer-events-none"
     >
+      <div className="strata-core" />
       {webglAvailable && mounted && (
         <WaterCanvas
           active={active}
