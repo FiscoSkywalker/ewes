@@ -1,13 +1,27 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { DM_Sans, Geist_Mono, Rajdhani } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+/**
+ * Identité typographique du site public (blueprint/05_UI_UX_System.md §3) :
+ * DM Sans pour le corps de texte, Rajdhani pour les titres — reprises du
+ * prototype immersif validé pour la page d'Accueil, appliquées à l'ensemble
+ * du site public pour une identité cohérente.
+ */
+const bodyFont = DM_Sans({
+  variable: '--font-body',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+});
+
+const headingFont = Rajdhani({
+  variable: '--font-heading',
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
 });
 
 const geistMono = Geist_Mono({
@@ -16,9 +30,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'EWES',
+  title: {
+    default: 'EWES S.A.R.L. | Environnement, Eau et Services d’Ingénierie',
+    template: '%s | EWES S.A.R.L.',
+  },
   description:
-    "Environnement, Eau, Travaux d'ingénierie — site institutionnel EWES.",
+    'Bureau d’études d’ingénierie et d’analyses environnementales en RD Congo (Lubumbashi & Kinshasa). EIES, adduction d’eau potable (AEP), gestion des rejets miniers et formation continue.',
 };
 
 export function generateStaticParams() {
@@ -41,13 +58,17 @@ export default async function LocaleLayout({
     notFound();
   }
 
+  const messages = await getMessages();
+
   return (
     <html
       lang={locale}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${bodyFont.variable} ${headingFont.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );
