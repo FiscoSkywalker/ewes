@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/public/section-heading';
 import { EngineeringItemsList } from '@/components/public/engineering-items-list';
+import { useSectionActivity } from '@/hooks/useSectionActivity';
 
 const EngineeringCanvas = dynamic(
   () =>
@@ -14,8 +15,6 @@ const EngineeringCanvas = dynamic(
 );
 
 interface EngineeringSectionProps {
-  scrollProgress: number;
-  velocity: number;
   reducedMotion: boolean;
   dpr: number;
   webglAvailable: boolean;
@@ -23,20 +22,21 @@ interface EngineeringSectionProps {
 
 /** Section "Travaux d'ingénierie" de l'Accueil, avec maquette 3D WebGL — homepage uniquement. */
 export function EngineeringSection({
-  scrollProgress,
-  velocity,
   reducedMotion,
   dpr,
   webglAvailable,
 }: EngineeringSectionProps) {
   const t = useTranslations('Engineering');
+  const { ref, mounted, active } = useSectionActivity<HTMLElement>();
 
   return (
-    <section className="section-shell flex items-center overflow-hidden pointer-events-none">
-      {webglAvailable && (
+    <section
+      ref={ref}
+      className="section-shell flex items-center overflow-hidden pointer-events-none"
+    >
+      {webglAvailable && mounted && (
         <EngineeringCanvas
-          scrollProgress={scrollProgress}
-          velocity={velocity}
+          active={active}
           reducedMotion={reducedMotion}
           dpr={dpr}
         />

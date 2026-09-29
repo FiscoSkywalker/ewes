@@ -18,7 +18,6 @@ export default async function PublicLayout({
     <ExperienceController>
       <div className="flex min-h-full flex-col bg-background text-sand selection:bg-primary selection:text-white">
         <ScrollAnimations />
-        <div className="noise-overlay" aria-hidden="true" />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

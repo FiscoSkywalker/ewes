@@ -1,28 +1,17 @@
 export type ProjectCategory =
-  'EAU' | 'ENVIRONNEMENT' | 'INGENIERIE' | 'MINES_INDUSTRIE';
-export type ProjectStatus = 'REALISE' | 'EN_COURS' | 'SUIVI_CONTINU';
+  'ETUDES_AUDITS' | 'AGREMENTS' | 'FORMATION' | 'RECHERCHE';
 
+/**
+ * Référence de réalisation (source : `raw/PROFIL_EWES.md` §5). Les champs se
+ * limitent à ce que le profil établit : pas de métrique ni de détail
+ * technique non documenté.
+ */
 export interface Project {
   id: string;
-  title: string;
   category: ProjectCategory;
-  status: ProjectStatus;
-  country: string;
-  region: string;
   year: string;
-  client: string;
-  keyMetric: {
-    value: string;
-    label: string;
-  };
-  summary: string;
-  description: string;
-  technicalDetails: {
-    capacity?: string;
-    footprint?: string;
-    impact?: string;
-    technologies: string[];
-  };
+  title: string;
+  detail: string;
 }
 
 export interface ProjectCategoryOption {

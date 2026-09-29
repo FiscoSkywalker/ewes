@@ -3,18 +3,15 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { readScroll } from '@/lib/scroll-state';
 import { TreatmentPlant } from './TreatmentPlant';
 import { PipeNetwork } from './PipeNetwork';
 
 interface InfrastructureProps {
-  scrollProgress: number;
-  velocity?: number;
   reducedMotion?: boolean;
 }
 
 export const Infrastructure: React.FC<InfrastructureProps> = ({
-  scrollProgress,
-  velocity = 0,
   reducedMotion = false,
 }) => {
   const infraGroupRef = useRef<THREE.Group>(null);
@@ -22,6 +19,7 @@ export const Infrastructure: React.FC<InfrastructureProps> = ({
   // Rotate slowly and angle camera view towards facility
   useFrame(({ clock }) => {
     if (infraGroupRef.current) {
+      const { velocity } = readScroll();
       const time = clock.getElapsedTime();
       const scrollRotation = THREE.MathUtils.clamp(velocity * 0.1, -0.22, 0.22);
       const idleRotation = reducedMotion ? 0 : Math.sin(time * 0.15) * 0.055;
@@ -35,11 +33,7 @@ export const Infrastructure: React.FC<InfrastructureProps> = ({
 
   return (
     <group ref={infraGroupRef} position={[0, -0.2, 0]}>
-      <TreatmentPlant
-        progress={scrollProgress}
-        velocity={velocity}
-        reducedMotion={reducedMotion}
-      />
+      <TreatmentPlant reducedMotion={reducedMotion} />
       <PipeNetwork />
     </group>
   );

@@ -1,16 +1,34 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { FileCheck, Microscope, ShieldCheck } from 'lucide-react';
+import {
+  Activity,
+  ClipboardCheck,
+  Droplets,
+  FileCheck,
+  Leaf,
+  Microscope,
+  Trash2,
+  Wind,
+} from 'lucide-react';
 
 interface EnvironmentService {
   title: string;
   text: string;
 }
 
-const ICONS = [FileCheck, Microscope, ShieldCheck];
+const ICONS = [
+  FileCheck,
+  ClipboardCheck,
+  Droplets,
+  Trash2,
+  Activity,
+  Wind,
+  Microscope,
+  Leaf,
+];
 
-/** Liste des 3 prestations du pôle Environnement — partagée entre l'Accueil et /services. */
+/** Liste des 8 prestations du pôle Environnement — partagée entre l'Accueil et /services. */
 export function EnvironmentServicesList() {
   const t = useTranslations('Environment');
   const services = t.raw('services') as EnvironmentService[];
@@ -25,7 +43,7 @@ export function EnvironmentServicesList() {
         return (
           <article
             key={title}
-            className="group grid grid-cols-[42px_1fr] gap-4 border-t border-sand/20 py-6 sm:grid-cols-[62px_180px_1fr] sm:items-start"
+            className="group grid grid-cols-[42px_1fr] gap-4 border-t border-sand/20 py-6 sm:grid-cols-[62px_230px_1fr] sm:items-start"
           >
             <span className="pt-1 text-primary">
               <Icon size={18} />

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ArrowUpRight, ChevronDown, MapPin, ShieldCheck } from 'lucide-react';
+import { useSectionActivity } from '@/hooks/useSectionActivity';
 
 interface HeroProps {
   onExplore: () => void;
@@ -12,13 +13,18 @@ interface HeroProps {
 export function Hero({ onExplore }: HeroProps) {
   const t = useTranslations('Hero');
   const expertise = t.raw('expertise') as string[];
+  const { ref, active } = useSectionActivity<HTMLElement>();
 
   return (
-    <section className="relative flex min-h-[112svh] flex-col justify-end overflow-hidden px-6 pb-0 pt-32 md:px-16">
+    <section
+      ref={ref}
+      data-paused={!active}
+      className="relative flex min-h-[112svh] flex-col justify-end overflow-hidden px-6 pb-0 pt-32 md:px-16"
+    >
       <div className="absolute inset-0 overflow-hidden" data-parallax-media>
         <Image
           src="/assets/images/ewes-hero-cinematic.png"
-          alt="Infrastructure hydraulique intégrée dans un paysage fluvial"
+          alt={t('imageAlt')}
           fill
           priority
           sizes="100vw"
@@ -32,7 +38,7 @@ export function Hero({ onExplore }: HeroProps) {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(213,228,234,.38),transparent_35%,rgba(181,208,219,.76))]" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 items-center">
-        <div className="max-w-4xl" data-hero-content>
+        <div className="hero-enter max-w-4xl">
           <div className="eyebrow mb-6">{t('eyebrow')}</div>
           <h1 className="section-title max-w-5xl text-[clamp(3.6rem,9vw,8.2rem)] uppercase text-sand">
             {t('titleLine1')}{' '}
@@ -77,7 +83,7 @@ export function Hero({ onExplore }: HeroProps) {
       </div>
 
       <div className="relative z-10 -mx-6 mt-8 overflow-hidden border-y border-primary/15 bg-primary/95 py-3 text-background md:-mx-16">
-        <div className="flex min-w-max animate-[scrollTicker_26s_linear_infinite] items-center">
+        <div className="hero-ticker flex min-w-max items-center">
           {[...expertise, ...expertise].map((item, index) => (
             <div key={`${item}-${index}`} className="flex items-center">
               <span className="px-7 font-heading text-xl font-bold uppercase tracking-wide">
@@ -87,16 +93,6 @@ export function Hero({ onExplore }: HeroProps) {
             </div>
           ))}
         </div>
-        <style jsx>{`
-          @keyframes scrollTicker {
-            from {
-              transform: translateX(0);
-            }
-            to {
-              transform: translateX(-50%);
-            }
-          }
-        `}</style>
       </div>
     </section>
   );

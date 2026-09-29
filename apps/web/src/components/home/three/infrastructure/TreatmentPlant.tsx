@@ -3,15 +3,13 @@
 import React, { useLayoutEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { readScroll } from '@/lib/scroll-state';
 
 interface TreatmentPlantProps {
-  progress?: number;
-  velocity?: number;
   reducedMotion?: boolean;
 }
 
 export const TreatmentPlant: React.FC<TreatmentPlantProps> = ({
-  velocity = 0,
   reducedMotion = false,
 }) => {
   const plantRef = useRef<THREE.Group>(null);
@@ -29,7 +27,7 @@ export const TreatmentPlant: React.FC<TreatmentPlantProps> = ({
 
   useFrame((_, delta) => {
     if (reducedMotion) return;
-    const scrollBoost = Math.min(Math.abs(velocity) * 0.3, 0.55);
+    const scrollBoost = Math.min(Math.abs(readScroll().velocity) * 0.3, 0.55);
     if (clarifierBridge1Ref.current) {
       clarifierBridge1Ref.current.rotation.y += delta * (0.12 + scrollBoost);
     }

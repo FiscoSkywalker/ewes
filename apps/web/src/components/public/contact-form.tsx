@@ -3,13 +3,12 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { Send } from 'lucide-react';
+import { EWES_CONTACT } from '@/data/contact';
 
 interface Sector {
   value: string;
   label: string;
 }
-
-const CONTACT_EMAIL = 'contact@ewes.cd';
 
 /**
  * Formulaire de contact (composant client isolé — blueprint/16_Rendering_State_Strategy.md
@@ -52,7 +51,7 @@ export function ContactForm() {
     // the react-hooks/immutability rule flags any assignment to `window.location`
     // regardless of context, so it's disabled for this one intentional line.
     // eslint-disable-next-line react-hooks/immutability
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:${EWES_CONTACT.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   return (

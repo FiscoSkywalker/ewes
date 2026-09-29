@@ -21,7 +21,7 @@ export default async function DocumentsPage() {
   const t = await getTranslations('DocumentsPage');
 
   return (
-    <div className="px-6 py-16 text-sand md:px-16 md:py-24">
+    <div className="px-6 pb-16 pt-28 text-sand md:px-16 md:pb-24 md:pt-36">
       <SectionHeading
         eyebrow={t('eyebrow')}
         title={t('title')}

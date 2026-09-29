@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/public/section-heading';
 import { WaterServicesList } from '@/components/public/water-services-list';
+import { useSectionActivity } from '@/hooks/useSectionActivity';
 
 const WaterCanvas = dynamic(
   () =>
@@ -14,8 +15,6 @@ const WaterCanvas = dynamic(
 );
 
 interface WaterSectionProps {
-  scrollProgress: number;
-  velocity: number;
   reducedMotion: boolean;
   dpr: number;
   particleMultiplier: number;
@@ -24,21 +23,22 @@ interface WaterSectionProps {
 
 /** Section "Eau & hydraulique" de l'Accueil, avec simulation d'eau WebGL — homepage uniquement. */
 export function WaterSection({
-  scrollProgress,
-  velocity,
   reducedMotion,
   dpr,
   particleMultiplier,
   webglAvailable,
 }: WaterSectionProps) {
   const t = useTranslations('Water');
+  const { ref, mounted, active } = useSectionActivity<HTMLElement>();
 
   return (
-    <section className="section-shell flex items-center overflow-hidden pointer-events-none">
-      {webglAvailable && (
+    <section
+      ref={ref}
+      className="section-shell flex items-center overflow-hidden pointer-events-none"
+    >
+      {webglAvailable && mounted && (
         <WaterCanvas
-          scrollProgress={scrollProgress}
-          velocity={velocity}
+          active={active}
           reducedMotion={reducedMotion}
           dpr={dpr}
           particleMultiplier={particleMultiplier}

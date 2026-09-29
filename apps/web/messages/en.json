@@ -6,441 +6,633 @@
     "realisations": "Our projects",
     "news": "News",
     "documents": "Documents",
-    "contact": "Contact"
+    "contact": "Contact",
+    "homeAriaLabel": "Back to home",
+    "tagline": "Environment · Water · Engineering Works",
+    "login": "Sign in",
+    "loginTitle": "Access the private document space",
+    "mainNavAriaLabel": "Main navigation",
+    "mobileNavAriaLabel": "Mobile navigation",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "Footer": {
-    "identity": "Environment, Water and Engineering Services. A limited liability company born from the University of Lubumbashi's University-Industry Interface.",
-    "officesTitle": "Our offices in DR Congo",
-    "headquartersLabel": "Head office",
-    "branchLabel": "Branch office",
-    "contactTitle": "Direct contacts",
-    "networkTitle": "Academic & R&D network",
+    "identity": "Environment, Water and Engineering Services (EWES SARL): a limited liability company that grew out of the Environment Centre of the University of Lubumbashi–Society Interface (IUS).",
+    "addressTitle": "Address",
+    "address": "1809, Araucarias Avenue, Hewa-Bora district, Ruashi commune, Lubumbashi, DRC",
+    "contactTitle": "Contact",
+    "partnersTitle": "Origins & partners",
+    "partners": [
+      "IUS Environment Centre — University of Lubumbashi",
+      "Belgian partners",
+      "French partners",
+      "Canadian partners"
+    ],
     "rights": "All rights reserved.",
     "tagline": "Environment · Water · Engineering Works",
     "privateSpaceLink": "Private document space"
   },
   "Hero": {
-    "eyebrow": "Engineering and environmental consultancy in DR Congo",
-    "titleLine1": "Science in the service of",
-    "titleHighlight": "life.",
-    "lead": "EWES turns environmental, water and infrastructure challenges into durable, measurable solutions adapted to the realities of the Democratic Republic of Congo.",
+    "eyebrow": "Environment, water and engineering works",
+    "titleLine1": "Innovative and",
+    "titleHighlight": "sustainable solutions.",
+    "lead": "Born from the Environment Centre of the University of Lubumbashi–Society Interface, EWES brings together a multidisciplinary team of Congolese and international experts to meet its clients’ needs, whatever the nature of the project.",
     "ctaExplore": "Discover our expertise",
-    "shieldLabel": "Academic & field expertise",
-    "locationLabel": "Lubumbashi · Kinshasa",
+    "shieldLabel": "Congolese & international experts",
+    "locationLabel": "Lubumbashi · DR Congo",
     "scrollLabel": "Scroll down",
+    "imageAlt": "Water infrastructure set in a river landscape",
     "expertise": [
-      "Environmental studies",
-      "Drinking water",
-      "Civil engineering",
-      "Laboratory & analysis"
+      "Environmental impact studies",
+      "Environmental audit",
+      "Drinking water supply",
+      "Water, soil and air analysis",
+      "Engineering works",
+      "Executive training"
     ]
   },
   "World": {
-    "eyebrow": "01 · Our story",
-    "title": "Expertise born at university, proven in the field.",
-    "description": "Rooted in research carried out at the Polytechnic Faculty of the University of Lubumbashi, EWES brings together scientists, engineers and field experts around a single requirement: producing solutions that are useful, verifiable and durable.",
+    "eyebrow": "01 · Who we are",
+    "title": "Mining and oil environmental experts.",
+    "description": "A limited liability company, EWES has established itself in drawing up and assessing the environmental plans of mining and oil projects: natural and man-made risk studies, site development, environmental compliance and training of the sector’s managers and technicians.",
     "hqLabel": "Head office",
     "hqCity": "Lubumbashi",
     "hqRegion": "Haut-Katanga · DRC",
-    "addressLine1": "N° 3095/86, Avenue Araucarias, Hewa-Bora district, Kampemba commune.",
-    "addressLine2": "Institutional coordination branch in Kinshasa.",
-    "networkLine": "Scientific network: University of Liège, Lorraine, Polytechnique Montréal and UQAT.",
-    "referenceMission": "Flagship mission",
-    "imageCaption": "Multidisciplinary expertise · DR Congo",
+    "addressLine1": "1809, Araucarias Avenue, Hewa-Bora district, Ruashi commune, Lubumbashi.",
+    "networkLine": "Our work is carried out in collaboration with Belgian, French and Canadian partners.",
+    "referenceMission": "See our projects",
+    "imageCaption": "Multidisciplinary team · DR Congo",
     "imageAlt": "EWES engineering team on a field mission",
-    "valuesTitle": "What guides our missions",
+    "valuesTitle": "What makes us strong",
     "values": [
       {
-        "title": "Scientific rigour",
-        "text": "Every diagnosis rests on a verifiable method and measured data, never on estimates."
+        "title": "A multidisciplinary team",
+        "text": "Congolese and international experts and consultants from environmental sciences, earth sciences and technology."
       },
       {
-        "title": "Local grounding",
-        "text": "A team based in DR Congo, familiar with the terrain, the mining sector and local administrative realities."
+        "title": "Mining and oil experience",
+        "text": "Environmental studies carried out for many mining operators, and support to Congolese State services."
       },
       {
-        "title": "Skills transfer",
-        "text": "Every mission strengthens local teams' capabilities, not just the final deliverable."
+        "title": "Training as a commitment",
+        "text": "Training adapted to local realities, for managers, technicians and the public services in charge of the environment."
       }
     ],
     "teamTitle": "Team & experts",
-    "teamText": "EWES brings together polytechnic professors, engineers and laboratory technicians. Individual team profiles will be published once the final content is validated by EWES."
+    "teamText": "EWES relies on a multidisciplinary team of Congolese and international experts and consultants whose expertise covers environmental sciences, earth sciences and technology.",
+    "clientsTitle": "They trusted us",
+    "clientsText": "Environmental studies carried out for the benefit of mining companies such as:",
+    "clients": [
+      "STL",
+      "SWANMINES",
+      "Anvil Mining Congo SA",
+      "COMIDE",
+      "Ruashi Mining",
+      "METALKOL",
+      "FMR Development",
+      "Kipushi Corporation",
+      "MMG",
+      "KCC"
+    ]
+  },
+  "Expertises": {
+    "eyebrow": "Our expertise",
+    "title": "Serving companies, the State and research.",
+    "items": [
+      {
+        "title": "Mining, oil and mineral sectors",
+        "text": "Feasibility studies, optimisation of operating conditions, environmental incidence studies."
+      },
+      {
+        "title": "The Congolese State",
+        "text": "Environmental audits, restoration of polluted sites, characterisation of deposits on concessions to be awarded."
+      },
+      {
+        "title": "Continuing education",
+        "text": "Coaching and refresher training for staff and managers of mining and mineral companies based in the DRC."
+      },
+      {
+        "title": "Researcher supervision",
+        "text": "Support for private and public sector researchers in environment, water and engineering works."
+      }
+    ]
+  },
+  "Research": {
+    "eyebrow": "Research & environment",
+    "title": "Data and methods adapted to local realities.",
+    "description": "EWES’s research activities pursue four objectives.",
+    "items": [
+      {
+        "title": "Measure and model",
+        "text": "Produce quantified data on the state of the environment and model how it evolves under different scenarios."
+      },
+      {
+        "title": "Support public authorities",
+        "text": "Develop knowledge and tools that help authorities manage the environment sector."
+      },
+      {
+        "title": "Support industry",
+        "text": "Help industrial companies build environmental protection criteria into their processes."
+      },
+      {
+        "title": "Remediate locally",
+        "text": "Establish remediation methods that fit local realities."
+      }
+    ]
   },
   "Water": {
-    "eyebrow": "02 · Water & hydraulics",
-    "title": "From the resource to every use.",
-    "description": "EWES designs complete, resilient chains: studies, catchment, treatment, distribution, quality control and effluent management.",
+    "eyebrow": "02 · Water",
+    "title": "The whole water chain, from resource to use.",
+    "description": "From feasibility study to training of stakeholders, EWES supports the sustainable management of water resources, including in industrial settings.",
     "services": [
       {
         "step": "01",
-        "title": "Water Supply Feasibility Studies",
-        "desc": "Computer-aided hydraulic sizing, resource surveys and drinking-water supply master plans."
+        "title": "Water supply feasibility",
+        "desc": "Feasibility studies for drinking water supply projects."
       },
       {
         "step": "02",
-        "title": "Catchment & Supply",
-        "desc": "Spring development, deep boreholes, solar pumping stations and gravity-fed networks."
+        "title": "Sustainable resource management",
+        "desc": "Water resource management designed for the long term."
       },
       {
         "step": "03",
-        "title": "Treatment & Potabilisation",
-        "desc": "Settling, sand filtration, disinfection and potabilisation compliant with WHO guidelines."
+        "title": "Intake & drinking water supply",
+        "desc": "Water intake and delivery all the way to users."
       },
       {
         "step": "04",
-        "title": "Wastewater Treatment",
-        "desc": "Industrial effluent neutralisation stations, settling tanks and closed-loop recycling."
+        "title": "Water treatment",
+        "desc": "Treatment processes adapted to the resource and the intended use."
       },
       {
         "step": "05",
-        "title": "Laboratory Analysis",
-        "desc": "Continuous physico-chemical and bacteriological monitoring of drinking-water quality."
+        "title": "Wastewater purification",
+        "desc": "Purification of wastewater before it returns to the environment."
       },
       {
         "step": "06",
-        "title": "Water in Mining Environments",
-        "desc": "Mine dewatering management, metallurgical plant water balances and effluent recovery."
+        "title": "Water quality analysis",
+        "desc": "Analyses to monitor and document water quality."
+      },
+      {
+        "step": "07",
+        "title": "Training of water stakeholders",
+        "desc": "Training for stakeholders in the water sector."
+      },
+      {
+        "step": "08",
+        "title": "Industrial water management",
+        "desc": "Water management within industrial processes."
       }
     ]
   },
   "Environment": {
     "eyebrow": "03 · Environment",
-    "title": "Understanding environments. Protecting their future.",
-    "description": "In a territory under heavy mining and industrial pressure, we produce independent knowledge that informs decisions and supports the transition.",
+    "title": "Measure, assess, protect.",
+    "description": "Studies, audits, monitoring and analyses: EWES supports industrial operators and institutions in controlling their environmental impact.",
     "imageCaption": "Measure · Understand · Act",
-    "imageAlt": "Water quality field analysis",
+    "imageAlt": "Field water quality analysis",
     "services": [
       {
-        "title": "Impact studies & audits",
-        "text": "Diagnostics, environmental management plans (PGEP) and compliance audits for institutions and industrial operators."
+        "title": "Environmental impact study",
+        "text": "Assessing the effects of a project on its surroundings."
       },
       {
-        "title": "Measuring to decide",
-        "text": "Water and soil analysis, dust fallout monitoring and air quality surveillance."
+        "title": "Environmental audit",
+        "text": "Review of environmental practices and compliance."
       },
       {
-        "title": "Sustainable rehabilitation",
-        "text": "Sludge treatment, acid effluent neutralisation and remediation of degraded sites."
+        "title": "Liquid effluents",
+        "text": "Management of liquid effluents."
+      },
+      {
+        "title": "Solid waste",
+        "text": "Management of solid waste."
+      },
+      {
+        "title": "Continuous monitoring",
+        "text": "Ongoing monitoring of the state of the environment."
+      },
+      {
+        "title": "Air quality",
+        "text": "Air quality analysis."
+      },
+      {
+        "title": "Water, soil and materials",
+        "text": "Analysis of water, soil and various materials."
+      },
+      {
+        "title": "Eco-design",
+        "text": "Building the environment into design from the start."
       }
     ]
   },
   "Engineering": {
     "eyebrow": "04 · Engineering works",
-    "title": "Design it right. Build it to last.",
-    "description": "From digital modelling to project management, our team secures every technical decision and supports the project through to commissioning.",
-    "sectionLabel": "Integrated project management",
+    "title": "Design, equip, support.",
+    "description": "Alongside the environment and water activities, EWES carries out engineering works: analytical instruments, building construction, IT and electricity.",
+    "sectionLabel": "Our engineering activities",
     "items": [
       {
-        "title": "Design & BIM",
-        "text": "Execution drawings, 3D modelling and structural calculations."
+        "title": "Analytical instruments",
+        "text": "Advice, supply, repair and training: pH meters, conductivity meters, gas analysers, and more."
       },
       {
-        "title": "Site supervision",
-        "text": "Computer-assisted supervision, concrete quality control and schedule management."
+        "title": "Building construction",
+        "text": "Computer-aided design, scale models, computer-aided site supervision and training in construction software."
       },
       {
-        "title": "Hydraulic structures",
-        "text": "Water towers, pumping stations, networks and drainage channels."
+        "title": "IT",
+        "text": "An IT activity complements EWES’s engineering offering."
       },
       {
-        "title": "Instrumentation",
-        "text": "Measurement equipment, laboratory tools and skills transfer."
+        "title": "Electricity",
+        "text": "Engineering works in the field of electricity."
       }
+    ]
+  },
+  "Training": {
+    "eyebrow": "Training",
+    "title": "Strengthening the skills of local stakeholders.",
+    "description": "Training is an essential part of EWES’s activities: the company shares its expertise with managers and technicians of mining and oil companies, as well as with the public services in charge of the environment in the Democratic Republic of Congo.",
+    "text": "Courses are tailored to each client’s needs and delivered by Congolese and international experts and consultants specialising in environmental sciences, earth sciences and technology. They help promote a more sustainable and responsible approach to the exploitation of natural resources.",
+    "topicsTitle": "Topics covered",
+    "topics": [
+      "Environmental good practice",
+      "Environmental risk management",
+      "Current standards and regulations",
+      "Post-mining management",
+      "Remediation of contaminated sites"
     ]
   },
   "Projects": {
     "eyebrow": "05 · Our projects",
-    "title": "Missions that transform territories.",
-    "description": "Reference studies and structures delivered for the State, local authorities and industry.",
+    "title": "References in the mining and environment sectors.",
+    "description": "Audits, impact studies, approvals, training and surveys: an overview of the missions carried out by EWES.",
     "imageCaption": "From scientific data to technical decisions",
     "imageAlt": "Modern environmental analysis laboratory",
+    "viewAll": "See all projects",
     "categories": [
-      { "key": "TOUS", "label": "All projects" },
-      { "key": "EAU", "label": "Water & Supply" },
-      { "key": "ENVIRONNEMENT", "label": "Environment & Audits" },
-      { "key": "MINES_INDUSTRIE", "label": "Mining & Industrial Effluents" },
-      { "key": "INGENIERIE", "label": "Civil Engineering & CAD" }
+      {
+        "key": "TOUS",
+        "label": "All"
+      },
+      {
+        "key": "ETUDES_AUDITS",
+        "label": "Impact studies & audits"
+      },
+      {
+        "key": "AGREMENTS",
+        "label": "Approvals & certifications"
+      },
+      {
+        "key": "FORMATION",
+        "label": "Training"
+      },
+      {
+        "key": "RECHERCHE",
+        "label": "Research & surveys"
+      }
     ],
-    "statusLabels": {
-      "REALISE": "Completed",
-      "EN_COURS": "Ongoing",
-      "SUIVI_CONTINU": "Continuous environmental monitoring"
-    },
     "items": [
       {
-        "id": "eies-katanga-mining",
-        "title": "Environmental and Social Impact Assessment (ESIA) & Mining Waste Management",
-        "category": "MINES_INDUSTRIE",
-        "status": "REALISE",
-        "country": "DR Congo",
-        "region": "Haut-Katanga & Lualaba",
-        "year": "2021 - 2024",
-        "client": "Mining operators & Ministry of Mines",
-        "keyMetric": {
-          "value": "100% Compliant",
-          "label": "DRC & international environmental standards"
-        },
-        "summary": "Physico-chemical characterisation of solid and liquid waste, dispersion modelling and the project's environmental management plan (PGEP).",
-        "description": "Rigorous inventory and sampling of metallurgical treatment effluents. Assessment of impacts on surface water, groundwater and neighbouring agricultural soils, together with a remediation and residue-containment plan.",
-        "technicalDetails": {
-          "capacity": "Supervision of 3 extraction sites and concentrators",
-          "footprint": "Mining watershed of more than 450 km²",
-          "impact": "Protection of village drinking-water sources and prevention of acid mine drainage",
-          "technologies": [
-            "Atomic absorption spectrometry",
-            "Hydrogeological plume modelling",
-            "Physico-chemical analysis in a certified laboratory",
-            "Environmental and Social Management Plan (ESMP)"
-          ]
-        }
+        "id": "barometre-rse-2025",
+        "category": "RECHERCHE",
+        "year": "2025",
+        "title": "National barometer of mining companies’ CSR",
+        "detail": "Survey carried out in the Haut-Katanga and Lualaba regions."
       },
       {
-        "id": "adduction-eau-potable-collectivites",
-        "title": "Feasibility Study & Solar-Powered Drinking Water Supply",
-        "category": "EAU",
-        "status": "EN_COURS",
-        "country": "DR Congo",
-        "region": "Greater Katanga & peri-urban territories",
-        "year": "2022 - 2025",
-        "client": "Local authorities & development partners",
-        "keyMetric": {
-          "value": "15,000 m³/day",
-          "label": "Drinking water volume secured"
-        },
-        "summary": "Spring catchment, deep boreholes, water-tower sizing and installation of gravity-fed and solar distribution networks.",
-        "description": "Complete design of drinking-water supply master plans to connect vulnerable populations. Integration of hybrid solar pumps and compact chlorination and sand-filtration units.",
-        "technicalDetails": {
-          "capacity": "15,000 m³/day serving more than 180,000 residents",
-          "footprint": "42 km linear network of HDPE and cast-iron pipes",
-          "impact": "Eradication of water-borne disease outbreaks in the intervention areas",
-          "technologies": [
-            "Computer-aided hydraulic sizing (EPANET / WaterCAD)",
-            "Hybrid photovoltaic pumping system",
-            "Multi-layer filtration and automated disinfection",
-            "Metered community water points"
-          ]
-        }
+        "id": "metalkol-carbone-2024",
+        "category": "FORMATION",
+        "year": "2024",
+        "title": "Métalkol",
+        "detail": "Training course “Carbon assessment in mining: measure, minimise and act for the climate”."
       },
       {
-        "id": "audit-environnemental-effluents",
-        "title": "Environmental Audit & Neutralisation of Industrial Liquid Effluents",
-        "category": "ENVIRONNEMENT",
-        "status": "REALISE",
-        "country": "DR Congo",
-        "region": "Lubumbashi & mining basin",
-        "year": "2020 - 2023",
-        "client": "Processing and metallurgical industries",
-        "keyMetric": {
-          "value": "98.5%",
-          "label": "Heavy-metal neutralisation rate"
-        },
-        "summary": "Comprehensive environmental diagnosis of industrial liquid effluents and deployment of neutralisation stations with closed-loop recycling.",
-        "description": "Technical audit of acid-generating hydrometallurgical processes. Design of lamella settlers, lime-based physico-chemical treatment and stabilised-sludge settling basins enabling process water recycling.",
-        "technicalDetails": {
-          "capacity": "Treatment of 8,500 m³/day of acidic effluents",
-          "footprint": "2.5-hectare installation",
-          "impact": "Zero toxic discharge into the public hydrographic network",
-          "technologies": [
-            "Automated pH neutralisation",
-            "Heavy-metal precipitation (Cu, Co, Fe, Mn)",
-            "High-rate lamella flocculation and settling",
-            "Continuous telemetric sensor monitoring"
-          ]
-        }
+        "id": "inspecteurs-2023",
+        "category": "FORMATION",
+        "year": "2023",
+        "title": "Capacity building for inspectors (DPEM, ACE and FNPSS)",
+        "detail": "Carrying out environmental and social inspections in the mining sector."
       },
       {
-        "id": "laboratoire-analyse-eau-air-sol",
-        "title": "Continuous Monitoring & Laboratory Analysis (Water, Soil & Air Quality)",
-        "category": "ENVIRONNEMENT",
-        "status": "SUIVI_CONTINU",
-        "country": "DR Congo",
-        "region": "National (DRC)",
-        "year": "2019 - 2026",
-        "client": "Private companies, public bodies, universities",
-        "keyMetric": {
-          "value": "12,000+",
-          "label": "Samples analysed and certified"
-        },
-        "summary": "State-of-the-art laboratory for quality control of drinking water, industrial waste, settleable dust and atmospheric gases.",
-        "description": "Quarterly sampling and analysis campaigns under a controlled cold chain. Production of detailed ecological assessments helping industry and public authorities make informed decisions.",
-        "technicalDetails": {
-          "capacity": "Capacity of 450 complete physico-chemical analyses / month",
-          "footprint": "Network of 24 monitoring stations across the DRC",
-          "impact": "Production of reference figures for the Ministry of the Environment",
-          "technologies": [
-            "Advanced chromatography and photometry",
-            "Dust-fallout gauges (ASTM standard)",
-            "Mobile multi-gas analysers (SO₂, NOₓ, CO, PM2.5 / PM10)",
-            "Membrane-filter bacteriology"
-          ]
-        }
+        "id": "ruashi-formation-2022",
+        "category": "FORMATION",
+        "year": "2022",
+        "title": "Ruashi Mining",
+        "detail": "Awareness training in mining environment."
       },
       {
-        "id": "formation-polytechnique-cadres",
-        "title": "Continuing Education Programme for Water and Mining Executives & Technicians",
-        "category": "INGENIERIE",
-        "status": "SUIVI_CONTINU",
-        "country": "DR Congo / Partnerships",
-        "region": "Lubumbashi (Digital Campus & UNILU)",
-        "year": "Since 2013",
-        "client": "Katanga mining companies, State agents, researchers",
-        "keyMetric": {
-          "value": "1,200+",
-          "label": "Executives and engineers trained"
-        },
-        "summary": "High-level skills transfer in environmental management, environmental auditing and hydraulic modelling software.",
-        "description": "Certified training modules led by university professors and EWES experts, in partnership with the polytechnic faculties of Lubumbashi (UNILU), Liège (Belgium), Lorraine (France) and Montréal (Canada).",
-        "technicalDetails": {
-          "capacity": "12 specialised training sessions per year",
-          "footprint": "National centre of expertise",
-          "impact": "Local teams empowered to operate complex infrastructure",
-          "technologies": [
-            "Hydraulic calculation and CAD software",
-            "ISO 14001 environmental audit methodologies",
-            "Decontamination and restoration of mining sites",
-            "Congolese environmental and mining legislation"
-          ]
-        }
+        "id": "lae-formation-2022",
+        "category": "FORMATION",
+        "year": "2022",
+        "title": "Environmental Analysis Laboratories",
+        "detail": "Accelerated training in mining environment."
       },
       {
-        "id": "cao-suivi-chantier-ouvrages",
-        "title": "Computer-Aided Design & Civil Engineering Site Supervision",
-        "category": "INGENIERIE",
-        "status": "EN_COURS",
-        "country": "DR Congo",
-        "region": "Haut-Katanga, Lualaba and Kinshasa provinces",
-        "year": "2021 - 2025",
-        "client": "Institutional and industrial project owners",
-        "keyMetric": {
-          "value": "100%",
-          "label": "Quality assurance and schedule compliance"
-        },
-        "summary": "Civil engineering studies, 3D/BIM modelling, structure mock-ups and rigorous on-site execution control.",
-        "description": "Owner's engineering support for the construction of reinforced-concrete water reservoirs, stormwater culverts and administrative and technical buildings.",
-        "technicalDetails": {
-          "capacity": "Supervision of more than 18 simultaneous sites",
-          "footprint": "Structures and industrial platforms",
-          "impact": "Guaranteed 50-year durability of critical infrastructure",
-          "technologies": [
-            "BIM modelling and 3D digital mock-ups",
-            "Fresh and hardened concrete testing (sclerometer, core sampling)",
-            "GNSS geo-referenced topographic control",
-            "Daily technical compliance audit reports"
-          ]
-        }
+        "id": "formation-environnement-minier-2022",
+        "category": "FORMATION",
+        "year": "2022",
+        "title": "Mining environment training",
+        "detail": "Modules: environmental monitoring; environmental and societal obligations of the mining sector."
+      },
+      {
+        "id": "fmr-audit-2021",
+        "category": "ETUDES_AUDITS",
+        "year": "2021",
+        "title": "FMR Development SARL",
+        "detail": "Environmental and social audit."
+      },
+      {
+        "id": "paragon-agrement-2021",
+        "category": "AGREMENTS",
+        "year": "2021",
+        "title": "Paragon Mining Sarlu",
+        "detail": "Renewal of the processing entity approval (category B)."
+      },
+      {
+        "id": "lae-unilu-agrement-2021",
+        "category": "AGREMENTS",
+        "year": "2021",
+        "title": "LAE/UNILU Environmental Analysis Laboratory",
+        "detail": "Obtaining approval and accreditation."
+      },
+      {
+        "id": "nmi-eies-2021",
+        "category": "ETUDES_AUDITS",
+        "year": "2021",
+        "title": "New Minerals Investment",
+        "detail": "ESIA and project environmental management plan (EIES-PGEP); annual environmental report."
+      },
+      {
+        "id": "giz-code-minier-2021",
+        "category": "FORMATION",
+        "year": "2021",
+        "title": "GIZ",
+        "detail": "Awareness campaign on the revised mining code and regulations."
+      },
+      {
+        "id": "sgs-monitoring",
+        "category": "ETUDES_AUDITS",
+        "year": "2019 · 2020 · 2021",
+        "title": "SGS",
+        "detail": "Environmental monitoring reports."
+      },
+      {
+        "id": "jinxing-eies-2020",
+        "category": "ETUDES_AUDITS",
+        "year": "2020",
+        "title": "Jinxing Mining",
+        "detail": "Environmental and social impact assessment."
+      },
+      {
+        "id": "obligations-environnementales-2020",
+        "category": "FORMATION",
+        "year": "2020",
+        "title": "Environmental obligations of the mining sector",
+        "detail": "Training organised by the Polytechnic Faculty of the University of Lubumbashi."
+      },
+      {
+        "id": "kcc-audit-2019",
+        "category": "ETUDES_AUDITS",
+        "year": "2019",
+        "title": "KCC",
+        "detail": "Environmental and social audit."
+      },
+      {
+        "id": "stl-certificat-2019",
+        "category": "AGREMENTS",
+        "year": "2019",
+        "title": "STL",
+        "detail": "Obtaining the environmental certificate."
+      },
+      {
+        "id": "ssm-eies-2019",
+        "category": "ETUDES_AUDITS",
+        "year": "2019",
+        "title": "SSM (Likasi and Kolwezi)",
+        "detail": "Environmental and social impact assessment."
+      },
+      {
+        "id": "sarw-kansanshi-2019",
+        "category": "RECHERCHE",
+        "year": "2019",
+        "title": "SARW",
+        "detail": "Assessment of the social and environmental responsibility of First Quantum Minerals — Kansanshi mine (Zambia)."
+      },
+      {
+        "id": "kambove-eies-2018",
+        "category": "ETUDES_AUDITS",
+        "year": "2018",
+        "title": "Kambove Mining",
+        "detail": "Environmental and social impact assessment."
+      },
+      {
+        "id": "nmi-eies-2018",
+        "category": "ETUDES_AUDITS",
+        "year": "2018",
+        "title": "New Minerals Investment",
+        "detail": "ESIA and project environmental management plan (EIES-PGEP); annual environmental report."
+      },
+      {
+        "id": "legislation-miniere-2018",
+        "category": "FORMATION",
+        "year": "2018",
+        "title": "Mining legislation in the DRC: challenges and prospects",
+        "detail": "Training organised by the Polytechnic Faculty of the University of Lubumbashi."
+      },
+      {
+        "id": "robinson-agrement-2017",
+        "category": "AGREMENTS",
+        "year": "2017",
+        "title": "Robinson International Afrique Sarl Laboratory",
+        "detail": "Renewal of the laboratory approval."
+      },
+      {
+        "id": "somika-audit-2016",
+        "category": "ETUDES_AUDITS",
+        "year": "2016",
+        "title": "SOMIKA",
+        "detail": "Environmental and social audit; annual environmental report."
+      },
+      {
+        "id": "mkm-rapport-2015",
+        "category": "ETUDES_AUDITS",
+        "year": "2015",
+        "title": "Minière de Kalumbwe Myunga (MKM)",
+        "detail": "Annual environmental report."
+      },
+      {
+        "id": "interface-obligations-2015",
+        "category": "RECHERCHE",
+        "year": "2015",
+        "title": "Interface Unilu-Société",
+        "detail": "Challenges and prospects of the new environmental and safety obligations of the mining sector in the DRC."
+      },
+      {
+        "id": "ssm-eies-2014",
+        "category": "ETUDES_AUDITS",
+        "year": "2014",
+        "title": "Société de Surveillance Minière",
+        "detail": "Environmental and social impact assessment (EIES)."
+      },
+      {
+        "id": "wwf-investissements-chinois-2014",
+        "category": "RECHERCHE",
+        "year": "2014",
+        "title": "WWF",
+        "detail": "Inventory of Chinese investments in the mining sector in Katanga and Kasaï Oriental."
+      },
+      {
+        "id": "code-minier-2014",
+        "category": "FORMATION",
+        "year": "2014",
+        "title": "Revision of the mining code",
+        "detail": "Training organised by the Directorate of the University of Lubumbashi–Society Interface and EWES."
+      },
+      {
+        "id": "management-environnement-2014",
+        "category": "FORMATION",
+        "year": "2014",
+        "title": "Environmental management, environmental inspection, occupational health and safety",
+        "detail": "Training course."
+      },
+      {
+        "id": "seminaire-interface-2013",
+        "category": "FORMATION",
+        "year": "2013 – 2014",
+        "title": "Interface Unilu-Société",
+        "detail": "Training seminar in mining environment."
+      },
+      {
+        "id": "ruashi-audit-2012",
+        "category": "ETUDES_AUDITS",
+        "year": "2012",
+        "title": "Ruashi Mining",
+        "detail": "Environmental and social audit; annual environmental report."
+      },
+      {
+        "id": "stl-eies-2011",
+        "category": "ETUDES_AUDITS",
+        "year": "2011",
+        "title": "STL",
+        "detail": "ESIA and project environmental management plan (EIES-PGEP)."
+      },
+      {
+        "id": "somika-audit-2010",
+        "category": "ETUDES_AUDITS",
+        "year": "2010",
+        "title": "SOMIKA",
+        "detail": "Environmental and social audit; annual environmental report."
+      },
+      {
+        "id": "kisenge-eies-2008",
+        "category": "ETUDES_AUDITS",
+        "year": "2008",
+        "title": "Kisenge Manganèse",
+        "detail": "ESIA and project environmental management plan (EIES-PGEP)."
       }
     ]
   },
-  "ProjectModal": {
-    "close": "Close technical sheet",
-    "closeAriaLabel": "Close the window",
-    "clientLabel": "Client",
-    "specTitle": "Technical Specifications & Results",
-    "capacityLabel": "Project scale",
-    "footprintLabel": "Area of influence",
-    "impactLabel": "Environmental & human impact",
-    "expertiseNote": "Scientific expertise and engineering supervision certified by EWES S.A.R.L."
-  },
   "Impact": {
-    "eyebrow": "06 · Our impact",
-    "title": "Expertise that delivers visible results.",
-    "description": "Beyond the studies, our interventions strengthen territories, local skills and the quality of public and industrial decisions alike.",
-    "badgeValue": "20",
-    "badgeLabel": "years of expertise",
+    "eyebrow": "06 · Our references",
+    "title": "Expertise proven in the field.",
+    "description": "Mining operators, laboratories and institutions call on EWES for their studies, audits and team training.",
+    "badgeValue": "26",
+    "badgeLabel": "detailed references",
     "imageAlt": "Community benefiting from a new water infrastructure",
     "cutoutAlt": "EWES environmental engineer"
   },
   "Metrics": {
     "items": [
       {
-        "value": 20,
-        "suffix": "+ years",
-        "label": "Of Scientific Excellence",
-        "subtext": "Founded by UNILU polytechnic professors since 2004"
+        "value": 10,
+        "suffix": "",
+        "label": "Mining operators supported",
+        "subtext": "STL, SWANMINES, Anvil Mining Congo, COMIDE, Ruashi Mining, METALKOL, FMR Development, Kipushi Corporation, MMG and KCC"
       },
       {
-        "value": 80,
-        "suffix": "+",
-        "label": "ESIA Studies & Audits Completed",
-        "subtext": "Supporting the Congolese State and industry leaders"
+        "value": 3,
+        "suffix": "",
+        "label": "Areas of expertise",
+        "subtext": "Environment, water and engineering works"
       },
       {
-        "value": 12000,
-        "suffix": " k+",
-        "label": "Samples Analysed",
-        "subtext": "Certified laboratory analysis: drinking water, waste, soil and air"
-      },
-      {
-        "value": 1200,
-        "suffix": "+",
-        "label": "Executives & Engineers Trained",
-        "subtext": "Continuous skills building for water and mining sector professionals"
-      },
-      {
-        "value": 4,
+        "value": 3,
         "suffix": " countries",
-        "label": "International Academic Network",
-        "subtext": "Active partnerships: DR Congo, Belgium (Liège), France (INPL) and Canada (Montréal)"
+        "label": "International partners",
+        "subtext": "Collaboration with Belgian, French and Canadian partners"
       },
       {
-        "value": 100,
-        "suffix": "%",
-        "label": "Environmental Compliance & Ethics",
-        "subtext": "Methodologies compliant with ISO 14001 and the Congolese Mining Code"
+        "value": 17,
+        "suffix": " years",
+        "label": "Of documented references",
+        "subtext": "From the first referenced ESIA-PGEP (2008) to the 2025 CSR survey"
       }
     ]
   },
   "Resources": {
-    "eyebrow": "07 · News & resources",
-    "title": "Knowledge becomes valuable when it circulates.",
-    "description": "Our publications, field news and institutional documents make EWES's expertise more accessible and more useful.",
+    "eyebrow": "07 · Recent activities",
+    "title": "Train, survey, share.",
+    "description": "Training courses, field surveys and publications: an overview of EWES’s most recent activities.",
+    "imageAlt": "EWES engineer presenting technical resources",
     "facts": [
-      { "value": "FR / EN", "label": "Bilingual content" },
-      { "value": "PDF", "label": "Downloadable resources" },
-      { "value": "Private", "label": "Secured document access" }
+      {
+        "value": "FR / EN",
+        "label": "Bilingual content"
+      },
+      {
+        "value": "PDF",
+        "label": "Downloadable resources"
+      },
+      {
+        "value": "Private",
+        "label": "Secured document access"
+      }
     ],
     "centerDocTitle": "Document centre",
     "centerDocText": "Presentations, technical fact sheets and public publications.",
     "exploreLabel": "Explore",
     "news": [
       {
-        "type": "Publication",
-        "date": "September 2026",
-        "title": "Towards integrated water resource management in DR Congo"
-      },
-      {
-        "type": "Expertise",
-        "date": "August 2026",
-        "title": "Why environmental auditing is strategic for industrial sites"
+        "type": "Survey",
+        "date": "2025",
+        "title": "National barometer of mining companies’ CSR (Haut-Katanga and Lualaba)"
       },
       {
         "type": "Training",
-        "date": "July 2026",
-        "title": "Strengthening environmental analysis skills"
+        "date": "2024",
+        "title": "Métalkol: carbon assessment in mining"
+      },
+      {
+        "type": "Training",
+        "date": "2023",
+        "title": "Capacity building for DPEM, ACE and FNPSS inspectors"
       }
     ]
   },
   "Cta": {
-    "badgeLabel": "Preferred Technical Partner in DR Congo",
-    "title": "Let's give your future projects a solid foundation.",
-    "description": "Environmental impact studies, drinking water supply, mining audits or civil engineering modelling: our team of academic experts and engineers is ready to listen.",
-    "ctaPrimary": "Request a Technical Consultation",
-    "phoneLabel": "+243 81 81 53 110"
+    "badgeLabel": "Let’s talk about your project",
+    "title": "A project in environment, water or engineering?",
+    "description": "Impact study, environmental audit, water supply, analyses or training: whatever the nature of your project, the EWES team is ready to listen.",
+    "ctaPrimary": "Contact us"
   },
   "AboutPage": {
     "eyebrow": "About",
-    "title": "EWES, scientific expertise in the service of the field.",
-    "description": "A company born from the University of Lubumbashi's University-Industry Interface, bringing together researchers, engineers and technicians around a single mission: producing environmental and hydraulic knowledge that is useful, verifiable and durable."
+    "title": "Born at university, focused on the field.",
+    "description": "EWES SARL grew out of the Environment Centre of the University of Lubumbashi–Society Interface (IUS). With a multidisciplinary team of Congolese and international experts, it works in environment, water and engineering works, in collaboration with Belgian, French and Canadian partners."
   },
   "ServicesPage": {
     "eyebrow": "Our services",
-    "title": "Three areas of expertise, one single standard of rigour.",
-    "description": "EWES operates across the full environment–water–engineering chain, from the preliminary study through to the commissioning of the structure."
+    "title": "Environment, water and engineering works.",
+    "description": "EWES works with mining and oil companies, the Congolese State and researchers, from the preliminary study to team training."
   },
   "RealisationsPage": {
     "eyebrow": "Our projects",
-    "title": "Missions that transform territories.",
-    "description": "Filter by area of intervention to explore the studies and structures delivered by EWES for the State, local authorities and industry.",
+    "title": "References in the mining and environment sectors.",
+    "description": "Audits, impact studies, approvals, training and surveys carried out by EWES. Filter by type of mission to explore references from 2008 to 2025.",
     "emptyState": "No project matches this filter at the moment."
   },
   "NewsPage": {
@@ -462,9 +654,9 @@
   "ContactPage": {
     "eyebrow": "Contact",
     "title": "Get in touch with our experts.",
-    "description": "Talk directly with our engineers and university professors based in Lubumbashi and Kinshasa.",
-    "quickContactTitle": "EWES S.A.R.L. · Engineering Consultation",
-    "formNote": "The form opens your mail client with the information you entered, while the online submission channel is being activated (Phase 2).",
+    "description": "Tell the EWES team, based in Lubumbashi, about your project or need.",
+    "quickContactTitle": "EWES S.A.R.L.",
+    "formNote": "The form opens your mail client with the information you entered, until online submission is activated.",
     "fields": {
       "name": "Full Name",
       "namePlaceholder": "e.g. Eng. Jean Mukendi",
@@ -480,25 +672,32 @@
     },
     "sectors": [
       {
-        "value": "EIES",
-        "label": "Environmental and Social Impact Assessment (ESIA) & Audits"
-      },
-      { "value": "EAU", "label": "Drinking Water Supply & Deep Boreholes" },
-      {
-        "value": "LABO",
-        "label": "Laboratory Analysis (Water, Soil, Air Quality)"
+        "value": "ENVIRONNEMENT",
+        "label": "Environmental impact study or audit"
       },
       {
-        "value": "EFFLUENTS",
-        "label": "Liquid Effluent & Mining Waste Management"
+        "value": "EAU",
+        "label": "Water supply, treatment or purification"
       },
       {
-        "value": "GENIE_CIVIL",
-        "label": "Civil Engineering, CAD/BIM Modelling & Site Supervision"
+        "value": "ANALYSES",
+        "label": "Analyses (water, air, soil, materials)"
+      },
+      {
+        "value": "GESTION",
+        "label": "Effluent and waste management"
+      },
+      {
+        "value": "INGENIERIE",
+        "label": "Engineering works (buildings, analytical instruments, electricity, IT)"
       },
       {
         "value": "FORMATION",
-        "label": "Continuing Education for Executives & Technicians"
+        "label": "Training"
+      },
+      {
+        "value": "AUTRE",
+        "label": "Other request"
       }
     ],
     "submitLabel": "Send the Request"

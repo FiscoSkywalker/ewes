@@ -16,6 +16,7 @@ import {
   Variable,
 } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
 import * as THREE from 'three';
+import { readScroll } from '@/lib/scroll-state';
 import {
   heightfieldFragmentShader,
   waterVertexShader,
@@ -23,18 +24,12 @@ import {
 } from '@/shaders/water/waterShader';
 
 interface WaterSurfaceProps {
-  scrollProgress: number;
-  velocity?: number;
   reducedMotion?: boolean;
 }
 
 const SIMULATION_SIZE = 128;
 
-export function WaterSurface({
-  scrollProgress,
-  velocity = 0,
-  reducedMotion = false,
-}: WaterSurfaceProps) {
+export function WaterSurface({ reducedMotion = false }: WaterSurfaceProps) {
   const { gl } = useThree();
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -102,6 +97,7 @@ export function WaterSurface({
 
   useFrame(({ clock }, delta) => {
     if (!materialRef.current) return;
+    const { progress: scrollProgress, velocity } = readScroll();
     const dynamicSpeed = 0.65 + Math.min(Math.abs(velocity) * 1.5, 2.0);
     materialRef.current.uniforms.uTime.value += delta * dynamicSpeed;
 

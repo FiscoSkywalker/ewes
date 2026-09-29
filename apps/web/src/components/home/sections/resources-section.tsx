@@ -58,7 +58,7 @@ export function ResourcesSection() {
             {news.map((item, index) => (
               <Link
                 key={item.title}
-                href="/actualites"
+                href="/realisations"
                 className="group grid grid-cols-[38px_1fr_auto] items-center gap-4 border-b border-white/16 py-5 last:border-b-0"
               >
                 <span className="font-heading text-xl text-water">
@@ -108,7 +108,7 @@ export function ResourcesSection() {
           <div className="absolute inset-x-0 bottom-0 top-0">
             <Image
               src="/assets/images/ewes-engineer-cutout-clean.png"
-              alt="Ingénieure EWES présentant les ressources techniques"
+              alt={t('imageAlt')}
               fill
               sizes="(min-width: 1024px) 40vw, 80vw"
               className="object-contain object-bottom drop-shadow-[0_30px_45px_rgba(0,0,0,.24)]"

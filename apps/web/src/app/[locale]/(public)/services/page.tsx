@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { SectionHeading } from '@/components/public/section-heading';
+import { CheckCircle2 } from 'lucide-react';
 import { WaterServicesList } from '@/components/public/water-services-list';
 import { EnvironmentServicesList } from '@/components/public/environment-services-list';
 import { EngineeringItemsList } from '@/components/public/engineering-items-list';
@@ -9,7 +10,8 @@ import { EngineeringItemsList } from '@/components/public/engineering-items-list
 /**
  * Page Nos services (blueprint/15_Public_Site_Pages.md) — SSG/ISR, Server
  * Component. Empile les trois pôles (Eau, Environnement, Ingénierie) déjà
- * détaillés à l'Accueil, sans le décor WebGL réservé à la page d'Accueil.
+ * détaillés à l'Accueil, puis le volet Formation, sans le décor WebGL
+ * réservé à la page d'Accueil.
  */
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('ServicesPage');
@@ -21,10 +23,12 @@ export default async function ServicesPage() {
   const tWater = await getTranslations('Water');
   const tEnvironment = await getTranslations('Environment');
   const tEngineering = await getTranslations('Engineering');
+  const tTraining = await getTranslations('Training');
+  const topics = tTraining.raw('topics') as string[];
 
   return (
     <div className="text-sand">
-      <section className="px-6 pb-16 pt-16 md:px-16 md:pt-24">
+      <section className="px-6 pb-16 pt-28 md:px-16 md:pt-36">
         <SectionHeading
           eyebrow={tPage('eyebrow')}
           title={tPage('title')}
@@ -79,6 +83,40 @@ export default async function ServicesPage() {
               description={tEngineering('description')}
             />
             <EngineeringItemsList />
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 py-16 md:px-16">
+        <div className="mx-auto grid max-w-[1440px] gap-12 lg:grid-cols-[1.1fr_.9fr]">
+          <div>
+            <SectionHeading
+              eyebrow={tTraining('eyebrow')}
+              title={tTraining('title')}
+              description={tTraining('description')}
+            />
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-sand/65">
+              {tTraining('text')}
+            </p>
+          </div>
+          <div className="self-end border-y border-sand/20 py-6" data-reveal>
+            <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
+              {tTraining('topicsTitle')}
+            </h3>
+            <ul className="mt-5 space-y-3">
+              {topics.map((topic) => (
+                <li
+                  key={topic}
+                  className="flex items-start gap-3 text-sm leading-6 text-sand/75"
+                >
+                  <CheckCircle2
+                    size={16}
+                    className="mt-1 shrink-0 text-primary"
+                  />
+                  {topic}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
