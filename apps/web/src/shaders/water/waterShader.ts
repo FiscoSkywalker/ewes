@@ -39,15 +39,22 @@ export const waterVertexShader = `
     return 130.0 * dot(m, g);
   }
 
+  // Houle de base (grosses vagues + clapot fin). Évaluée plusieurs fois par
+  // sommet pour en dériver une normale : sans cela les vagues déplacent la
+  // géométrie mais n'influencent jamais l'éclairage.
+  float swell(vec2 p, float t) {
+    float w1 = sin(p.x * uFrequency * 0.9 + t * 0.9) * cos(p.y * uFrequency * 0.75 + t * 1.1);
+    float w2 = sin(p.x * uFrequency * 1.8 - t * 0.6) * cos(p.y * uFrequency * 1.4 + t * 0.8) * 0.35;
+    float w3 = sin((p.x + p.y) * uFrequency * 3.1 + t * 1.7) * 0.14;
+    return (w1 + w2 + w3) * uWaveHeight;
+  }
+
   void main() {
     vUv = uv;
     vec3 pos = position;
 
     float t = uTime * uSpeed;
-    // Multi-octave natural swell (avoiding rigid geometric patterns)
-    float wave1 = sin(pos.x * uFrequency * 0.9 + t * 0.9) * cos(pos.y * uFrequency * 0.75 + t * 1.1);
-    float wave2 = sin(pos.x * uFrequency * 1.8 - t * 0.6) * cos(pos.y * uFrequency * 1.4 + t * 0.8) * 0.35;
-    float microChop = snoise(pos.xy * 1.1 + vec2(t * 0.4, t * 0.25)) * 0.18;
+    float microChop = snoise(pos.xy * 1.1 + vec2(t * 0.4, t * 0.25)) * 0.18 * uWaveHeight * 4.0;
 
     vec2 texel = vec2(1.0 / 128.0);
     float simulatedHeight = texture2D(uHeightMap, uv).r;
@@ -56,13 +63,20 @@ export const waterVertexShader = `
     float hD = texture2D(uHeightMap, uv - vec2(0.0, texel.y)).r;
     float hU = texture2D(uHeightMap, uv + vec2(0.0, texel.y)).r;
 
-    float elevation = (wave1 + wave2 + microChop) * uWaveHeight + simulatedHeight * 0.52;
+    float elevation = swell(pos.xy, t) + microChop + simulatedHeight * 0.52;
     pos.z += elevation;
 
     vElevation = elevation;
     vPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
 
-    vec3 computedNormal = normalize(vec3((hL - hR) * 13.0, (hD - hU) * 13.0, 1.0));
+    float eps = 0.06;
+    float dSwellX = swell(pos.xy + vec2(eps, 0.0), t) - swell(pos.xy - vec2(eps, 0.0), t);
+    float dSwellY = swell(pos.xy + vec2(0.0, eps), t) - swell(pos.xy - vec2(0.0, eps), t);
+    vec3 computedNormal = normalize(vec3(
+      (hL - hR) * 13.0 - dSwellX / (2.0 * eps) * 1.6,
+      (hD - hU) * 13.0 - dSwellY / (2.0 * eps) * 1.6,
+      1.0
+    ));
 
     vNormal = normalize(mat3(modelMatrix) * computedNormal);
 
@@ -85,49 +99,70 @@ export const waterFragmentShader = `
   varying vec3 vPosition;
   varying float vElevation;
 
+  // Toutes les couleurs sont exprimées directement en espace d'affichage
+  // (sRGB) : ce shader n'applique aucune conversion de sortie.
+  const vec3 HORIZON_COLOR = vec3(0.835, 0.894, 0.918); // = fond du site (#d5e4ea)
+
+  vec3 skyColor(vec3 dir) {
+    float h = clamp(dir.y, 0.0, 1.0);
+    vec3 horizon = vec3(0.88, 0.95, 0.98);
+    vec3 zenith = vec3(0.30, 0.62, 0.86);
+    return mix(horizon, zenith, pow(h, 0.5));
+  }
+
   void main() {
-    vec3 normal = normalize(vNormal);
-    vec2 normalUvA = vUv * 4.0 + vec2(uTime * 0.015, uTime * 0.01);
-    vec2 normalUvB = vUv * 7.0 + vec2(-uTime * 0.01, uTime * 0.018);
-    vec3 detailA = texture2D(uNormalMap, normalUvA).xyz * 2.0 - 1.0;
-    vec3 detailB = texture2D(uNormalMap, normalUvB).xyz * 2.0 - 1.0;
-    normal = normalize(normal + vec3(detailA.xy + detailB.xy, 0.0) * 0.12);
-    vec3 lightDir = normalize(uLightPosition - vPosition);
-    vec3 viewDir = normalize(cameraPosition - vPosition);
+    // Trois couches de micro-relief qui dérivent dans des directions
+    // différentes : c'est ce qui donne le scintillement « vivant » de l'eau.
+    vec2 uvA = vUv * 6.0 + vec2(uTime * 0.020, uTime * 0.012);
+    vec2 uvB = vUv * 13.0 + vec2(-uTime * 0.015, uTime * 0.024);
+    vec2 uvC = vUv * 3.0 + vec2(uTime * 0.008, -uTime * 0.010);
+    vec3 nA = texture2D(uNormalMap, uvA).xyz * 2.0 - 1.0;
+    vec3 nB = texture2D(uNormalMap, uvB).xyz * 2.0 - 1.0;
+    vec3 nC = texture2D(uNormalMap, uvC).xyz * 2.0 - 1.0;
+    vec2 detail = nA.xy * 0.55 + nB.xy * 0.35 + nC.xy * 0.45;
 
-    // Physically-plausible Schlick Fresnel approximation for water (F0 ~ 0.02 for water-air interface)
-    float cosTheta = clamp(dot(viewDir, normal), 0.0, 1.0);
-    float F0 = 0.02;
-    float fresnel = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 4.5);
+    // Le plan est presque horizontal : l'axe « haut » du monde est Y, donc le
+    // relief de détail se répartit sur X et Z.
+    vec3 normal = normalize(vNormal + vec3(detail.x, 0.0, detail.y));
 
-    // Beer-Lambert style depth absorption (realistic mineral tones instead of neon)
-    float depthFactor = smoothstep(-0.35, 0.45, vElevation * uElevationMultiplier);
-    vec3 refractedGround = vec3(0.035, 0.18, 0.15);
-    vec3 waterBody = mix(uDeepColor, uSurfaceColor, depthFactor);
-    waterBody = mix(refractedGround, waterBody, 0.74);
+    vec3 V = normalize(cameraPosition - vPosition);
+    vec3 L = normalize(uLightPosition - vPosition);
+    vec3 R = reflect(-V, normal);
 
-    // Natural sun specular highlight
-    vec3 halfVector = normalize(lightDir + viewDir);
-    float NdotH = max(dot(normal, halfVector), 0.0);
-    float specular = pow(NdotH, 96.0) * 0.75;
+    // Fresnel (légèrement exagéré pour que le ciel se lise bien à l'écran).
+    float cosTheta = clamp(dot(V, normal), 0.0, 1.0);
+    float fresnel = 0.05 + 0.95 * pow(1.0 - cosTheta, 3.6);
 
-    // Sky dome reflection (soft cool ambient reflection at grazing angles)
-    vec3 skyReflection = mix(vec3(0.25, 0.48, 0.52), vec3(0.78, 0.9, 0.94), fresnel);
+    // Couleur du corps de l'eau : profond -> turquoise, plus clair sur les
+    // crêtes qui laissent passer la lumière (diffusion sous la surface).
+    float depth = smoothstep(-0.35, 0.45, vElevation * uElevationMultiplier);
+    vec3 body = mix(uDeepColor, uSurfaceColor, 0.25 + depth * 0.6);
+    float scatter = pow(clamp(dot(normal, L) * 0.5 + 0.5, 0.0, 1.0), 2.0);
+    body += uSurfaceColor * scatter * 0.14;
 
-    // Subtle micro-foam only on highest turbulent crests
-    float foamThreshold = smoothstep(0.28, 0.45, vElevation);
-    vec3 finalColor = mix(waterBody, uFoamColor, foamThreshold * 0.4);
+    vec3 color = mix(body, skyColor(R), fresnel);
 
-    finalColor = mix(finalColor, skyReflection, fresnel * 0.72);
-    finalColor += vec3(specular) * vec3(1.0, 0.98, 0.92); // Warm sunlight highlight
+    // Éclats de soleil : un reflet net + un halo large, modulés par le
+    // micro-relief, d'où les paillettes qui bougent.
+    float sun = max(dot(R, L), 0.0);
+    float glint = pow(sun, 220.0) * 1.7 + pow(sun, 28.0) * 0.16;
+    color += vec3(1.0, 0.97, 0.90) * glint;
 
-    // Lightweight caustic response: two moving wave fields concentrate warm light.
-    float causticA = sin((vUv.x + detailA.x * 0.05) * 48.0 + uTime * 0.7);
-    float causticB = sin((vUv.y + detailB.y * 0.05) * 52.0 - uTime * 0.55);
-    float caustic = pow(max(0.0, causticA * causticB), 5.0) * (1.0 - fresnel);
-    finalColor += vec3(0.34, 0.45, 0.28) * caustic * 0.18;
+    // Caustiques : réseau de lignes lumineuses (deux couches qui se croisent).
+    float web = pow(clamp(dot(nA.xy, nB.xy) * 0.5 + 0.5, 0.0, 1.0), 7.0);
+    color += vec3(0.75, 0.96, 1.0) * web * 0.30 * (1.0 - fresnel);
 
-    gl_FragColor = vec4(finalColor, uOpacity);
+    // Écume légère sur les crêtes et là où l'eau est agitée.
+    float foam = smoothstep(0.16, 0.34, vElevation + nB.x * 0.05);
+    color = mix(color, uFoamColor, foam * 0.5);
+
+    // Fondu vers l'horizon et sur les bords : aucune arête visible.
+    float dist = distance(cameraPosition, vPosition);
+    color = mix(color, HORIZON_COLOR, smoothstep(6.5, 13.0, dist) * 0.75);
+    vec2 edge = min(vUv, 1.0 - vUv);
+    float edgeFade = smoothstep(0.0, 0.14, min(edge.x, edge.y));
+
+    gl_FragColor = vec4(color, uOpacity * edgeFade);
   }
 `;
 
