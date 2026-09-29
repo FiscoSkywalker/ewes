@@ -29,7 +29,7 @@ export default async function AdminLoginPage({
   const redirectTo = safeAdminRedirect(next);
 
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background px-5 py-10 text-sand">
+    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background px-5 py-10 text-sand md:h-dvh md:min-h-0 md:py-6">
       <div className="absolute inset-0" aria-hidden="true">
         <Image
           src="/assets/images/ewes-hero-cinematic.png"
@@ -45,11 +45,14 @@ export default async function AdminLoginPage({
       </div>
 
       <div className="relative w-full max-w-[400px]">
-        <div className="relative flex min-h-[640px] flex-col justify-center rounded-sheet border border-white/70 bg-surface-elevated/80 px-8 pb-40 pt-16 shadow-[0_30px_90px_rgba(23,60,77,.22)] backdrop-blur-xl sm:px-10">
+        <div className="relative flex min-h-[640px] flex-col justify-center rounded-sheet border border-white/70 bg-surface-elevated/80 px-8 pb-40 pt-16 shadow-[0_30px_90px_rgba(23,60,77,.22)] backdrop-blur-xl sm:px-10 md:h-[min(640px,calc(100dvh-6.5rem))] md:min-h-0 md:[@media(max-height:820px)]:pb-24 md:[@media(max-height:820px)]:pt-10">
           <CardDecor />
           <div className="relative">
-            <div className="mb-10 flex justify-center">
-              <BrandLogo priority className="h-24" />
+            <div className="mb-10 flex justify-center md:[@media(max-height:820px)]:mb-6">
+              <BrandLogo
+                priority
+                className="h-24 md:[@media(max-height:820px)]:h-16"
+              />
             </div>
             <h1 className="sr-only">Connexion au portail EWES</h1>
             <LoginForm redirectTo={redirectTo} />
@@ -58,7 +61,7 @@ export default async function AdminLoginPage({
 
         <Link
           href="/"
-          className="mx-auto mt-6 flex w-fit items-center gap-2 text-sm font-medium text-sand/65 transition-colors hover:text-sand"
+          className="mx-auto mt-6 flex w-fit md:mt-4 items-center gap-2 text-sm font-medium text-sand/65 transition-colors hover:text-sand"
         >
           <ArrowLeft size={15} aria-hidden="true" />
           Retour au site
