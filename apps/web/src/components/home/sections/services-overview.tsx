@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { ArrowDown } from 'lucide-react';
 import { SectionHeading } from '@/components/public/section-heading';
+import { PoleImage } from '@/components/public/pole-image';
 import { scrollToElement } from '@/lib/smooth-scroll';
 
 export const POLE_ANCHORS = {
@@ -75,7 +76,7 @@ export function ServicesOverview() {
               }}
               className={`pole-${pole} group relative flex items-center gap-4 border-b border-sand py-6 pl-14 pr-2 transition-colors hover:bg-paper md:gap-8 md:py-8 md:pl-32`}
             >
-              <span className="pattern-swatch absolute inset-y-0 left-0 w-10 border-r border-sand md:w-24" />
+              <PoleImage pole={pole} />
               <span className="hidden w-14 font-mono text-xs text-pole md:block">
                 {POLE_CODES[pole]}
               </span>

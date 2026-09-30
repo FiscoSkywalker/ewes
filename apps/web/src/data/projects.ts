@@ -15,6 +15,14 @@ export interface Project {
   yearEnd: number | null;
   client: string;
   mission: string;
+  /**
+   * Champs facultatifs, renseignés plus tard par l'API (module `realisations`)
+   * — jamais inventés : sans image, la fiche affiche une couverture générée.
+   */
+  image?: string;
+  imageAlt?: string;
+  location?: string;
+  summary?: string;
 }
 
 export interface ProjectCategoryOption {

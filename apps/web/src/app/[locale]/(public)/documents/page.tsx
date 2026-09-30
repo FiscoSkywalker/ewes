@@ -1,16 +1,14 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { DocumentsOverview } from '@/components/public/documents-overview';
+import { DocumentsLibrary } from '@/components/public/documents-library';
+import type { ShowcaseDocument } from '@/components/public/documents-showcase';
 import { SectionHeading } from '@/components/public/section-heading';
 
 /**
- * Page Documents (blueprint/15_Public_Site_Pages.md §5) — liste publique en
- * ISR (Server Component) + passerelle vers l'espace documentaire privé
- * (`DocumentsOverview`, partagé avec l'Accueil). L'espace documentaire privé
- * lui-même (blueprint/11_Document_Management_System.md) n'est pas encore
- * implémenté (module `documents-prives`, Phase 03) : le lien pointe donc
- * temporairement vers le portail admin existant, seul point
- * d'authentification fonctionnel à ce stade.
+ * Page Documents (blueprint/15_Public_Site_Pages.md §5) — Server Component
+ * (ISR) ; seule la bibliothèque (recherche, filtres) est un composant client.
+ * Les documents sont des exemples tirés des messages (`HomeDocuments.items`,
+ * partagés avec l'Accueil) en attendant le branchement sur l'API.
  */
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('DocumentsPage');
@@ -19,6 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function DocumentsPage() {
   const t = await getTranslations('DocumentsPage');
+  const tDoc = await getTranslations('HomeDocuments');
+  const documents = tDoc.raw('items') as ShowcaseDocument[];
 
   return (
     <div className="px-6 pb-20 pt-28 text-sand md:px-16 md:pb-28 md:pt-36">
@@ -27,9 +27,9 @@ export default async function DocumentsPage() {
           eyebrow={t('eyebrow')}
           title={t('title')}
           description={t('description')}
-          className="mb-14"
+          className="mb-14 max-w-4xl"
         />
-        <DocumentsOverview />
+        <DocumentsLibrary documents={documents} />
       </div>
     </div>
   );

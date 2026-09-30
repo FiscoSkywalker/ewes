@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { RealisationsRegister } from '@/components/public/realisations-register';
+import type { Project, ProjectCategoryOption } from '@/data/projects';
+import { RealisationsGallery } from '@/components/public/realisations-gallery';
+import { SectionHeading } from '@/components/public/section-heading';
 
 /**
  * Page Nos réalisations (blueprint/12_Realisations_Portfolio_System.md) —
- * registre complet (histogramme par année, filtres par type), même composant
- * que la section de l'Accueil (`RealisationsRegister`), sans repli.
+ * Server Component ; la galerie paginée et la fiche de lecture sont le seul
+ * îlot client. L'Accueil garde son registre compact (`RealisationsRegister`).
  */
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('RealisationsPage');
@@ -14,14 +16,22 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RealisationsPage() {
   const t = await getTranslations('RealisationsPage');
+  const tProjects = await getTranslations('Projects');
 
   return (
-    <div className="bg-paper pt-12 md:pt-16">
-      <RealisationsRegister
-        eyebrow={t('eyebrow')}
-        title={t('title')}
-        description={t('description')}
-      />
+    <div className="bg-paper px-6 pb-24 pt-28 text-sand md:px-16 md:pb-32 md:pt-36">
+      <div className="mx-auto w-full max-w-[1440px]">
+        <SectionHeading
+          eyebrow={t('eyebrow')}
+          title={t('title')}
+          description={t('description')}
+          className="mb-14 max-w-4xl"
+        />
+        <RealisationsGallery
+          projects={tProjects.raw('items') as Project[]}
+          categories={tProjects.raw('categories') as ProjectCategoryOption[]}
+        />
+      </div>
     </div>
   );
 }

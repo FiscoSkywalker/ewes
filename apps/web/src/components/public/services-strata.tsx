@@ -4,6 +4,7 @@ import { useState, type ComponentType } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { PoleImage } from './pole-image';
 import { EngineeringItemsList } from './engineering-items-list';
 import { EnvironmentServicesList } from './environment-services-list';
 import { WaterServicesList } from './water-services-list';
@@ -95,7 +96,7 @@ export function ServicesStrata() {
               isOpen ? 'bg-white' : ''
             }`}
           >
-            <span className="pattern-swatch absolute inset-y-0 left-0 w-10 border-r border-sand md:w-24" />
+            <PoleImage pole={pole} />
             <h2>
               <button
                 type="button"

@@ -10,3 +10,21 @@ export const EWES_CONTACT = {
   email: 'arthurkaniki@gmail.com',
   website: 'www.ewes.cd',
 } as const;
+
+/**
+ * Horaires d'ouverture du siège, en heure de Lubumbashi (UTC+2). Absents de
+ * `raw/PROFIL_EWES.md` : valeurs provisoires, À VALIDER PAR EWES
+ * (blueprint/15_Public_Site_Pages.md exige des horaires sur la page Contact).
+ * Jours au format `Date.getDay()` (0 = dimanche).
+ */
+export const EWES_OFFICE_HOURS = {
+  timeZone: 'Africa/Lubumbashi',
+  openDays: [1, 2, 3, 4, 5],
+  opensAt: '08:00',
+  closesAt: '17:00',
+} as const;
+
+/** Itinéraire vers le siège (lien de recherche Google Maps, sans clé d'API). */
+export const EWES_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+  '1809 Avenue Araucarias, Ruashi, Lubumbashi, RDC',
+)}`;
