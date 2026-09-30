@@ -3,10 +3,8 @@
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ArrowUpRight, ChevronDown, MapPin, ShieldCheck } from 'lucide-react';
-import { LocalClock } from '@/components/public/local-clock';
+import { Link } from '@/i18n/navigation';
 import { useSectionActivity } from '@/hooks/useSectionActivity';
-
-const POLES = ['env', 'eau', 'ing'] as const;
 
 interface HeroProps {
   onExplore: () => void;
@@ -15,15 +13,13 @@ interface HeroProps {
 /** Premier écran de l'Accueil — homepage uniquement. */
 export function Hero({ onExplore }: HeroProps) {
   const t = useTranslations('Hero');
-  const tServices = useTranslations('ServicesOverview');
-  const expertise = t.raw('expertise') as string[];
   const { ref, active } = useSectionActivity<HTMLElement>();
 
   return (
     <section
       ref={ref}
       data-paused={!active}
-      className="relative flex min-h-[112svh] flex-col justify-end overflow-hidden px-6 pb-0 pt-32 md:px-16"
+      className="relative flex min-h-[112svh] flex-col justify-end overflow-hidden px-6 pb-6 pt-32 md:px-16"
     >
       <div className="absolute inset-0 overflow-hidden" data-parallax-media>
         <Image
@@ -44,25 +40,16 @@ export function Hero({ onExplore }: HeroProps) {
       <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 items-center">
         <div className="hero-enter max-w-4xl">
           <div className="eyebrow mb-6">{t('eyebrow')}</div>
-          <h1 className="section-title max-w-5xl text-[clamp(3.6rem,9vw,8.2rem)] uppercase text-sand">
-            {t('titleLine1')}{' '}
-            <span className="font-medium text-white drop-shadow-[0_2px_14px_rgba(34,83,102,.18)]">
-              {t('titleHighlight')}
-            </span>
+          <h1 className="hero-title text-sand">
+            {t('titleLine1')} <em>{t('titleHighlight')}</em>
           </h1>
-          <p className="mt-7 max-w-2xl text-base leading-7 text-sand/75 sm:text-lg">
-            {t('lead')}
-          </p>
+          <p className="hero-lead mt-7 text-sand/75">{t('lead')}</p>
 
           <div className="pointer-events-auto mt-8 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={onExplore}
-              className="primary-button"
-            >
-              {t('ctaExplore')}
+            <Link href="/contact" className="primary-button">
+              {t('ctaContact')}
               <ArrowUpRight size={15} />
-            </button>
+            </Link>
             <div className="flex items-center gap-3 border-l border-sand/25 px-5 py-3 text-xs text-sand/70">
               <ShieldCheck size={16} className="text-primary" />
               {t('shieldLabel')}
@@ -71,54 +58,19 @@ export function Hero({ onExplore }: HeroProps) {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto mt-8 flex w-full max-w-[1440px] items-center justify-between gap-6 border-t border-sand/12 pt-5 text-[11px] uppercase tracking-[0.16em] text-sand/55">
+      <div className="relative z-10 mx-auto mt-8 flex w-full max-w-[1440px] items-center justify-between border-t border-sand/12 pt-5 text-[11px] uppercase tracking-[0.16em] text-sand/55">
         <div className="flex items-center gap-2">
           <MapPin size={13} className="text-primary" />
           {t('locationLabel')}
-          <span className="hidden font-mono normal-case tracking-normal text-sand/45 md:inline">
-            · {t('coordinates')}
-          </span>
         </div>
-        <ul
-          className="hidden items-center gap-6 normal-case tracking-normal text-sand/70 lg:flex"
-          aria-label={tServices('indexLabel')}
+        <button
+          type="button"
+          onClick={onExplore}
+          className="pointer-events-auto hidden items-center gap-2 transition-colors hover:text-primary sm:flex"
         >
-          {POLES.map((pole) => (
-            <li key={pole} className={`pole-${pole} flex items-center gap-2`}>
-              <span className="pattern-swatch h-3.5 w-6 border border-sand/20" />
-              {tServices(`poles.${pole}`)}
-            </li>
-          ))}
-        </ul>
-        <div className="flex items-center gap-6">
-          <span className="hidden font-mono normal-case tracking-normal sm:inline">
-            {t('localTime')}{' '}
-            <b className="font-medium text-sand/80">
-              <LocalClock />
-            </b>
-          </span>
-          <button
-            type="button"
-            onClick={onExplore}
-            className="pointer-events-auto hidden items-center gap-2 transition-colors hover:text-primary sm:flex"
-          >
-            {t('scrollLabel')}
-            <ChevronDown size={14} />
-          </button>
-        </div>
-      </div>
-
-      <div className="relative z-10 -mx-6 mt-8 overflow-hidden border-y border-primary/15 bg-primary/95 py-3 text-background md:-mx-16">
-        <div className="hero-ticker flex min-w-max items-center">
-          {[...expertise, ...expertise].map((item, index) => (
-            <div key={`${item}-${index}`} className="flex items-center">
-              <span className="px-7 font-heading text-xl font-bold uppercase tracking-wide">
-                {item}
-              </span>
-              <span className="text-sm">✦</span>
-            </div>
-          ))}
-        </div>
+          {t('scrollLabel')}
+          <ChevronDown size={14} />
+        </button>
       </div>
     </section>
   );

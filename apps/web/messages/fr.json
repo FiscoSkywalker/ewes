@@ -39,24 +39,14 @@
   },
   "Hero": {
     "eyebrow": "Environnement, eau et travaux d’ingénierie",
-    "titleLine1": "Des solutions innovantes et",
-    "titleHighlight": "durables.",
-    "lead": "Issue du Pôle de l’Environnement de l’Interface Université de Lubumbashi–Société, EWES réunit une équipe multidisciplinaire d’experts congolais et étrangers pour répondre aux besoins de ses clients, quelle que soit la nature du projet.",
-    "ctaExplore": "Découvrir notre expertise",
+    "titleLine1": "Des données de terrain pour des",
+    "titleHighlight": "décisions durables.",
+    "lead": "Études d’impact, audits environnementaux, ressources en eau et travaux d’ingénierie pour les secteurs minier, pétrolier et public en République Démocratique du Congo.",
     "shieldLabel": "Experts congolais & étrangers",
     "locationLabel": "Lubumbashi · RD Congo",
     "scrollLabel": "Faire défiler",
     "imageAlt": "Infrastructure hydraulique intégrée dans un paysage fluvial",
-    "expertise": [
-      "Études d’impact environnemental",
-      "Audit environnemental",
-      "Adduction d’eau potable",
-      "Analyses d’eau, de sol et d’air",
-      "Travaux d’ingénierie",
-      "Formation des cadres"
-    ],
-    "coordinates": "11°37′ S · 27°31′ E",
-    "localTime": "Heure locale"
+    "ctaContact": "Discuter d’un projet"
   },
   "World": {
     "eyebrow": "01 · Qui sommes-nous",
