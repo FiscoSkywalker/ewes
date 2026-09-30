@@ -287,15 +287,10 @@ body {
   animation-delay: 0.4s;
 }
 
-.hero-ticker {
-  animation: scrollTicker 26s linear infinite;
-}
-
 /* Animations décoratives du hero suspendues quand il n'est plus à l'écran. */
 [data-paused='true'] .hero-cinematic-image,
 [data-paused='true'] .hero-cloud,
-[data-paused='true'] .hero-water-shimmer,
-[data-paused='true'] .hero-ticker {
+[data-paused='true'] .hero-water-shimmer {
   animation-play-state: paused;
 }
 
@@ -385,6 +380,44 @@ body {
   .section-shell {
     padding: 9rem 4rem 6rem;
   }
+}
+
+/*
+ * Titre et sous-titre du hero, à la typographie du prototype : Archivo large
+ * (axe de largeur 116) pour le titre, italique serif pour l'accent, tailles
+ * fluides du prototype.
+ */
+.hero-title {
+  max-width: 16ch;
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-weight: 720;
+  font-variation-settings: 'wdth' 116;
+  letter-spacing: -0.025em;
+  line-height: 0.95;
+  font-size: clamp(2.6rem, 9.6vw, 4.9rem);
+}
+
+@media (min-width: 900px) {
+  .hero-title {
+    max-width: 18ch;
+    font-size: clamp(3.2rem, 5.3vw, 5.4rem);
+  }
+}
+
+.hero-title em {
+  font-family: var(--font-serif-accent), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: normal;
+  letter-spacing: -0.02em;
+  color: var(--color-malachite);
+}
+
+.hero-lead {
+  max-width: 46ch;
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-size: clamp(1.05rem, 1.35vw, 1.2rem);
+  line-height: 1.6;
 }
 
 /* --- Storytelling (prototype « Malachite × Laboratoire », adapté) --- */

@@ -39,3 +39,6 @@ Thumbs.db
 # Build / misc
 coverage/
 *.tsbuildinfo
+
+# Prototype local (hors dépôt)
+prototype/

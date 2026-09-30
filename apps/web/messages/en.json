@@ -39,24 +39,14 @@
   },
   "Hero": {
     "eyebrow": "Environment, water and engineering works",
-    "titleLine1": "Innovative and",
-    "titleHighlight": "sustainable solutions.",
-    "lead": "Born from the Environment Centre of the University of Lubumbashi–Society Interface, EWES brings together a multidisciplinary team of Congolese and international experts to meet its clients’ needs, whatever the nature of the project.",
-    "ctaExplore": "Discover our expertise",
+    "titleLine1": "Field data for",
+    "titleHighlight": "lasting decisions.",
+    "lead": "Impact studies, environmental audits, water resources and engineering works for the mining, oil and public sectors in the Democratic Republic of Congo.",
     "shieldLabel": "Congolese & international experts",
     "locationLabel": "Lubumbashi · DR Congo",
     "scrollLabel": "Scroll down",
     "imageAlt": "Water infrastructure set in a river landscape",
-    "expertise": [
-      "Environmental impact studies",
-      "Environmental audit",
-      "Drinking water supply",
-      "Water, soil and air analysis",
-      "Engineering works",
-      "Executive training"
-    ],
-    "coordinates": "11°37′ S · 27°31′ E",
-    "localTime": "Local time"
+    "ctaContact": "Discuss a project"
   },
   "World": {
     "eyebrow": "01 · Who we are",

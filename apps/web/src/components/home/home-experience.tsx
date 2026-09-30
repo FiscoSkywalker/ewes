@@ -29,7 +29,7 @@ const HOME_REGISTER_ROWS = 8;
  * un Server Component pour les métadonnées ; toute l'interactivité vit ici.
  *
  * Récit (fusion du prototype « storytelling » et de l'expérience immersive) :
- * hero → qui nous sommes → ils nous font confiance → les trois pôles comme
+ * hero → ils nous font confiance → qui nous sommes → les trois pôles comme
  * une colonne stratigraphique (ENV → H₂O → ING, avec l'eau et la maquette
  * 3D) → méthode → registre des missions → formation → actualités →
  * documents → contact.
@@ -45,10 +45,11 @@ export function HomeExperience() {
     <div className="relative bg-background text-sand selection:bg-primary selection:text-white">
       <Hero onExplore={() => scrollToElement(aboutRef.current)} />
 
+      <ClientsMarquee />
+
       <div ref={aboutRef}>
         <AboutSection />
       </div>
-      <ClientsMarquee />
 
       <ServicesOverview />
       <EnvironmentSection />

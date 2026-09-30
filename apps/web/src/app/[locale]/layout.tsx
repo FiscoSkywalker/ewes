@@ -1,5 +1,11 @@
 import type { Metadata } from 'next';
-import { DM_Sans, Geist_Mono, Rajdhani } from 'next/font/google';
+import {
+  Archivo,
+  DM_Sans,
+  Geist_Mono,
+  Rajdhani,
+  Source_Serif_4,
+} from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -22,6 +28,24 @@ const headingFont = Rajdhani({
   variable: '--font-heading',
   subsets: ['latin'],
   weight: ['500', '600', '700'],
+});
+
+/**
+ * Typographie du titre du hero, reprise du prototype : Archivo (axe de
+ * largeur) et Source Serif 4 italique pour l'accent. Chargées une fois pour
+ * tout le site mais utilisées par le seul hero.
+ */
+const heroFont = Archivo({
+  variable: '--font-archivo',
+  subsets: ['latin'],
+  axes: ['wdth'],
+});
+
+const accentSerif = Source_Serif_4({
+  variable: '--font-serif-accent',
+  subsets: ['latin'],
+  style: ['italic'],
+  weight: ['400'],
 });
 
 const geistMono = Geist_Mono({
@@ -63,7 +87,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${bodyFont.variable} ${headingFont.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${bodyFont.variable} ${headingFont.variable} ${heroFont.variable} ${accentSerif.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider messages={messages}>
