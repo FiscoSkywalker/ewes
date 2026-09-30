@@ -44,7 +44,9 @@ export function EngineeringSection({
           dpr={dpr}
         />
       )}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(213,228,234,.98)_0%,rgba(213,228,234,.9)_48%,rgba(213,228,234,.18)_78%,transparent_100%)]" />
+      <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(213,228,234,.98)_0%,rgba(213,228,234,.9)_48%,rgba(213,228,234,.18)_78%,transparent_100%)] md:block" />
+      {/* Mobile : voile uniforme lisible sur toute la largeur, fondu vers la couleur du fond en haut et en bas. */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgb(213,228,234)_0%,rgba(213,228,234,.9)_14%,rgba(213,228,234,.9)_86%,rgb(213,228,234)_100%)] md:hidden" />
       <div className="relative z-10 mx-auto w-full max-w-[1440px]">
         <div className="max-w-3xl">
           <SectionHeading

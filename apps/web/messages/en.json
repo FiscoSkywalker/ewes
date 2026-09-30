@@ -39,7 +39,7 @@
   },
   "Hero": {
     "eyebrow": "Environment, water and engineering works",
-    "titleLine1": "Field data for",
+    "titleLine1": "Field data for\n",
     "titleHighlight": "lasting decisions.",
     "lead": "Impact studies, environmental audits, water resources and engineering works for the mining, oil and public sectors in the Democratic Republic of Congo.",
     "shieldLabel": "Congolese & international experts",
@@ -597,7 +597,18 @@
         "client": "Kisenge Manganèse",
         "mission": "ESIA and environmental management plan (EIES-PGEP)"
       }
-    ]
+    ],
+    "river": {
+      "title": "The thread of our assignments.",
+      "description": "From the first impact assessment in 2008 to the 2025 CSR Barometer: follow the course of the assignments carried out by EWES. Each dot is an assignment; each card opens its sheet.",
+      "counter": "assignments since {from}",
+      "openLabel": "{client}, {year}: view the assignment sheet",
+      "endTitle": "{count} assignments, from {from} to {to}.",
+      "endText": "Impact assessments, audits, monitoring, approvals, training and studies: browse and filter the full register on the “Our projects” page.",
+      "contactCta": "Entrust us with an assignment",
+      "scrollHint": "Scroll to follow the thread",
+      "swipeHint": "Swipe to follow the thread"
+    }
   },
   "Impact": {
     "eyebrow": "06 · Our references",
@@ -635,7 +646,103 @@
   "AboutPage": {
     "eyebrow": "About",
     "title": "Born at university, focused on the field.",
-    "description": "EWES SARL grew out of the Environment Centre of the University of Lubumbashi–Society Interface (IUS). With a multidisciplinary team of Congolese and international experts, it works in environment, water and engineering works, in collaboration with Belgian, French and Canadian partners."
+    "description": "EWES SARL grew out of the Environment Centre of the University of Lubumbashi–Society Interface (IUS). With a multidisciplinary team of Congolese and international experts, it works in environment, water and engineering works, in collaboration with Belgian, French and Canadian partners.",
+    "valuesEyebrow": "Our strengths",
+    "clientsEyebrow": "References",
+    "cta": {
+      "title": "An environmental, water or engineering project? Let’s talk.",
+      "button": "Contact EWES"
+    },
+    "team": {
+      "title": "Field experts, from the laboratory to the training room.",
+      "hint": "Hover or select a portrait to meet the expert",
+      "listLabel": "EWES experts",
+      "pole": "{pole}",
+      "specialties": "Specialties",
+      "years": "years of experience",
+      "experts": [
+        {
+          "id": "expert-1",
+          "name": "Jean-Pierre Kabongo",
+          "role": "Technical Director · Senior environmental assessment expert",
+          "pole": "env",
+          "years": 22,
+          "specialties": [
+            "ESIA & ESMP",
+            "Environmental audit",
+            "Mining regulations"
+          ],
+          "bio": "Leads impact assessments and audits for mining projects, from regulatory scoping to the approval of management plans."
+        },
+        {
+          "id": "expert-2",
+          "name": "Grâce Mutombo",
+          "role": "Hydrogeologist",
+          "pole": "eau",
+          "years": 14,
+          "specialties": [
+            "Hydrogeology",
+            "Boreholes",
+            "Water quality",
+            "GIS"
+          ],
+          "bio": "Leads water resource studies and supports water catchment and drinking water supply projects."
+        },
+        {
+          "id": "expert-3",
+          "name": "Patrick Tshibangu",
+          "role": "Head of training",
+          "pole": "env",
+          "years": 18,
+          "specialties": [
+            "Training",
+            "CSR",
+            "E&S inspections",
+            "Mine closure"
+          ],
+          "bio": "Designs and delivers capacity-building programmes for managers, technicians and public services."
+        },
+        {
+          "id": "expert-4",
+          "name": "Esther Kalenga",
+          "role": "Environmental engineer",
+          "pole": "env",
+          "years": 9,
+          "specialties": [
+            "Monitoring",
+            "Air quality",
+            "Waste management"
+          ],
+          "bio": "Handles environmental monitoring of sites and writes the periodic reports for operators."
+        },
+        {
+          "id": "expert-5",
+          "name": "Nadine Banza",
+          "role": "Laboratory manager · Analytical chemist",
+          "pole": "ing",
+          "years": 12,
+          "specialties": [
+            "Physico-chemical analysis",
+            "Heavy metals",
+            "Quality assurance"
+          ],
+          "bio": "Oversees water, soil and material analyses, and the maintenance of measuring instruments."
+        },
+        {
+          "id": "expert-6",
+          "name": "Olivier Ngoy",
+          "role": "Civil engineer",
+          "pole": "ing",
+          "years": 11,
+          "specialties": [
+            "Hydraulic structures",
+            "CAD",
+            "Site supervision"
+          ],
+          "bio": "Designs structures and supervises works, from the digital model to final acceptance."
+        }
+      ]
+    }
   },
   "ServicesPage": {
     "eyebrow": "Our services",
@@ -645,29 +752,152 @@
   "RealisationsPage": {
     "eyebrow": "Our projects",
     "title": "References in the mining and environment sectors.",
-    "description": "Audits, impact studies, approvals, training and surveys carried out by EWES. Filter by type of mission to explore references from 2008 to 2025.",
-    "emptyState": "No project matches this filter at the moment."
+    "description": "Audits, impact studies, approvals, training and surveys carried out by EWES. Search for a client, filter by type or year, and open the sheet of each assignment.",
+    "emptyState": "No project matches your search. Try another keyword or remove a filter.",
+    "stats": {
+      "missions": "Listed assignments",
+      "clients": "Clients & partners",
+      "period": "Years of references"
+    },
+    "searchLabel": "Search for a project",
+    "searchPlaceholder": "Search a client, an assignment…",
+    "yearLabel": "Filter by year",
+    "allYears": "All years",
+    "filtersLabel": "Filter by type of assignment",
+    "all": "All",
+    "results": "{count, plural, =0 {No projects} one {# project} other {# projects}}",
+    "pageOf": "Page {page} of {total}",
+    "reset": "Reset",
+    "openSheet": "Read the sheet",
+    "timeline": {
+      "eyebrow": "Assignments timeline",
+      "title": "Each dot is an assignment carried out by EWES.",
+      "total": "Assignments · {from}–{to}",
+      "inYear": "Assignments in {year}",
+      "yearButton": "{year}: {count, plural, =0 {no assignments} one {# assignment} other {# assignments}} — filter",
+      "dotLabel": "{client}, {year} — open the sheet",
+      "legendMatch": "Matching assignment",
+      "legendOther": "Filtered out",
+      "peak": "Peak: {count} assignments in {year}",
+      "hint": "Click a year to filter, a dot to open its sheet"
+    },
+    "pagination": {
+      "label": "Projects pagination",
+      "previous": "Previous page",
+      "next": "Next page",
+      "page": "Page {page}"
+    },
+    "sheet": {
+      "eyebrow": "Project sheet",
+      "close": "Close the sheet",
+      "mission": "The assignment",
+      "nature": "Type of assignment · {type}",
+      "period": "Period",
+      "duration": "Duration",
+      "years": "{count, plural, one {# year} other {# years}}",
+      "client": "Client / partner",
+      "type": "Type of assignment",
+      "location": "Location",
+      "ctaTitle": "A similar project?",
+      "cta": "Let’s talk",
+      "navLabel": "Other projects",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "categoryDetails": {
+      "EIES": "An environmental and social impact assessment identifies, assesses and ranks a project’s effects on the physical, biological and human environment, then defines the measures to avoid, reduce or offset them, set out in an environmental and social management plan submitted to the ACE.",
+      "AUDIT": "An environmental audit compares a site’s practices and facilities with regulatory requirements and the operator’s commitments, records any gaps and proposes a prioritised corrective action plan.",
+      "MONITORING": "Environmental monitoring tracks a site’s key parameters over time (water, air, soil, noise…) and consolidates the results in periodic reports for the operator and the authorities.",
+      "AGREMENT": "Support with approvals and certificates covers preparing and following up the regulatory files required to carry out an activity, until the document is issued by the competent authority.",
+      "FORMATION": "EWES training builds the skills of technical teams and institutions in environmental and social management, through sessions combining the regulatory framework, methods and practical cases.",
+      "ETUDE": "Studies and research produce data and analysis to support decision-making: field surveys, sector assessments and publications on environmental and social issues."
+    }
   },
   "NewsPage": {
     "eyebrow": "News & publications",
     "title": "News from the field and from EWES research.",
-    "description": "Press releases, technical publications, training sessions and events — updated as missions progress.",
-    "emptyState": "No news published at the moment."
+    "description": "Press releases, technical publications, training sessions and events.",
+    "emptyState": "No news published at the moment.",
+    "emptyCategory": "No news in this category at the moment.",
+    "pageTitle": "News — page {page}",
+    "featured": "Featured",
+    "readMore": "Read the article",
+    "categoriesLabel": "Categories",
+    "categories": {
+      "all": "All",
+      "survey": "Survey",
+      "training": "Training",
+      "event": "Event",
+      "publication": "Publication"
+    },
+    "pagination": {
+      "label": "News pagination",
+      "previous": "Previous page",
+      "next": "Next page",
+      "page": "Page {page}"
+    },
+    "library": {
+      "title": "Reports, guides and datasheets",
+      "text": "Find EWES publications in the library, free to download.",
+      "cta": "Open the library"
+    },
+    "article": {
+      "breadcrumb": "Breadcrumb",
+      "home": "Home",
+      "facts": {
+        "category": "Category",
+        "date": "Date",
+        "context": "Context",
+        "reading": "Reading time"
+      },
+      "minutes": "{count, plural, one {# minute} other {# minutes}}",
+      "noBody": "Would you like to know more about this assignment? The EWES team will be happy to walk you through its approach and results.",
+      "contact": "Contact the team",
+      "share": "Share",
+      "shareNative": "Share this article",
+      "shareOn": "Share on {network}",
+      "shareEmail": "Share by email",
+      "copyLink": "Copy link",
+      "copied": "Link copied",
+      "otherArticles": "Other news",
+      "older": "Previous article",
+      "newer": "Next article",
+      "related": "Read also",
+      "allNews": "All news"
+    }
   },
   "DocumentsPage": {
     "eyebrow": "Documents",
-    "title": "Public documents & private document space.",
-    "description": "EWES's institutional presentations, technical fact sheets and public publications, along with access to the secured document space.",
-    "publicListTitle": "Public documents",
-    "publicListEmpty": "No public document is available at the moment. This section will be populated as EWES publishes new content.",
-    "privateTitle": "Private document space",
-    "privateText": "Reserved for authorised EWES accounts (files, reports and archives classified by confidentiality level). Access is via the secured portal.",
-    "privateCta": "Go to the secured space"
+    "title": "The EWES library.",
+    "description": "Reports, methodological guides, technical datasheets and brochures: browse our publications and download them freely.",
+    "latest": "Latest publication",
+    "meta": {
+      "type": "Type",
+      "year": "Year",
+      "file": "File"
+    },
+    "searchLabel": "Search for a document",
+    "searchPlaceholder": "Search a title, a topic…",
+    "poleFilterLabel": "Filter by area",
+    "poles": {
+      "all": "All areas",
+      "env": "Environment",
+      "eau": "Water",
+      "ing": "Engineering"
+    },
+    "results": "{count, plural, =0 {No documents} one {# document} other {# documents}}",
+    "noResults": "No document matches your search. Try another keyword or remove a filter.",
+    "reset": "Reset",
+    "request": {
+      "title": "Can’t find a document?",
+      "text": "Write to us: the EWES team will point you to the right publication or send it to you directly.",
+      "cta": "Contact us"
+    }
   },
   "ContactPage": {
     "eyebrow": "Contact",
-    "title": "Get in touch with our experts.",
-    "description": "Tell the EWES team, based in Lubumbashi, about your project or need.",
+    "title": "A project? Let’s talk.",
+    "description": "Impact assessment, water supply, analyses, engineering works or training: describe your need and an EWES expert from the relevant division will get back to you from Lubumbashi.",
     "quickContactTitle": "EWES S.A.R.L.",
     "formNote": "The form opens your mail client with the information you entered, until online submission is activated.",
     "fields": {
@@ -721,7 +951,60 @@
       }
     ],
     "submitLabel": "Send the Request",
-    "needLegend": "Your need"
+    "needLegend": "Your need",
+    "heroCta": "Describe my project",
+    "status": {
+      "label": "Lubumbashi · local time",
+      "open": "Offices open",
+      "closed": "Offices closed",
+      "hoursTitle": "Opening hours",
+      "weekdays": "Monday – Friday",
+      "weekend": "Saturday – Sunday",
+      "closedDay": "Closed",
+      "note": "Requests sent outside office hours are handled as soon as we reopen."
+    },
+    "channels": {
+      "title": "Reach us directly",
+      "call": {
+        "label": "Call",
+        "hint": "During office hours"
+      },
+      "write": {
+        "label": "Write",
+        "hint": "Answered by an expert from the relevant division"
+      },
+      "visit": {
+        "label": "Visit us",
+        "hint": "Head office · Ruashi, Lubumbashi",
+        "value": "See the address"
+      }
+    },
+    "steps": {
+      "eyebrow": "Your request",
+      "title": "What happens next.",
+      "items": [
+        {
+          "title": "You describe your need",
+          "text": "Division, location, timeline: a few lines are enough to get started."
+        },
+        {
+          "title": "An expert gets back to you",
+          "text": "Your request is routed to the relevant division (Environment, Water or Engineering), which contacts you."
+        },
+        {
+          "title": "We scope the assignment",
+          "text": "Technical discussion, site visit if needed, then a tailored technical and financial proposal."
+        }
+      ]
+    },
+    "location": {
+      "eyebrow": "Location",
+      "title": "In the heart of Haut-Katanga.",
+      "addressLabel": "Head office",
+      "directions": "Directions",
+      "coordinates": "11°40′ S · 27°29′ E",
+      "mapLabel": "Stylised map: EWES head office in Lubumbashi"
+    }
   },
   "HomeAbout": {
     "eyebrow": "01 · About us",
@@ -805,6 +1088,7 @@
     "items": [
       {
         "id": "barometre-rse-2025",
+        "category": "survey",
         "type": "Survey",
         "date": "2025",
         "context": "Haut-Katanga & Lualaba",
@@ -814,6 +1098,7 @@
       },
       {
         "id": "metalkol-carbone-2024",
+        "category": "training",
         "type": "Training",
         "date": "2024",
         "context": "Metalkol",
@@ -823,6 +1108,7 @@
       },
       {
         "id": "inspecteurs-2023",
+        "category": "training",
         "type": "Training",
         "date": "2023",
         "context": "DPEM, ACE, FNPSS",
@@ -834,7 +1120,89 @@
   },
   "HomeDocuments": {
     "eyebrow": "05 · Documents",
-    "title": "Public for everyone, private for authorised users.",
+    "title": "Our studies and publications, within reach.",
+    "lead": "Reports, methodological guides, technical datasheets and brochures: EWES reference documents, free to read and download.",
+    "filterLabel": "Filter by document type",
+    "featured": "Featured",
+    "download": "Download",
+    "viewAll": "All documents",
+    "empty": "No documents are available at the moment.",
+    "pages": "{count, plural, one {# page} other {# pages}}",
+    "categories": {
+      "all": "All",
+      "report": "Report",
+      "guide": "Guide",
+      "datasheet": "Datasheet",
+      "brochure": "Brochure"
+    },
+    "items": [
+      {
+        "id": "guide-eies-2025",
+        "category": "guide",
+        "pole": "env",
+        "year": "2025",
+        "pages": 48,
+        "size": "3.2 MB",
+        "format": "PDF",
+        "title": "Practical guide to the environmental and social impact assessment (ESIA)",
+        "excerpt": "The stages of an ESIA in the DR Congo, from scoping to validation by the ACE: stakeholders, expected deliverables, public consultation and the environmental and social management plan."
+      },
+      {
+        "id": "rapport-activites-2024",
+        "category": "report",
+        "pole": "env",
+        "year": "2024",
+        "pages": 36,
+        "size": "5.8 MB",
+        "format": "PDF",
+        "title": "2024 activity report",
+        "excerpt": "Review of the assignments carried out in 2024 across our three areas of expertise."
+      },
+      {
+        "id": "fiche-forage-rural",
+        "category": "datasheet",
+        "pole": "eau",
+        "year": "2024",
+        "pages": 12,
+        "size": "1.1 MB",
+        "format": "PDF",
+        "title": "Boreholes and drinking water supply in rural areas",
+        "excerpt": "Key stages of a borehole project, from the hydrogeological survey to commissioning."
+      },
+      {
+        "id": "fiche-qualite-eau",
+        "category": "datasheet",
+        "pole": "eau",
+        "year": "2024",
+        "pages": 8,
+        "size": "740 KB",
+        "format": "PDF",
+        "title": "Drinking water quality: parameters and reference values",
+        "excerpt": "Physico-chemical and bacteriological parameters monitored by the laboratory."
+      },
+      {
+        "id": "guide-suivi-chantier",
+        "category": "guide",
+        "pole": "ing",
+        "year": "2023",
+        "pages": 24,
+        "size": "2.4 MB",
+        "format": "PDF",
+        "title": "Site supervision of hydraulic structures",
+        "excerpt": "Our works supervision method: planning, quality control and acceptance."
+      },
+      {
+        "id": "brochure-ewes",
+        "category": "brochure",
+        "pole": "eau",
+        "year": "2025",
+        "pages": 16,
+        "size": "4.5 MB",
+        "format": "PDF",
+        "title": "EWES company brochure",
+        "excerpt": "Our areas of expertise, references and technical resources."
+      }
+    ],
     "publicTitle": "Public documents",
     "publicLink": "See the Documents page",
     "vault": {

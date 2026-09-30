@@ -2,7 +2,6 @@
 
 import { useRef } from 'react';
 import { ContactBlock } from '@/components/public/contact-block';
-import { RealisationsRegister } from '@/components/public/realisations-register';
 import { Hero } from './sections/hero';
 import { AboutSection } from './sections/about-section';
 import { ClientsMarquee } from './sections/clients-marquee';
@@ -11,6 +10,7 @@ import { EnvironmentSection } from './sections/environment-section';
 import { WaterSection } from './sections/water-section';
 import { EngineeringSection } from './sections/engineering-section';
 import { MethodSection } from './sections/method-section';
+import { MissionsRiver } from './sections/missions-river';
 import { TrainingSection } from './sections/training-section';
 import { NewsSection } from './sections/news-section';
 import { DocumentsSection } from './sections/documents-section';
@@ -18,9 +18,6 @@ import { scrollToElement } from '@/lib/smooth-scroll';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useWebglAvailable } from '@/hooks/useWebglAvailable';
-
-/** Lignes du registre visibles à l'Accueil avant « Afficher tout ». */
-const HOME_REGISTER_ROWS = 8;
 
 /**
  * Arbre client de la page d'Accueil (blueprint/15/16 : exception assumée et
@@ -31,7 +28,7 @@ const HOME_REGISTER_ROWS = 8;
  * Récit (fusion du prototype « storytelling » et de l'expérience immersive) :
  * hero → ils nous font confiance → qui nous sommes → les trois pôles comme
  * une colonne stratigraphique (ENV → H₂O → ING, avec l'eau et la maquette
- * 3D) → méthode → registre des missions → formation → actualités →
+ * 3D) → méthode → fil des missions → formation → actualités →
  * documents → contact.
  */
 export function HomeExperience() {
@@ -66,7 +63,7 @@ export function HomeExperience() {
       />
 
       <MethodSection />
-      <RealisationsRegister initialCount={HOME_REGISTER_ROWS} showPageLink />
+      <MissionsRiver />
       <TrainingSection />
       <NewsSection />
       <DocumentsSection />

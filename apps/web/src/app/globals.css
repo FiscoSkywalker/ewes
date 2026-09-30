@@ -400,6 +400,7 @@ body {
 @media (min-width: 900px) {
   .hero-title {
     max-width: 18ch;
+    white-space: pre-line;
     font-size: clamp(3.2rem, 5.3vw, 5.4rem);
   }
 }
@@ -507,6 +508,55 @@ body {
   }
 }
 
+/* Frise « un point = une mission » (page Réalisations). */
+.missions-timeline {
+  --dot-size: 12px;
+  --dot-gap: 4px;
+  --dot-step: 16px;
+}
+
+@media (min-width: 640px) {
+  .missions-timeline {
+    --dot-size: 20px;
+    --dot-gap: 6px;
+    --dot-step: 26px;
+  }
+}
+
+/* Fiche d'un expert (/a-propos) : entrée après l'ouverture de la lame. */
+.expert-panel-in {
+  animation: expertPanelIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+}
+
+@keyframes expertPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+/* Fiche de lecture d'une réalisation (`<dialog>` modal). */
+.project-sheet[open] {
+  animation: sheetIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.project-sheet[open]::backdrop {
+  animation: sheetBackdropIn 0.4s ease-out;
+}
+
+@keyframes sheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(32px) scale(0.97);
+  }
+}
+
+@keyframes sheetBackdropIn {
+  from {
+    opacity: 0;
+  }
+}
+
 .pulse-dot {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--pole) 18%, transparent);
   animation: pulseDot 2.4s cubic-bezier(0.2, 0.7, 0.1, 1) infinite;
@@ -518,7 +568,38 @@ body {
   }
 }
 
+/* Ondes autour du siège (carte stylisée de la page Contact). */
+.ripple-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16rem;
+  height: 16rem;
+  margin: -8rem 0 0 -8rem;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 999px;
+  opacity: 0;
+  transform: scale(0.1);
+  animation: rippleRing 3.6s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+@keyframes rippleRing {
+  15% {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .ripple-ring {
+    animation: none;
+    opacity: 0.25;
+    transform: scale(0.5);
+  }
+
   .marquee-track {
     width: auto;
     justify-content: center;
@@ -585,4 +666,45 @@ html.lenis body {
 ::selection {
   background: var(--color-primary);
   color: #ffffff;
+}
+
+/*
+ * Dévoilement doux d'une photo (photo ENV de l'Accueil) : fondu, cadre qui
+ * s'ouvre depuis l'intérieur et zoom qui se pose (propriété `scale`, indépendante
+ * du `transform` utilisé par la parallaxe et la dérive). Piloté par
+ * `data-inview` (IntersectionObserver), pas par ScrollTrigger.
+ */
+.soft-reveal-mask {
+  opacity: 0;
+  clip-path: inset(9% 9% 9% 9%);
+  transition:
+    opacity 1s ease-out,
+    clip-path 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.soft-reveal-media {
+  scale: 1.2;
+  transition: scale 2.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.soft-reveal-caption {
+  opacity: 0;
+  transform: translateX(24px);
+  transition:
+    opacity 0.8s ease-out 0.9s,
+    transform 1s cubic-bezier(0.16, 1, 0.3, 1) 0.9s;
+}
+
+.soft-reveal[data-inview='true'] .soft-reveal-mask {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+}
+
+.soft-reveal[data-inview='true'] .soft-reveal-media {
+  scale: 1;
+}
+
+.soft-reveal[data-inview='true'] .soft-reveal-caption {
+  opacity: 1;
+  transform: none;
 }

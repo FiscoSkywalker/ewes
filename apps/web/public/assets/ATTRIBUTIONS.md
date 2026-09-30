@@ -32,7 +32,13 @@ React Three Fiber ; aucun fichier source du projet de référence n’est embarq
 
 ## Photographies cinématiques du prototype
 
-- `images/ewes-hero-cinematic.png`
+- `images/ewes-hero-cinematic.webp`
+- `images/ewes-hero-mobile.webp`
+- `images/ewes-pole-env.webp`
+- `images/ewes-pole-eau.webp`
+- `images/ewes-pole-ing.webp`
+- `images/ewes-apropos-equipe.webp`
+- `images/ewes-environment-terrain.webp`
 - `images/ewes-about-field-team.png`
 - `images/ewes-environment-field.png`
 - `images/ewes-laboratory-cinematic.png`

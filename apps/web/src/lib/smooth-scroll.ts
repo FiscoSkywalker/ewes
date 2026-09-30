@@ -12,11 +12,21 @@ export function registerLenis(lenis: Lenis | null) {
   instance = lenis;
 }
 
-export function scrollToElement(element: HTMLElement | null) {
+export function scrollToElement(
+  element: HTMLElement | null,
+  options: { offset?: number; duration?: number } = {},
+) {
   if (!element) return;
   if (instance) {
-    instance.scrollTo(element, { duration: 1.2 });
+    instance.scrollTo(element, { duration: 1.2, ...options });
   } else {
     element.scrollIntoView({ behavior: 'smooth' });
   }
+}
+
+/** Gèle le défilement de la page (fenêtre modale ouverte). */
+export function setScrollLocked(locked: boolean) {
+  if (locked) instance?.stop();
+  else instance?.start();
+  document.documentElement.style.overflow = locked ? 'hidden' : '';
 }

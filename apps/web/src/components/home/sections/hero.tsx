@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ArrowUpRight, ChevronDown, MapPin, ShieldCheck } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
@@ -22,20 +21,27 @@ export function Hero({ onExplore }: HeroProps) {
       className="relative flex min-h-[112svh] flex-col justify-end overflow-hidden px-6 pb-6 pt-32 md:px-16"
     >
       <div className="absolute inset-0 overflow-hidden" data-parallax-media>
-        <Image
-          src="/assets/images/ewes-hero-cinematic.png"
-          alt={t('imageAlt')}
-          fill
-          priority
-          sizes="100vw"
-          className="hero-cinematic-image object-cover"
-        />
+        <picture>
+          <source
+            media="(max-width: 767px)"
+            srcSet="/assets/images/ewes-hero-mobile.webp"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/images/ewes-hero-cinematic.webp"
+            alt={t('imageAlt')}
+            fetchPriority="high"
+            className="hero-cinematic-image absolute inset-0 h-full w-full object-cover"
+          />
+        </picture>
         <div className="hero-cloud hero-cloud-one" />
         <div className="hero-cloud hero-cloud-two" />
         <div className="hero-water-shimmer" />
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(213,228,234,.98)_0%,rgba(213,228,234,.89)_38%,rgba(213,228,234,.26)_72%,rgba(213,228,234,.16)_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(213,228,234,.38),transparent_35%,rgba(181,208,219,.76))]" />
+      <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(213,228,234,.98)_0%,rgba(213,228,234,.89)_38%,rgba(213,228,234,.26)_72%,rgba(213,228,234,.16)_100%)] md:block" />
+      <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(180deg,rgba(213,228,234,.38),transparent_35%,rgba(181,208,219,.76))] md:block" />
+      {/* Mobile : voile vertical (le texte occupe toute la largeur) qui finit exactement sur la couleur du fond, sans ligne de raccord. */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(213,228,234,.5)_0%,rgba(213,228,234,.82)_30%,rgba(213,228,234,.9)_65%,rgb(213,228,234)_100%)] md:hidden" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 items-center">
         <div className="hero-enter max-w-4xl">

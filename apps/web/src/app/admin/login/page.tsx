@@ -32,7 +32,7 @@ export default async function AdminLoginPage({
     <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background px-5 py-10 text-sand md:h-dvh md:min-h-0 md:py-6">
       <div className="absolute inset-0" aria-hidden="true">
         <Image
-          src="/assets/images/ewes-hero-cinematic.png"
+          src="/assets/images/ewes-hero-cinematic.webp"
           alt=""
           fill
           priority
