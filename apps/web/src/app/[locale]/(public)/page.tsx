@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { HomeExperience } from '@/components/home/home-experience';
 import { getHomeNews } from '@/lib/news';
 
@@ -15,14 +15,19 @@ import { getHomeNews } from '@/lib/news';
 /** ISR : fraîcheur des actualités (blueprint/16 §2, 5 à 15 min). */
 export const revalidate = 600;
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('Hero');
+export async function generateMetadata({
+  params,
+}: PageProps<'/[locale]'>): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Hero' });
   return {
     description: t('lead'),
   };
 }
 
-export default async function HomePage() {
+export default async function HomePage({ params }: PageProps<'/[locale]'>) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const news = await getHomeNews();
   return <HomeExperience news={news} />;
 }

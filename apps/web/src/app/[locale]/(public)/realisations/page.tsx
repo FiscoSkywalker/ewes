@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Project, ProjectCategoryOption } from '@/data/projects';
 import { RealisationsGallery } from '@/components/public/realisations-gallery';
 import { SectionHeading } from '@/components/public/section-heading';
@@ -9,12 +9,19 @@ import { SectionHeading } from '@/components/public/section-heading';
  * Server Component ; la galerie paginée et la fiche de lecture sont le seul
  * îlot client. L'Accueil garde son registre compact (`RealisationsRegister`).
  */
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('RealisationsPage');
+export async function generateMetadata({
+  params,
+}: PageProps<'/[locale]/realisations'>): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'RealisationsPage' });
   return { title: t('eyebrow'), description: t('description') };
 }
 
-export default async function RealisationsPage() {
+export default async function RealisationsPage({
+  params,
+}: PageProps<'/[locale]/realisations'>) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations('RealisationsPage');
   const tProjects = await getTranslations('Projects');
 

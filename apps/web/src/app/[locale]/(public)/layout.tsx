@@ -1,3 +1,4 @@
+import { setRequestLocale } from 'next-intl/server';
 import { ExperienceController } from '@/components/public/experience-controller';
 import { Footer } from '@/components/public/footer';
 import { Header } from '@/components/public/header';
@@ -13,7 +14,10 @@ import { ScrollAnimations } from '@/components/public/scroll-animations';
  */
 export default async function PublicLayout({
   children,
+  params,
 }: LayoutProps<'/[locale]'>) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   return (
     <ExperienceController>
       <div className="flex min-h-full flex-col bg-background text-sand selection:bg-primary selection:text-white">

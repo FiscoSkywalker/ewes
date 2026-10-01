@@ -32,6 +32,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ code: 'BAD_REQUEST' }, { status: 400 });
   }
 
-  revalidateTag(body.tag, 'max');
+  // expire: 0 — jamais de version périmée servie : une dépublication doit
+  // retirer le contenu immédiatement (blueprint/09_Business_Rules.md).
+  revalidateTag(body.tag, { expire: 0 });
   return NextResponse.json({ revalidated: true, tag: body.tag });
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ArrowRight, Building2, MapPin, Phone } from 'lucide-react';
 import type { ImpactMetric } from '@/data/metrics';
 import type { Expert } from '@/data/experts';
@@ -16,8 +16,11 @@ import { fetchPublishedPage, localizePage } from '@/lib/api/public-pages';
  * client. Contenus du profil EWES (`raw/PROFIL_EWES.md`) : qui sommes-nous,
  * chiffres clés, atouts, équipe, publics, recherche et références.
  */
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('AboutPage');
+export async function generateMetadata({
+  params,
+}: PageProps<'/[locale]/a-propos'>): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'AboutPage' });
   return { title: t('eyebrow'), description: t('description') };
 }
 
@@ -27,6 +30,7 @@ export default async function AboutPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   // Titre et introduction pilotés par la page `a-propos` du portail admin ;
   // repli sur les messages statiques si elle n'est pas publiée / API injoignable.
   const cmsPage = await fetchPublishedPage('a-propos');
