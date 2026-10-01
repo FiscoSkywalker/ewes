@@ -7,6 +7,7 @@ import { ContentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { CreatePageDto } from './dto/create-page.dto.js';
 import type { UpdatePageDto } from './dto/update-page.dto.js';
+import { FrontendRevalidator } from './frontend-revalidator.service.js';
 
 const PAGE_NOT_FOUND = {
   code: 'PAGE_NOT_FOUND',
@@ -16,7 +17,10 @@ const PAGE_NOT_FOUND = {
 
 @Injectable()
 export class PagesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly revalidator: FrontendRevalidator,
+  ) {}
 
   /** Lecture publique : seules les pages PUBLISHED existent pour le visiteur. */
   async findPublishedBySlug(slug: string) {
@@ -61,32 +65,41 @@ export class PagesService {
       });
     }
 
+    let updated;
     try {
-      return await this.prisma.page.update({ where: { id }, data: dto });
+      updated = await this.prisma.page.update({ where: { id }, data: dto });
     } catch (error) {
       throw this.translateSlugConflict(error);
     }
+    if (updated.status === ContentStatus.PUBLISHED) {
+      await this.revalidator.revalidatePage(updated.slug);
+    }
+    return updated;
   }
 
   async publish(id: string) {
     const current = await this.findById(id);
     if (current.status === ContentStatus.PUBLISHED) return current;
-    return this.prisma.page.update({
+    const published = await this.prisma.page.update({
       where: { id },
       data: {
         status: ContentStatus.PUBLISHED,
         publishedAt: current.publishedAt ?? new Date(),
       },
     });
+    await this.revalidator.revalidatePage(published.slug);
+    return published;
   }
 
   /** Retire immédiatement la page du site public (retour en brouillon). */
   async unpublish(id: string) {
     await this.findById(id);
-    return this.prisma.page.update({
+    const unpublished = await this.prisma.page.update({
       where: { id },
       data: { status: ContentStatus.DRAFT },
     });
+    await this.revalidator.revalidatePage(unpublished.slug);
+    return unpublished;
   }
 
   private translateSlugConflict(error: unknown): unknown {

@@ -8,6 +8,7 @@ import { EWES_CONTACT } from '@/data/contact';
 import { ExpertsGallery } from '@/components/public/experts-gallery';
 import { SectionHeading } from '@/components/public/section-heading';
 import { Link } from '@/i18n/navigation';
+import { fetchPublishedPage, localizePage } from '@/lib/api/public-pages';
 
 /**
  * Page À propos (blueprint/15_Public_Site_Pages.md) — SSG/ISR, Server
@@ -20,7 +21,16 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t('eyebrow'), description: t('description') };
 }
 
-export default async function AboutPage() {
+export default async function AboutPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  // Titre et introduction pilotés par la page `a-propos` du portail admin ;
+  // repli sur les messages statiques si elle n'est pas publiée / API injoignable.
+  const cmsPage = await fetchPublishedPage('a-propos');
+  const cms = cmsPage ? localizePage(cmsPage, locale) : null;
   const t = await getTranslations('World');
   const tPage = await getTranslations('AboutPage');
   const tExpertises = await getTranslations('Expertises');
@@ -43,8 +53,8 @@ export default async function AboutPage() {
         <div className="mx-auto grid w-full max-w-[1440px] gap-12 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-20">
           <SectionHeading
             eyebrow={tPage('eyebrow')}
-            title={tPage('title')}
-            description={tPage('description')}
+            title={cms?.title ?? tPage('title')}
+            description={cms?.content ?? tPage('description')}
           />
           <figure className="relative" data-reveal>
             <div className="relative aspect-[4/3] overflow-hidden rounded-sheet">
