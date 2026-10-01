@@ -8,6 +8,10 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
 import type { CreateServiceDto } from './dto/create-service.dto.js';
 import type { UpdateServiceDto } from './dto/update-service.dto.js';
+import type {
+  CreateServiceOfferingDto,
+  UpdateServiceOfferingDto,
+} from './dto/service-offering.dto.js';
 
 const SERVICE_NOT_FOUND = {
   code: 'SERVICE_NOT_FOUND',
@@ -15,9 +19,24 @@ const SERVICE_NOT_FOUND = {
   details: [],
 };
 
+const OFFERING_NOT_FOUND = {
+  code: 'SERVICE_OFFERING_NOT_FOUND',
+  message: 'Prestation introuvable.',
+  details: [],
+};
+
 /** Tags de cache du site public : une entrée par service + la liste. */
 const SERVICES_LIST_TAG = 'services';
 const serviceTag = (slug: string) => `service:${slug}`;
+
+const WITH_OFFERINGS = {
+  offerings: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] },
+} satisfies Prisma.ServiceInclude;
+
+const ORDER = [
+  { sortOrder: 'asc' },
+  { createdAt: 'asc' },
+] satisfies Prisma.ServiceOrderByWithRelationInput[];
 
 @Injectable()
 export class ServicesService {
@@ -29,7 +48,8 @@ export class ServicesService {
   listPublished() {
     return this.prisma.service.findMany({
       where: { status: ContentStatus.PUBLISHED },
-      orderBy: { createdAt: 'asc' },
+      include: WITH_OFFERINGS,
+      orderBy: ORDER,
     });
   }
 
@@ -37,24 +57,34 @@ export class ServicesService {
   async findPublishedBySlug(slug: string) {
     const service = await this.prisma.service.findFirst({
       where: { slug, status: ContentStatus.PUBLISHED },
+      include: WITH_OFFERINGS,
     });
     if (!service) throw new NotFoundException(SERVICE_NOT_FOUND);
     return service;
   }
 
   list() {
-    return this.prisma.service.findMany({ orderBy: { createdAt: 'asc' } });
+    return this.prisma.service.findMany({
+      include: WITH_OFFERINGS,
+      orderBy: ORDER,
+    });
   }
 
   async findById(id: string) {
-    const service = await this.prisma.service.findUnique({ where: { id } });
+    const service = await this.prisma.service.findUnique({
+      where: { id },
+      include: WITH_OFFERINGS,
+    });
     if (!service) throw new NotFoundException(SERVICE_NOT_FOUND);
     return service;
   }
 
   async create(dto: CreateServiceDto) {
     try {
-      return await this.prisma.service.create({ data: dto });
+      return await this.prisma.service.create({
+        data: dto,
+        include: WITH_OFFERINGS,
+      });
     } catch (error) {
       throw this.translateSlugConflict(error);
     }
@@ -78,13 +108,15 @@ export class ServicesService {
 
     let updated;
     try {
-      updated = await this.prisma.service.update({ where: { id }, data: dto });
+      updated = await this.prisma.service.update({
+        where: { id },
+        data: dto,
+        include: WITH_OFFERINGS,
+      });
     } catch (error) {
       throw this.translateSlugConflict(error);
     }
-    if (updated.status === ContentStatus.PUBLISHED) {
-      await this.revalidate(updated.slug);
-    }
+    await this.revalidateIfPublished(updated);
     return updated;
   }
 
@@ -97,6 +129,7 @@ export class ServicesService {
         status: ContentStatus.PUBLISHED,
         publishedAt: current.publishedAt ?? new Date(),
       },
+      include: WITH_OFFERINGS,
     });
     await this.revalidate(published.slug);
     return published;
@@ -108,9 +141,66 @@ export class ServicesService {
     const unpublished = await this.prisma.service.update({
       where: { id },
       data: { status: ContentStatus.DRAFT },
+      include: WITH_OFFERINGS,
     });
     await this.revalidate(unpublished.slug);
     return unpublished;
+  }
+
+  async addOffering(serviceId: string, dto: CreateServiceOfferingDto) {
+    const service = await this.findById(serviceId);
+    const offering = await this.prisma.serviceOffering.create({
+      data: {
+        serviceId,
+        titleFr: dto.titleFr,
+        titleEn: dto.titleEn,
+        descriptionFr: dto.descriptionFr,
+        descriptionEn: dto.descriptionEn,
+        sortOrder: dto.sortOrder,
+      },
+    });
+    await this.revalidateIfPublished(service);
+    return offering;
+  }
+
+  async updateOffering(
+    serviceId: string,
+    offeringId: string,
+    dto: UpdateServiceOfferingDto,
+  ) {
+    const service = await this.findById(serviceId);
+    await this.findOffering(serviceId, offeringId);
+    const offering = await this.prisma.serviceOffering.update({
+      where: { id: offeringId },
+      data: dto,
+    });
+    await this.revalidateIfPublished(service);
+    return offering;
+  }
+
+  async removeOffering(serviceId: string, offeringId: string) {
+    const service = await this.findById(serviceId);
+    await this.findOffering(serviceId, offeringId);
+    await this.prisma.serviceOffering.delete({ where: { id: offeringId } });
+    await this.revalidateIfPublished(service);
+  }
+
+  /** Une prestation n'est joignable que par son propre service (pas d'IDOR croisé). */
+  private async findOffering(serviceId: string, offeringId: string) {
+    const offering = await this.prisma.serviceOffering.findFirst({
+      where: { id: offeringId, serviceId },
+    });
+    if (!offering) throw new NotFoundException(OFFERING_NOT_FOUND);
+    return offering;
+  }
+
+  private async revalidateIfPublished(service: {
+    slug: string;
+    status: ContentStatus;
+  }) {
+    if (service.status === ContentStatus.PUBLISHED) {
+      await this.revalidate(service.slug);
+    }
   }
 
   private async revalidate(slug: string) {

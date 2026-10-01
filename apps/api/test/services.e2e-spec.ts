@@ -149,6 +149,77 @@ describe('Services (e2e)', () => {
       .expect(404);
   });
 
+  it('manages ordered offerings, exposes them only once the service is published, and scopes them to their service', async () => {
+    const auth = { Authorization: `Bearer ${await login(gestionnaireEmail)}` };
+    const offeringsSlug = `${slug}-offerings`;
+    const created = await request(app.getHttpServer())
+      .post('/api/v1/admin/services')
+      .set(auth)
+      .send({
+        slug: offeringsSlug,
+        nameFr: 'Environnement',
+        taglineFr: 'Mesurer',
+        descriptionFr: 'D',
+        sortOrder: 5,
+      })
+      .expect(201);
+    const id = created.body.id as string;
+    const other = await request(app.getHttpServer())
+      .post('/api/v1/admin/services')
+      .set(auth)
+      .send({ slug: `${offeringsSlug}-other`, nameFr: 'O', descriptionFr: 'D' })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/offerings`)
+      .set(auth)
+      .send({ titleFr: 'Deuxième', descriptionFr: 'd', sortOrder: 2 })
+      .expect(201);
+    const first = await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/offerings`)
+      .set(auth)
+      .send({ titleFr: 'Première', descriptionFr: 'd', sortOrder: 1 })
+      .expect(201);
+    const offeringId = first.body.id as string;
+
+    // Une prestation n'est modifiable que via son propre service.
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/services/${other.body.id}/offerings/${offeringId}`)
+      .set(auth)
+      .send({ titleFr: 'Piraté' })
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/services/${id}/offerings/${offeringId}`)
+      .set(auth)
+      .send({ titleEn: 'First' })
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/publish`)
+      .set(auth)
+      .expect(200);
+
+    const visible = await request(app.getHttpServer())
+      .get(`/api/v1/services/${offeringsSlug}`)
+      .expect(200);
+    expect(visible.body.taglineFr).toBe('Mesurer');
+    expect(
+      visible.body.offerings.map((o: { titleFr: string }) => o.titleFr),
+    ).toEqual(['Première', 'Deuxième']);
+    expect(visible.body.offerings[0].titleEn).toBe('First');
+    expect(visible.body.offerings[0]).not.toHaveProperty('id');
+
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/services/${id}/offerings/${offeringId}`)
+      .set(auth)
+      .expect(204);
+    const after = await request(app.getHttpServer())
+      .get(`/api/v1/services/${offeringsSlug}`)
+      .expect(200);
+    expect(after.body.offerings).toHaveLength(1);
+  });
+
   it('locks the slug after first publication, even if unpublished, and rejects duplicates', async () => {
     const auth = { Authorization: `Bearer ${await login(gestionnaireEmail)}` };
     const lockedSlug = `${slug}-locked`;

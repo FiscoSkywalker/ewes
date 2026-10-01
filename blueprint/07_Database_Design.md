@@ -23,7 +23,7 @@ PostgreSQL et Prisma font autorité. Clés primaires UUID, horodatages UTC, `cre
 
 # 3. Relations critiques
 
-Un `User` possède un `Role` (ADMINISTRATEUR, GESTIONNAIRE, UTILISATEUR) et zéro ou plusieurs `FolderAccessGrant`/`DocumentAccessGrant`. Une `Realisation` appartient à un `Service` (domaine) et référence zéro ou plusieurs `RealisationDocument`/`RealisationImage`. Un `Folder` peut contenir des sous-dossiers (auto-référence) et des `PrivateDocument` ; chaque fichier hérite du niveau de confidentialité de son dossier sauf surcharge explicite. Un `AuditLog` référence l'acteur (`User`), l'action et l'entité concernée ; il est en écriture seule (append-only).
+Un `User` possède un `Role` (ADMINISTRATEUR, GESTIONNAIRE, UTILISATEUR) et zéro ou plusieurs `FolderAccessGrant`/`DocumentAccessGrant`. Un `Service` (pôle) porte un nom, une accroche, une description et une position (`sortOrder`), et possède zéro ou plusieurs `ServiceOffering` (prestations ordonnées, FR/EN) qui suivent son statut de publication ; son slug est verrouillé après la première publication (`publishedAt`). Une `Realisation` appartient à un `Service` (domaine) et référence zéro ou plusieurs `RealisationDocument`/`RealisationImage`. Un `Folder` peut contenir des sous-dossiers (auto-référence) et des `PrivateDocument` ; chaque fichier hérite du niveau de confidentialité de son dossier sauf surcharge explicite. Un `AuditLog` référence l'acteur (`User`), l'action et l'entité concernée ; il est en écriture seule (append-only).
 
 # 4. Invariants
 

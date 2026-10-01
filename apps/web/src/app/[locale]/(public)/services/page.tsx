@@ -9,10 +9,11 @@ import {
   Landmark,
   Pickaxe,
 } from 'lucide-react';
+import { getPoleServices } from '@/lib/api/public-services';
 import { SectionHeading } from '@/components/public/section-heading';
 import {
+  SERVICE_POLES,
   ServiceChapter,
-  usePoleCount,
   type ServicePole,
 } from '@/components/public/service-chapter';
 import { Link } from '@/i18n/navigation';
@@ -40,12 +41,13 @@ function SummaryLink({
   pole,
   index,
   label,
+  count,
 }: {
   pole: ServicePole;
   index: number;
   label: string;
+  count: string;
 }) {
-  const count = usePoleCount(pole);
   return (
     <li>
       <a
@@ -79,6 +81,20 @@ export default async function ServicesPage({
   setRequestLocale(locale);
   const tPage = await getTranslations('ServicesPage');
   const tOverview = await getTranslations('ServicesOverview');
+  const tPoles = {
+    env: await getTranslations('Environment'),
+    eau: await getTranslations('Water'),
+    ing: await getTranslations('Engineering'),
+  };
+  // Contenu des pôles piloté par l'API ; repli sur les messages si absent.
+  const poleData = await getPoleServices(locale);
+  const poleCount = (pole: ServicePole) => {
+    const config = SERVICE_POLES[pole];
+    const total =
+      poleData[pole]?.offerings.length ??
+      (tPoles[pole].raw(config.listKey) as unknown[]).length;
+    return tOverview(pole === 'ing' ? 'fields' : 'services', { count: total });
+  };
   const tMethod = await getTranslations('Method');
   const tExpertises = await getTranslations('Expertises');
   const tTraining = await getTranslations('Training');
@@ -109,7 +125,8 @@ export default async function ServicesPage({
                   key={pole}
                   pole={pole}
                   index={index}
-                  label={tOverview(`poles.${pole}`)}
+                  label={poleData[pole]?.name ?? tOverview(`poles.${pole}`)}
+                  count={poleCount(pole)}
                 />
               ))}
             </ul>
@@ -118,7 +135,12 @@ export default async function ServicesPage({
       </section>
 
       {POLES.map((pole, index) => (
-        <ServiceChapter key={pole} pole={pole} index={index + 1} />
+        <ServiceChapter
+          key={pole}
+          pole={pole}
+          index={index + 1}
+          data={poleData[pole]}
+        />
       ))}
 
       {/* Méthode */}

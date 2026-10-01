@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { readFileSync } from 'node:fs';
 import { ContentStatus, PrismaClient, Role } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as argon2 from 'argon2';
@@ -57,6 +58,72 @@ async function seedAdmin(
   console.log(`Utilisateur administrateur créé : ${email}`);
 }
 
+interface PoleMessages {
+  title: string;
+  description: string;
+  services?: { title: string; text?: string; desc?: string }[];
+  items?: { title: string; text?: string; desc?: string }[];
+}
+
+/** Pôles du site public : clé de messages -> slug, espace de noms, liste de prestations. */
+const SERVICE_POLES = [
+  { slug: 'environnement', pole: 'env', namespace: 'Environment' },
+  { slug: 'eau', pole: 'eau', namespace: 'Water' },
+  { slug: 'ingenierie', pole: 'ing', namespace: 'Engineering' },
+] as const;
+
+function readMessages(locale: 'fr' | 'en') {
+  // Import initial : les textes de /services vivent aujourd'hui dans apps/web/messages.
+  return JSON.parse(
+    readFileSync(
+      new URL(`../../web/messages/${locale}.json`, import.meta.url),
+      'utf-8',
+    ),
+  ) as Record<string, any>;
+}
+
+/** Importe les trois pôles et leurs prestations (publiés). Idempotent par slug. */
+async function seedServices(prisma: PrismaClient) {
+  const fr = readMessages('fr');
+  const en = readMessages('en');
+
+  for (const [index, { slug, pole, namespace }] of SERVICE_POLES.entries()) {
+    if (await prisma.service.findUnique({ where: { slug } })) {
+      console.log(`Service ${slug} déjà présent — rien à faire.`);
+      continue;
+    }
+    const frPole = fr[namespace] as PoleMessages;
+    const enPole = en[namespace] as PoleMessages;
+    const frList = frPole.services ?? frPole.items ?? [];
+    const enList = enPole.services ?? enPole.items ?? [];
+
+    await prisma.service.create({
+      data: {
+        slug,
+        nameFr: fr.ServicesOverview.poles[pole],
+        nameEn: en.ServicesOverview.poles[pole],
+        taglineFr: frPole.title,
+        taglineEn: enPole.title,
+        descriptionFr: frPole.description,
+        descriptionEn: enPole.description,
+        sortOrder: index,
+        status: ContentStatus.PUBLISHED,
+        publishedAt: new Date(),
+        offerings: {
+          create: frList.map((item, position) => ({
+            titleFr: item.title,
+            titleEn: enList[position]?.title,
+            descriptionFr: item.text ?? item.desc ?? '',
+            descriptionEn: enList[position]?.text ?? enList[position]?.desc,
+            sortOrder: position,
+          })),
+        },
+      },
+    });
+    console.log(`Service ${slug} créé (${frList.length} prestations).`);
+  }
+}
+
 async function main() {
   const email = (
     process.env.SEED_ADMIN_EMAIL ?? 'admin@ewes.example'
@@ -72,6 +139,7 @@ async function main() {
   try {
     await seedAdmin(prisma, email, password);
     await seedAboutPage(prisma);
+    await seedServices(prisma);
   } finally {
     await prisma.$disconnect();
   }
