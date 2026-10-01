@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { getPoleServices } from '@/lib/api/public-services';
 import { HomeExperience } from '@/components/home/home-experience';
 import { getHomeNews } from '@/lib/news';
 
@@ -28,6 +29,9 @@ export async function generateMetadata({
 export default async function HomePage({ params }: PageProps<'/[locale]'>) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const news = await getHomeNews();
-  return <HomeExperience news={news} />;
+  const [news, poles] = await Promise.all([
+    getHomeNews(),
+    getPoleServices(locale),
+  ]);
+  return <HomeExperience news={news} poles={poles} />;
 }
