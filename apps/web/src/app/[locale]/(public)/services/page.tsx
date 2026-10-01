@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import {
   ArrowDown,
   ArrowRight,
@@ -24,8 +24,11 @@ import { Link } from '@/i18n/navigation';
  * méthode, les publics servis et le volet Formation. Pas de décor WebGL
  * (réservé à l'Accueil).
  */
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('ServicesPage');
+export async function generateMetadata({
+  params,
+}: PageProps<'/[locale]/services'>): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'ServicesPage' });
   return { title: t('eyebrow'), description: t('description') };
 }
 
@@ -69,7 +72,11 @@ function SummaryLink({
   );
 }
 
-export default async function ServicesPage() {
+export default async function ServicesPage({
+  params,
+}: PageProps<'/[locale]/services'>) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const tPage = await getTranslations('ServicesPage');
   const tOverview = await getTranslations('ServicesOverview');
   const tMethod = await getTranslations('Method');

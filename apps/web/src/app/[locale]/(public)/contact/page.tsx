@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ArrowDown, ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react';
 import { EWES_CONTACT } from '@/data/contact';
 import { ContactForm } from '@/components/public/contact-form';
@@ -17,8 +17,11 @@ import { TopoContours } from '@/components/public/topo-contours';
  * l'envoi, puis localisation. Îlots client : formulaire, heure locale,
  * relief topographique et liens d'ancre (blueprint/16 §2/§4).
  */
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('ContactPage');
+export async function generateMetadata({
+  params,
+}: PageProps<'/[locale]/contact'>): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'ContactPage' });
   return { title: t('eyebrow'), description: t('description') };
 }
 
@@ -55,7 +58,11 @@ function ChannelContent({ icon, label, value, hint }: ChannelProps) {
 const channelClass =
   'group flex flex-col rounded-card border border-border bg-surface-elevated p-6 transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_24px_48px_-28px_rgba(21,52,66,0.45)] sm:p-7';
 
-export default async function ContactPage() {
+export default async function ContactPage({
+  params,
+}: PageProps<'/[locale]/contact'>) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations('ContactPage');
   const steps = t.raw('steps.items') as { title: string; text: string }[];
 

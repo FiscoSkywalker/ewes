@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { DocumentsLibrary } from '@/components/public/documents-library';
 import type { ShowcaseDocument } from '@/components/public/documents-showcase';
 import { SectionHeading } from '@/components/public/section-heading';
@@ -10,12 +10,19 @@ import { SectionHeading } from '@/components/public/section-heading';
  * Les documents sont des exemples tirés des messages (`HomeDocuments.items`,
  * partagés avec l'Accueil) en attendant le branchement sur l'API.
  */
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('DocumentsPage');
+export async function generateMetadata({
+  params,
+}: PageProps<'/[locale]/documents'>): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'DocumentsPage' });
   return { title: t('eyebrow'), description: t('description') };
 }
 
-export default async function DocumentsPage() {
+export default async function DocumentsPage({
+  params,
+}: PageProps<'/[locale]/documents'>) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations('DocumentsPage');
   const tDoc = await getTranslations('HomeDocuments');
   const documents = tDoc.raw('items') as ShowcaseDocument[];

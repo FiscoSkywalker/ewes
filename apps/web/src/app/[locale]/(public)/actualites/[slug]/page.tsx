@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server';
 import { ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react';
 import { NewsCard, NewsMeta } from '@/components/public/news-card';
 import { ShareLinks } from '@/components/public/share-links';
@@ -29,7 +29,8 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PageProps<'/[locale]/actualites/[slug]'>): Promise<Metadata> {
-  const { slug } = await params;
+  const { locale, slug } = await params;
+  setRequestLocale(locale);
   const entry = await getNewsItem(slug);
   if (!entry) return {};
   const { item } = entry;
@@ -49,7 +50,8 @@ export async function generateMetadata({
 export default async function NewsArticlePage({
   params,
 }: PageProps<'/[locale]/actualites/[slug]'>) {
-  const { slug } = await params;
+  const { locale: routeLocale, slug } = await params;
+  setRequestLocale(routeLocale);
   const entry = await getNewsItem(slug);
   if (!entry) notFound();
 
