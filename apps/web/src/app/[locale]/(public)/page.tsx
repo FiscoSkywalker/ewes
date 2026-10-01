@@ -1,13 +1,20 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { HomeExperience } from '@/components/home/home-experience';
+import { getHomeNews } from '@/lib/news';
 
 /**
  * Accueil — blueprint/15_Public_Site_Pages.md. Server Component pour les
- * métadonnées uniquement : le rendu est délégué à `HomeExperience`, un
- * arbre client assumé (décor immersif WebGL/GSAP, voir le journal de
- * session Phase 02 pour la justification de cet écart au SSR par défaut).
+ * métadonnées et les données dynamiques : le rendu est délégué à
+ * `HomeExperience`, un arbre client assumé (décor immersif WebGL/GSAP, voir
+ * le journal de session Phase 02 pour la justification de cet écart au SSR
+ * par défaut). Les actualités sont lues ici, côté serveur, puis transmises
+ * en props : jamais d'appel API depuis le navigateur.
  */
+
+/** ISR : fraîcheur des actualités (blueprint/16 §2, 5 à 15 min). */
+export const revalidate = 600;
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('Hero');
   return {
@@ -15,6 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function HomePage() {
-  return <HomeExperience />;
+export default async function HomePage() {
+  const news = await getHomeNews();
+  return <HomeExperience news={news} />;
 }

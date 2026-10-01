@@ -1004,7 +1004,14 @@
       "directions": "Directions",
       "coordinates": "11°40′ S · 27°29′ E",
       "mapLabel": "Stylised map: EWES head office in Lubumbashi"
-    }
+    },
+    "errors": {
+      "required": "This field is required.",
+      "email": "Enter a valid email address (e.g. name@company.com).",
+      "messageShort": "Describe your need in at least {min} characters."
+    },
+    "requiredNote": "Fields marked * are required.",
+    "privacyNote": "Your information is used only to answer your request."
   },
   "HomeAbout": {
     "eyebrow": "01 · About us",
@@ -1056,6 +1063,13 @@
       "eau": "Water",
       "ing": "Engineering works"
     },
+    "chapterLink": "Explore this area",
+    "detailLink": "Full details",
+    "allLink": "All our services",
+    "relations": [
+      "informs",
+      "guides"
+    ],
     "audiencesTitle": "Who we work for"
   },
   "Method": {
@@ -1116,7 +1130,14 @@
         "excerpt": "A session on carrying out environmental and social inspections in the mining sector.",
         "imageAlt": "Water quality analysis in the field"
       }
-    ]
+    ],
+    "indexLabel": "Latest news",
+    "categoriesLabel": "Sections",
+    "pause": "Pause the news rotation",
+    "play": "Resume the news rotation",
+    "empty": "No news published yet. Find our reports and guides in the document library.",
+    "emptyCta": "Browse documents",
+    "readLabel": "Read the article: {title}"
   },
   "HomeDocuments": {
     "eyebrow": "05 · Documents",
@@ -1243,6 +1264,18 @@
     "lead": "Impact study, environmental audit, water supply, analyses or training: whatever the nature of your project, the EWES team is ready to listen.",
     "address": "Address",
     "phone": "Phone",
-    "email": "Email"
+    "email": "Email",
+    "titleStart": "Let’s talk about your",
+    "titleEnd": ".",
+    "words": {
+      "ENVIRONNEMENT": "impact assessment",
+      "EAU": "water project",
+      "ANALYSES": "analysis campaign",
+      "GESTION": "waste management",
+      "INGENIERIE": "engineering works",
+      "FORMATION": "training",
+      "AUTRE": "project"
+    },
+    "moreLink": "All our contact details"
   }
 }

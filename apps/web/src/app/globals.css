@@ -568,6 +568,34 @@ body {
   }
 }
 
+/* Mot du titre « Parlons de votre … » (bloc Contact de l'Accueil). */
+.word-swap {
+  animation: wordSwap 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes wordSwap {
+  from {
+    opacity: 0;
+    transform: translateY(70%);
+  }
+}
+
+/* Progression de la rotation des actualités (Accueil). */
+.news-progress {
+  animation-name: newsProgress;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+@keyframes newsProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 /* Ondes autour du siège (carte stylisée de la page Contact). */
 .ripple-ring {
   position: absolute;

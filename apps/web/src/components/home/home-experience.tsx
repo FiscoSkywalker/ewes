@@ -18,6 +18,7 @@ import { scrollToElement } from '@/lib/smooth-scroll';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useWebglAvailable } from '@/hooks/useWebglAvailable';
+import type { HomeNews } from '@/lib/news';
 
 /**
  * Arbre client de la page d'Accueil (blueprint/15/16 : exception assumée et
@@ -31,7 +32,7 @@ import { useWebglAvailable } from '@/hooks/useWebglAvailable';
  * 3D) → méthode → fil des missions → formation → actualités →
  * documents → contact.
  */
-export function HomeExperience() {
+export function HomeExperience({ news }: { news: HomeNews }) {
   const { dpr, particleMultiplier } = useResponsive();
   const reducedMotion = useReducedMotion();
   const webglAvailable = useWebglAvailable();
@@ -65,7 +66,7 @@ export function HomeExperience() {
       <MethodSection />
       <MissionsRiver />
       <TrainingSection />
-      <NewsSection />
+      <NewsSection news={news} />
       <DocumentsSection />
       <ContactBlock />
     </div>
