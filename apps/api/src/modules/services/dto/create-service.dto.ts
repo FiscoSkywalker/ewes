@@ -6,15 +6,11 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
-
 import { SLUG_PATTERN } from '../../../common/utils/slug.js';
 
-/**
- * Le statut n'est volontairement pas accepté ici : la publication est une
- * action explicite (blueprint/09_Business_Rules.md, 08_API_Specification.md §4).
- */
-export class CreatePageDto {
-  @ApiProperty({ example: 'a-propos' })
+/** Le statut n'est pas accepté ici : la publication est une action explicite. */
+export class CreateServiceDto {
+  @ApiProperty({ example: 'eau' })
   @IsString()
   @MaxLength(100)
   @Matches(SLUG_PATTERN, {
@@ -26,21 +22,21 @@ export class CreatePageDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  titleFr!: string;
+  nameFr!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  titleEn?: string;
+  nameEn?: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  contentFr!: string;
+  descriptionFr!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  contentEn?: string;
+  descriptionEn?: string;
 }
