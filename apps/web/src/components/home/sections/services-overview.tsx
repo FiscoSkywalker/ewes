@@ -18,6 +18,7 @@ import { SectionHeading } from '@/components/public/section-heading';
 import {
   SERVICE_POLES,
   usePoleCount,
+  type PoleContent,
   type ServicePole,
 } from '@/components/public/service-chapter';
 import { Link } from '@/i18n/navigation';
@@ -51,16 +52,22 @@ function PolePlate({
   pole,
   index,
   relation,
+  data,
 }: {
   pole: ServicePole;
   index: number;
   relation?: string;
+  data?: PoleContent;
 }) {
   const t = useTranslations('ServicesOverview');
   const config = SERVICE_POLES[pole];
   const tPole = useTranslations(config.namespace);
-  const services = tPole.raw(config.listKey) as RawService[];
-  const count = usePoleCount(pole);
+  const services: RawService[] =
+    data?.offerings ?? (tPole.raw(config.listKey) as RawService[]);
+  const staticCount = usePoleCount(pole);
+  const count = data
+    ? t(pole === 'ing' ? 'fields' : 'services', { count: services.length })
+    : staticCount;
   const anchor = POLE_ANCHORS[pole];
 
   return (
@@ -165,12 +172,14 @@ function PolePlate({
           }}
           className="outline-none after:absolute after:inset-0 after:rounded-sheet focus-visible:after:outline-2 focus-visible:after:outline-offset-8 focus-visible:after:outline-pole"
         >
-          {t(`poles.${pole}`)}
+          {data?.name ?? t(`poles.${pole}`)}
         </a>
       </h3>
-      <p className="mt-3 font-heading text-lg font-semibold leading-snug text-pole">
-        {tPole('title')}
-      </p>
+      {(data ? data.tagline : tPole('title')) && (
+        <p className="mt-3 font-heading text-lg font-semibold leading-snug text-pole">
+          {data ? data.tagline : tPole('title')}
+        </p>
+      )}
 
       <div className="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-3 pt-7">
         <span className="inline-flex items-center gap-3 whitespace-nowrap text-xs font-bold uppercase tracking-[0.12em] text-sand">
@@ -202,7 +211,12 @@ function PolePlate({
  * nombre de prestations). Progression en variable CSS (pas de re-rendu
  * React) ; rendu serveur et « animations réduites » : tout est affiché.
  */
-export function ServicesOverview() {
+export function ServicesOverview({
+  poles,
+}: {
+  /** Contenu des pôles venu de l'API ; un pôle absent retombe sur les messages. */
+  poles?: Partial<Record<ServicePole, PoleContent>>;
+}) {
   const t = useTranslations('ServicesOverview');
   const tExpertises = useTranslations('Expertises');
   const relations = t.raw('relations') as string[];
@@ -264,6 +278,7 @@ export function ServicesOverview() {
                 pole={pole}
                 index={index}
                 relation={relations[index]}
+                data={poles?.[pole]}
               />
             ))}
           </div>

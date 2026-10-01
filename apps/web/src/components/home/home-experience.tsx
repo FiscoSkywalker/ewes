@@ -18,6 +18,7 @@ import { scrollToElement } from '@/lib/smooth-scroll';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useWebglAvailable } from '@/hooks/useWebglAvailable';
+import type { PoleContent, ServicePole } from '@/components/public/service-chapter';
 import type { HomeNews } from '@/lib/news';
 
 /**
@@ -32,7 +33,14 @@ import type { HomeNews } from '@/lib/news';
  * 3D) → méthode → fil des missions → formation → actualités →
  * documents → contact.
  */
-export function HomeExperience({ news }: { news: HomeNews }) {
+export function HomeExperience({
+  news,
+  poles,
+}: {
+  news: HomeNews;
+  /** Pôles de services pilotés par l'API (repli sur les messages si absents). */
+  poles?: Partial<Record<ServicePole, PoleContent>>;
+}) {
   const { dpr, particleMultiplier } = useResponsive();
   const reducedMotion = useReducedMotion();
   const webglAvailable = useWebglAvailable();
@@ -49,7 +57,7 @@ export function HomeExperience({ news }: { news: HomeNews }) {
         <AboutSection />
       </div>
 
-      <ServicesOverview />
+      <ServicesOverview poles={poles} />
       <EnvironmentSection />
       <WaterSection
         reducedMotion={reducedMotion}
