@@ -62,7 +62,7 @@ export function Header() {
         <div
           className={`mx-auto flex items-center justify-between transition-[max-width,background-color,border-color,padding,box-shadow,border-radius] duration-500 ${
             isScrolled
-              ? 'mt-3 max-w-[1180px] rounded-full border border-sand/10 bg-surface-elevated/88 px-4 py-2 shadow-[0_14px_45px_rgba(34,76,93,.14)] backdrop-blur-xl md:px-5'
+              ? 'mt-3 max-w-[1180px] rounded-full border border-sand/10 bg-surface-elevated/92 px-4 py-2 shadow-[0_14px_45px_rgba(34,76,93,.14)] backdrop-blur-md md:px-5'
               : 'mt-0 max-w-[1440px] rounded-none border border-transparent bg-transparent px-0 py-5 shadow-none'
           }`}
         >

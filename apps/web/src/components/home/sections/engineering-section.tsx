@@ -7,6 +7,9 @@ import { EngineeringItemsList } from '@/components/public/engineering-items-list
 import { useSectionActivity } from '@/hooks/useSectionActivity';
 import { POLE_ANCHORS } from './services-overview';
 
+/** Préparée après la scène de l'eau, pour ne pas cumuler les deux en un seul temps mort. */
+const IDLE_MOUNT_DELAY = 2500;
+
 const EngineeringCanvas = dynamic(
   () =>
     import('../experience/EngineeringSectionExperience').then(
@@ -28,7 +31,9 @@ export function EngineeringSection({
   webglAvailable,
 }: EngineeringSectionProps) {
   const t = useTranslations('Engineering');
-  const { ref, mounted, active } = useSectionActivity<HTMLElement>();
+  const { ref, mounted, active } = useSectionActivity<HTMLElement>({
+    idleMountDelay: IDLE_MOUNT_DELAY,
+  });
 
   return (
     <section

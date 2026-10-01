@@ -12,6 +12,7 @@ import {
   type NewsItem,
 } from '@/data/news';
 import type { HomeNews } from '@/lib/news';
+import { useInView } from '@/hooks/useInView';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Link } from '@/i18n/navigation';
 
@@ -42,8 +43,12 @@ export function NewsSection({ news }: { news: HomeNews }) {
   const [previous, setPrevious] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
   const [hovering, setHovering] = useState(false);
+  // Hors écran, la rotation s'arrête : elle re-rendait la section toutes
+  // les 7 s et rejouait le balayage d'image pendant qu'on défilait ailleurs.
+  const { ref: sectionRef, inView } = useInView<HTMLElement>();
 
-  const rotating = items.length > 1 && !reducedMotion && !paused && !hovering;
+  const rotating =
+    items.length > 1 && !reducedMotion && !paused && !hovering && inView;
 
   const show = (index: number) => {
     if (index === active) return;
@@ -55,6 +60,8 @@ export function NewsSection({ news }: { news: HomeNews }) {
 
   return (
     <section
+      ref={sectionRef}
+      data-paused={!inView}
       aria-labelledby="home-news-title"
       className="bg-paper-muted px-6 py-24 text-sand md:px-16 md:py-32"
     >

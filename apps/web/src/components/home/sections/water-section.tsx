@@ -7,6 +7,9 @@ import { WaterServicesList } from '@/components/public/water-services-list';
 import { useSectionActivity } from '@/hooks/useSectionActivity';
 import { POLE_ANCHORS } from './services-overview';
 
+/** Préparée pendant un temps mort, ~1 s après le chargement (voir `useSectionActivity`). */
+const IDLE_MOUNT_DELAY = 1000;
+
 const WaterCanvas = dynamic(
   () =>
     import('../experience/WaterSectionExperience').then(
@@ -30,7 +33,9 @@ export function WaterSection({
   webglAvailable,
 }: WaterSectionProps) {
   const t = useTranslations('Water');
-  const { ref, mounted, active } = useSectionActivity<HTMLElement>();
+  const { ref, mounted, active } = useSectionActivity<HTMLElement>({
+    idleMountDelay: IDLE_MOUNT_DELAY,
+  });
 
   return (
     <section

@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { WaterSurface } from '../three/water/WaterSurface';
 import { WaterParticles } from '../three/water/WaterParticles';
 import { readScroll } from '@/lib/scroll-state';
+import { ScenePrewarm } from './ScenePrewarm';
 
 interface WaterSectionExperienceProps {
   /** `false` suspend la boucle de rendu (section hors écran). */
@@ -104,6 +105,7 @@ export function WaterSectionExperience({
       >
         <Suspense fallback={null}>
           <WaterStage {...stageProps} />
+          <ScenePrewarm />
         </Suspense>
       </Canvas>
     </div>
