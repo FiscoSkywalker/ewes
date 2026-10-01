@@ -27,8 +27,12 @@ const BAND = 100;
 const GAP = 14;
 /** Position du « front » de lecture dans la fenêtre (part de la largeur). */
 const FRONT = 0.62;
-/** Défilement vertical consommé par px de déplacement horizontal. */
-const SCROLL_RATIO = 0.8;
+/**
+ * Défilement vertical consommé par px de déplacement horizontal. 0,4 :
+ * ~1 950 px de section figée sur un écran de 1440 px (deux écrans) ; à 0,8,
+ * la phase figée (~3 900 px) donnait l'impression d'une page bloquée.
+ */
+const SCROLL_RATIO = 0.4;
 
 /** Méandre de la rivière : ordonnée (dans la bande) pour une abscisse. */
 const riverY = (x: number) =>
