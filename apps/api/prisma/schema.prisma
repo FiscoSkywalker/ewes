@@ -122,6 +122,7 @@ model Service {
   descriptionFr String
   descriptionEn String?
   status        ContentStatus @default(DRAFT)
+  publishedAt   DateTime?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 

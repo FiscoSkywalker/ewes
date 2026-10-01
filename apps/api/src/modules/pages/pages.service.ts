@@ -7,7 +7,7 @@ import { ContentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { CreatePageDto } from './dto/create-page.dto.js';
 import type { UpdatePageDto } from './dto/update-page.dto.js';
-import { FrontendRevalidator } from './frontend-revalidator.service.js';
+import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
 
 const PAGE_NOT_FOUND = {
   code: 'PAGE_NOT_FOUND',
@@ -72,7 +72,7 @@ export class PagesService {
       throw this.translateSlugConflict(error);
     }
     if (updated.status === ContentStatus.PUBLISHED) {
-      await this.revalidator.revalidatePage(updated.slug);
+      await this.revalidator.revalidate(`page:${updated.slug}`);
     }
     return updated;
   }
@@ -87,7 +87,7 @@ export class PagesService {
         publishedAt: current.publishedAt ?? new Date(),
       },
     });
-    await this.revalidator.revalidatePage(published.slug);
+    await this.revalidator.revalidate(`page:${published.slug}`);
     return published;
   }
 
@@ -98,7 +98,7 @@ export class PagesService {
       where: { id },
       data: { status: ContentStatus.DRAFT },
     });
-    await this.revalidator.revalidatePage(unpublished.slug);
+    await this.revalidator.revalidate(`page:${unpublished.slug}`);
     return unpublished;
   }
 
