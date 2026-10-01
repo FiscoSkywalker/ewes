@@ -93,6 +93,8 @@ export function MissionsRiver() {
   const stripRef = useRef<HTMLDivElement>(null);
   const yearRef = useRef<HTMLSpanElement>(null);
   const countRef = useRef<HTMLSpanElement>(null);
+  const flowRef = useRef<SVGPathElement>(null);
+  const progressBarRef = useRef<HTMLSpanElement>(null);
 
   // Mode figé réservé aux grands écrans sans préférence « animations réduites ».
   useLayoutEffect(() => {
@@ -120,11 +122,26 @@ export function MissionsRiver() {
     );
     let lastReached = -1;
 
-    /** Met la frise à jour pour un décalage horizontal donné (px). */
+    // Position du front dans la frise, mesurée hors de la boucle de
+    // défilement : lire `clientWidth`/`offsetLeft` juste après avoir écrit
+    // une transformation forçait une mise en page synchrone à chaque image.
+    let frontOffset = 0;
+    const measureFront = () => {
+      frontOffset = viewport.clientWidth * FRONT - strip.offsetLeft;
+    };
+    measureFront();
+
+    /**
+     * Met la frise à jour pour un décalage horizontal donné (px). Les
+     * écritures visent l'élément concerné (tracé, barre) et non un ancêtre :
+     * une variable CSS posée sur la frise recalculait le style de ses 34
+     * cartes à chaque image.
+     */
     const update = (shift: number) => {
-      const front = shift + viewport.clientWidth * FRONT - strip.offsetLeft;
+      const front = shift + frontOffset;
       const progress = Math.min(1, Math.max(0, front / stripWidth));
-      strip.style.setProperty('--river', progress.toFixed(4));
+      if (flowRef.current)
+        flowRef.current.style.strokeDashoffset = (1 - progress).toFixed(4);
       const reached = Math.max(
         0,
         Math.min(missions.length, Math.floor((front - STEP / 2) / STEP) + 1),
@@ -143,7 +160,7 @@ export function MissionsRiver() {
     const resetAll = () => {
       track.style.transform = '';
       section.style.height = '';
-      strip.style.setProperty('--river', '1');
+      if (flowRef.current) flowRef.current.style.strokeDashoffset = '0';
       items.forEach((item) => {
         item.dataset.reached = 'true';
       });
@@ -155,10 +172,16 @@ export function MissionsRiver() {
     if (!pinned) {
       // Frise à faire glisser : le front suit le défilement horizontal.
       const onScroll = () => update(viewport.scrollLeft);
+      const onResize = () => {
+        measureFront();
+        onScroll();
+      };
       viewport.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onResize);
       onScroll();
       return () => {
         viewport.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onResize);
         resetAll();
       };
     }
@@ -167,22 +190,26 @@ export function MissionsRiver() {
     const measure = () => {
       overflow = Math.max(0, track.scrollWidth - viewport.clientWidth);
       section.style.height = `${overflow * SCROLL_RATIO + window.innerHeight}px`;
+      measureFront();
     };
     measure();
     ScrollTrigger.addEventListener('refreshInit', measure);
+
+    const advance = (progress: number) => {
+      const shift = progress * overflow;
+      track.style.transform = `translate3d(${-shift}px,0,0)`;
+      if (progressBarRef.current)
+        progressBarRef.current.style.transform = `scaleX(${progress.toFixed(4)})`;
+      update(shift);
+    };
 
     const trigger = ScrollTrigger.create({
       trigger: section,
       start: 'top top',
       end: 'bottom bottom',
-      onUpdate: (self) => {
-        const shift = self.progress * overflow;
-        track.style.transform = `translate3d(${-shift}px,0,0)`;
-        section.style.setProperty('--progress', self.progress.toFixed(4));
-        update(shift);
-      },
+      onUpdate: (self) => advance(self.progress),
     });
-    update(trigger.progress * overflow);
+    advance(trigger.progress);
     // La hauteur de la section a changé : recalcule les déclencheurs suivants.
     ScrollTrigger.refresh();
 
@@ -288,6 +315,7 @@ export function MissionsRiver() {
                   opacity="0.3"
                 />
                 <path
+                  ref={flowRef}
                   d={riverPath}
                   fill="none"
                   stroke="url(#missions-river-flow)"
@@ -295,7 +323,7 @@ export function MissionsRiver() {
                   strokeLinecap="round"
                   pathLength={1}
                   strokeDasharray="1 1"
-                  style={{ strokeDashoffset: 'calc(1 - var(--river, 1))' }}
+                  strokeDashoffset={0}
                 />
               </svg>
 
@@ -418,7 +446,11 @@ export function MissionsRiver() {
           </p>
           {pinned && (
             <span className="relative h-[2px] flex-1 overflow-hidden bg-border-subtle">
-              <span className="absolute inset-0 origin-left scale-x-[var(--progress,0)] bg-linear-to-r from-primary via-malachite to-copper" />
+              <span
+                ref={progressBarRef}
+                className="absolute inset-0 origin-left bg-linear-to-r from-primary via-malachite to-copper"
+                style={{ transform: 'scaleX(0)' }}
+              />
             </span>
           )}
         </div>

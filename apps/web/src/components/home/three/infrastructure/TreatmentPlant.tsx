@@ -290,16 +290,17 @@ export const TreatmentPlant: React.FC<TreatmentPlantProps> = ({
             metalness={0.08}
           />
         </mesh>
-        {/* Supervisory Observation Glazing (Section 20: Glass) */}
+        {/* Supervisory Observation Glazing (Section 20: Glass) — reflets de
+            la carte d'environnement plutôt que `transmission`, qui imposait
+            un second rendu complet de la scène à chaque image. */}
         <mesh position={[0, 0.06, 0.38]}>
           <planeGeometry args={[1.0, 0.28]} />
-          <meshPhysicalMaterial
+          <meshStandardMaterial
             color="#8fc5c4"
             roughness={0.1}
-            transmission={0.6}
-            thickness={0.2}
+            metalness={0.2}
             transparent
-            opacity={0.85}
+            opacity={0.78}
           />
         </mesh>
         {/* Telemetry SCADA Mast */}

@@ -88,6 +88,39 @@ export function TopoContours({
       return z;
     };
 
+    // État de la cellule courante, partagé avec `edgePoint` : aucune
+    // allocation dans la boucle (l'ancienne fermeture + tableaux créés par
+    // cellule, ~70 000 par image, provoquaient des pauses du ramasse-miettes
+    // ressenties comme des à-coups pendant le défilement).
+    let a = 0;
+    let b = 0;
+    let c = 0;
+    let d = 0;
+    let x0 = 0;
+    let y0 = 0;
+    let level = 0;
+    let px = 0;
+    let py = 0;
+    const edgePoint = (edge: number) => {
+      switch (edge) {
+        case 0:
+          px = x0 + CELL * ((level - a) / (b - a));
+          py = y0;
+          break;
+        case 1:
+          px = x0 + CELL;
+          py = y0 + CELL * ((level - b) / (c - b));
+          break;
+        case 2:
+          px = x0 + CELL * ((level - d) / (c - d));
+          py = y0 + CELL;
+          break;
+        default:
+          px = x0;
+          py = y0 + CELL * ((level - a) / (d - a));
+      }
+    };
+
     const draw = () => {
       for (let j = 0; j < rows; j++)
         for (let i = 0; i < cols; i++)
@@ -95,16 +128,16 @@ export function TopoContours({
       context.clearRect(0, 0, width, height);
 
       for (let k = 0; k < LEVELS; k++) {
-        const level = -1.05 + (k * 2.1) / LEVELS;
+        level = -1.05 + (k * 2.1) / LEVELS;
         // Courbes maîtresses (une sur quatre), comme sur une carte IGN.
         const major = k % 4 === 0;
         context.beginPath();
         for (let j = 0; j < rows - 1; j++) {
           for (let i = 0; i < cols - 1; i++) {
-            const a = field[j * cols + i];
-            const b = field[j * cols + i + 1];
-            const c = field[(j + 1) * cols + i + 1];
-            const d = field[(j + 1) * cols + i];
+            a = field[j * cols + i];
+            b = field[j * cols + i + 1];
+            c = field[(j + 1) * cols + i + 1];
+            d = field[(j + 1) * cols + i];
             const index =
               (a > level ? 8 : 0) |
               (b > level ? 4 : 0) |
@@ -112,25 +145,13 @@ export function TopoContours({
               (d > level ? 1 : 0);
             const segments = SEGMENTS[index];
             if (!segments) continue;
-            const x0 = i * CELL;
-            const y0 = j * CELL;
-            const point = (edge: number): [number, number] => {
-              switch (edge) {
-                case 0:
-                  return [x0 + CELL * ((level - a) / (b - a)), y0];
-                case 1:
-                  return [x0 + CELL, y0 + CELL * ((level - b) / (c - b))];
-                case 2:
-                  return [x0 + CELL * ((level - d) / (c - d)), y0 + CELL];
-                default:
-                  return [x0, y0 + CELL * ((level - a) / (d - a))];
-              }
-            };
-            for (const [from, to] of segments) {
-              const p = point(from);
-              const q = point(to);
-              context.moveTo(p[0], p[1]);
-              context.lineTo(q[0], q[1]);
+            x0 = i * CELL;
+            y0 = j * CELL;
+            for (let s = 0; s < segments.length; s++) {
+              edgePoint(segments[s][0]);
+              context.moveTo(px, py);
+              edgePoint(segments[s][1]);
+              context.lineTo(px, py);
             }
           }
         }

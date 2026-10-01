@@ -158,24 +158,26 @@ export function WaterSurface({ reducedMotion = false }: WaterSurfaceProps) {
   };
 
   return (
-    <mesh
-      ref={meshRef}
-      rotation={[-Math.PI / 2.3, 0, 0]}
-      position={[0, -0.6, 0]}
-      onPointerMove={disturbWater}
-      onPointerDown={disturbWater}
-      receiveShadow
-    >
-      <planeGeometry args={[14, 14, 128, 128]} />
-      <shaderMaterial
-        ref={materialRef}
-        vertexShader={waterVertexShader}
-        fragmentShader={waterFragmentShader}
-        uniforms={uniforms}
-        transparent
-        depthWrite
-        side={THREE.DoubleSide}
-      />
-    </mesh>
+    <group rotation={[-Math.PI / 2.3, 0, 0]} position={[0, -0.6, 0]}>
+      <mesh ref={meshRef} receiveShadow>
+        <planeGeometry args={[14, 14, 128, 128]} />
+        <shaderMaterial
+          ref={materialRef}
+          vertexShader={waterVertexShader}
+          fragmentShader={waterFragmentShader}
+          uniforms={uniforms}
+          transparent
+          depthWrite
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Cible du pointeur : même plan en 2 triangles. Le relief n'existe que
+          dans le shader, la grille de 33 000 triangles était donc testée à
+          chaque mouvement de souris pour exactement le même résultat (UV). */}
+      <mesh onPointerMove={disturbWater} onPointerDown={disturbWater}>
+        <planeGeometry args={[14, 14]} />
+        <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
   );
 }

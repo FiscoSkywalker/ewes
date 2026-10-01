@@ -8,12 +8,27 @@ function subscribe() {
   return () => {};
 }
 
+/**
+ * Résultat mis en cache : `useSyncExternalStore` appelle `getSnapshot` à
+ * chaque rendu. Sans cache, chaque re-rendu de l'Accueil créait un nouveau
+ * contexte WebGL de test (coûteux, plusieurs ms) ; au-delà d'une quinzaine,
+ * le navigateur sacrifie les plus anciens — dont ceux des scènes eau et
+ * maquette, qui disparaissaient (écran vide, scintillement).
+ */
+let cached: boolean | undefined;
+
 function getSnapshot() {
-  const probe = document.createElement('canvas');
-  return Boolean(
-    window.WebGLRenderingContext &&
-    (probe.getContext('webgl2') || probe.getContext('webgl')),
-  );
+  if (cached === undefined) {
+    const probe = document.createElement('canvas');
+    const context = window.WebGLRenderingContext
+      ? ((probe.getContext('webgl2') ?? probe.getContext('webgl')) as
+          WebGLRenderingContext | WebGL2RenderingContext | null)
+      : null;
+    cached = Boolean(context);
+    // Libère tout de suite le contexte de test plutôt qu'au ramasse-miettes.
+    context?.getExtension('WEBGL_lose_context')?.loseContext();
+  }
+  return cached;
 }
 
 function getServerSnapshot() {

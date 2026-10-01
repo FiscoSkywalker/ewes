@@ -6,6 +6,7 @@ import { Environment, Lightformer } from '@react-three/drei';
 import * as THREE from 'three';
 import { Infrastructure } from '../three/infrastructure/Infrastructure';
 import { readScroll } from '@/lib/scroll-state';
+import { ScenePrewarm } from './ScenePrewarm';
 
 interface EngineeringSectionExperienceProps {
   /** `false` suspend la boucle de rendu (section hors écran). */
@@ -82,7 +83,8 @@ export function EngineeringSectionExperience({
       <Canvas
         camera={{ position: [1.05, 1.7, 3.85], fov: 45, near: 0.1, far: 80 }}
         dpr={dpr}
-        shadows="soft"
+        // three.js ≥ r180 a retiré PCFSoftShadowMap (il retombait déjà sur PCF).
+        shadows="percentage"
         frameloop={active ? 'always' : 'never'}
         gl={{
           antialias: dpr < 1.5,
@@ -93,11 +95,11 @@ export function EngineeringSectionExperience({
         }}
         onCreated={({ gl }) => {
           gl.outputColorSpace = THREE.SRGBColorSpace;
-          gl.shadowMap.type = THREE.PCFSoftShadowMap;
         }}
       >
         <Suspense fallback={null}>
           <EngineeringStage {...stageProps} />
+          <ScenePrewarm />
         </Suspense>
       </Canvas>
     </div>

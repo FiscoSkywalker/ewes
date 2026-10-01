@@ -107,9 +107,11 @@ export function AboutSection() {
               style={{ '--read': 1, '--words': words.length } as CSSProperties}
             >
               {words.map((word, index) => (
+                // Pas de `transition` ici : l'opacité suit déjà le défilement
+                // lissé par Lenis, et une transition relancée à chaque image
+                // sur chaque mot ne faisait qu'ajouter du travail.
                 <span
                   key={index}
-                  className="transition-opacity duration-150"
                   style={{
                     opacity: `clamp(0.16, calc(var(--read) * (var(--words) + 4) - ${index}), 1)`,
                   }}
@@ -176,7 +178,7 @@ export function AboutSection() {
             alt={t('imageAlt')}
             fill
             sizes="100vw"
-            className="object-cover"
+            className="object-cover will-change-transform"
             style={{ transform: 'scale(calc(1.18 - 0.18 * var(--open)))' }}
           />
           <div className="absolute inset-0 bg-linear-to-t from-night/80 via-night/10 to-white/5" />

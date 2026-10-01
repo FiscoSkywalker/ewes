@@ -246,23 +246,36 @@ body {
   animation: cloudPassReverse 31s linear infinite alternate;
 }
 
+/*
+ * Reflets sur l'eau du hero. Les stries glissent par `transform` sur un
+ * pseudo-élément plus grand que la zone découpée (compositeur seul) : animer
+ * `background-position` repeignait toute la zone à chaque image.
+ */
 .hero-water-shimmer {
   position: absolute;
   left: 8%;
   bottom: -7%;
   width: 58%;
   height: 70%;
+  overflow: hidden;
   pointer-events: none;
   opacity: 0.2;
   clip-path: polygon(18% 0, 58% 0, 100% 100%, 0 100%);
+  animation: waterGlint 8s ease-in-out infinite alternate;
+}
+
+.hero-water-shimmer::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
   background: repeating-linear-gradient(
     102deg,
     transparent 0 15px,
     rgba(255, 255, 255, 0.72) 17px,
     transparent 21px 38px
   );
-  background-size: 160% 160%;
-  animation: waterGlint 8s ease-in-out infinite alternate;
+  animation: waterGlintDrift 8s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 /*
@@ -287,10 +300,17 @@ body {
   animation-delay: 0.4s;
 }
 
-/* Animations décoratives du hero suspendues quand il n'est plus à l'écran. */
+/*
+ * Animations décoratives en boucle suspendues quand leur section n'est plus
+ * à l'écran (`data-paused`, posé par un IntersectionObserver) : sinon le
+ * compositeur produit des images en continu pour rien, page immobile.
+ */
 [data-paused='true'] .hero-cinematic-image,
 [data-paused='true'] .hero-cloud,
-[data-paused='true'] .hero-water-shimmer {
+[data-paused='true'] .hero-water-shimmer,
+[data-paused='true'] .hero-water-shimmer::before,
+[data-paused='true'] .marquee-track,
+[data-paused='true'] .pulse-dot::after {
   animation-play-state: paused;
 }
 
@@ -368,11 +388,18 @@ body {
 @keyframes waterGlint {
   from {
     transform: translate3d(-2%, 0, 0) scaleY(0.97);
-    background-position: 0% 0%;
   }
   to {
     transform: translate3d(3%, 1%, 0) scaleY(1.04);
-    background-position: 100% 70%;
+  }
+}
+
+@keyframes waterGlintDrift {
+  from {
+    transform: translate3d(-12%, -8%, 0);
+  }
+  to {
+    transform: translate3d(12%, 8%, 0);
   }
 }
 
@@ -557,14 +584,35 @@ body {
   }
 }
 
+/*
+ * Halo pulsé : anneau statique (ombre fixe) + onde en pseudo-élément animée
+ * par `transform`/`opacity` seulement, jouée par le compositeur. Animer
+ * `box-shadow` en boucle infinie repeignait la pastille à chaque image sur
+ * le thread principal, en concurrence avec le défilement.
+ */
 .pulse-dot {
+  position: relative;
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--pole) 18%, transparent);
+}
+
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--pole) 18%, transparent);
   animation: pulseDot 2.4s cubic-bezier(0.2, 0.7, 0.1, 1) infinite;
 }
 
 @keyframes pulseDot {
-  50% {
-    box-shadow: 0 0 0 8px transparent;
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50%,
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
   }
 }
 

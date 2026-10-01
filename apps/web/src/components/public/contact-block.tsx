@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react';
 import { EWES_CONTACT } from '@/data/contact';
+import { useInView } from '@/hooks/useInView';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Link } from '@/i18n/navigation';
 import { ContactForm } from './contact-form';
@@ -51,15 +52,18 @@ export function ContactBlock() {
 
   const [rotation, setRotation] = useState(0);
   const [chosen, setChosen] = useState<string | null>(null);
+  // Le mot qui change modifie la largeur du titre (nouvelle mise en page) :
+  // inutile, et coûteux pendant le défilement, quand le bloc est hors écran.
+  const { ref: sectionRef, inView } = useInView<HTMLElement>();
 
   useEffect(() => {
-    if (chosen || reducedMotion) return;
+    if (chosen || reducedMotion || !inView) return;
     const id = window.setInterval(
       () => setRotation((value) => (value + 1) % SECTOR_KEYS.length),
       ROTATION_MS,
     );
     return () => window.clearInterval(id);
-  }, [chosen, reducedMotion]);
+  }, [chosen, reducedMotion, inView]);
 
   const sector = chosen ?? (reducedMotion ? 'AUTRE' : SECTOR_KEYS[rotation]);
   const word = t(`words.${sector}`);
@@ -86,6 +90,8 @@ export function ContactBlock() {
 
   return (
     <section
+      ref={sectionRef}
+      data-paused={!inView}
       aria-labelledby="home-contact-title"
       className="tone-night relative overflow-hidden bg-night-deep px-6 py-24 md:px-16 md:py-32"
     >

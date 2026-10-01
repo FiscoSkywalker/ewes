@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/public/section-heading';
 import { EnvironmentServicesList } from '@/components/public/environment-services-list';
+import { useInView } from '@/hooks/useInView';
 import { POLE_ANCHORS } from './services-overview';
 
 /** Chapitre ENV (Environnement) de l'Accueil, accent malachite — homepage uniquement. */
@@ -12,6 +13,8 @@ export function EnvironmentSection() {
   const t = useTranslations('Environment');
   const figureRef = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
+  // Dérive lente de la photo (animation en boucle) suspendue hors écran.
+  const { ref: sectionRef, inView: visible } = useInView<HTMLElement>();
 
   // IntersectionObserver plutôt que ScrollTrigger : insensible aux décalages de
   // mise en page (polices, images au-dessus) qui faussaient la position de
@@ -35,6 +38,8 @@ export function EnvironmentSection() {
 
   return (
     <section
+      ref={sectionRef}
+      data-paused={!visible}
       id={POLE_ANCHORS.env}
       className="pole-env section-shell flex items-center bg-paper-muted pointer-events-none"
     >

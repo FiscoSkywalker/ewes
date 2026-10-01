@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { EWES_CLIENTS } from '@/data/clients';
+import { useInView } from '@/hooks/useInView';
 
 /** Losange séparateur, aux couleurs des trois pôles en alternance. */
 const SEPARATOR_TONES = ['bg-malachite', 'bg-primary', 'bg-copper'];
@@ -9,10 +10,12 @@ const SEPARATOR_TONES = ['bg-malachite', 'bg-primary', 'bg-copper'];
 /**
  * Bandeau défilant des clients et partenaires — homepage uniquement. Liste
  * doublée pour une boucle continue ; la copie est masquée aux lecteurs
- * d'écran. Pause au survol ; statique si l'utilisateur réduit les animations.
+ * d'écran. Pause au survol et hors écran ; statique si l'utilisateur réduit
+ * les animations.
  */
 export function ClientsMarquee() {
   const t = useTranslations('Clients');
+  const { ref, inView } = useInView<HTMLElement>();
 
   const list = (hidden: boolean) => (
     <ul className="flex flex-none" aria-hidden={hidden || undefined}>
@@ -32,6 +35,8 @@ export function ClientsMarquee() {
 
   return (
     <section
+      ref={ref}
+      data-paused={!inView}
       className="marquee border-y border-sand/10 bg-white py-8"
       aria-label={t('label')}
     >
