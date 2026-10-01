@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -18,6 +19,10 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { ServicesService } from './services.service.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
+import {
+  CreateServiceOfferingDto,
+  UpdateServiceOfferingDto,
+} from './dto/service-offering.dto.js';
 
 @ApiTags('admin/services')
 @ApiBearerAuth()
@@ -50,6 +55,33 @@ export class AdminServicesController {
     @Body() dto: UpdateServiceDto,
   ) {
     return this.servicesService.update(id, dto);
+  }
+
+  @Post(':id/offerings')
+  @ApiOperation({ summary: 'Ajouter une prestation à un service' })
+  addOffering(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateServiceOfferingDto,
+  ) {
+    return this.servicesService.addOffering(id, dto);
+  }
+
+  @Patch(':id/offerings/:offeringId')
+  updateOffering(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('offeringId', ParseUUIDPipe) offeringId: string,
+    @Body() dto: UpdateServiceOfferingDto,
+  ) {
+    return this.servicesService.updateOffering(id, offeringId, dto);
+  }
+
+  @Delete(':id/offerings/:offeringId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeOffering(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('offeringId', ParseUUIDPipe) offeringId: string,
+  ) {
+    await this.servicesService.removeOffering(id, offeringId);
   }
 
   @Post(':id/publish')

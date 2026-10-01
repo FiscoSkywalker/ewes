@@ -1,10 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   Matches,
   MaxLength,
+  Min,
 } from 'class-validator';
 import { SLUG_PATTERN } from '../../../common/utils/slug.js';
 
@@ -30,6 +32,18 @@ export class CreateServiceDto {
   @MaxLength(200)
   nameEn?: string;
 
+  @ApiPropertyOptional({ description: 'Accroche courte sous le nom du service.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  taglineFr?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  taglineEn?: string;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -39,4 +53,10 @@ export class CreateServiceDto {
   @IsOptional()
   @IsString()
   descriptionEn?: string;
+
+  @ApiPropertyOptional({ description: 'Position dans la liste (croissant).' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  sortOrder?: number;
 }

@@ -69,6 +69,14 @@ interface RawService {
   desc?: string;
 }
 
+/** Contenu d'un pôle venu de l'API (une seule langue déjà choisie). */
+export interface PoleContent {
+  name: string;
+  tagline: string | null;
+  description: string;
+  offerings: { title: string; text: string }[];
+}
+
 /** Nombre de prestations d'un pôle, formaté (« 8 prestations », « 4 volets »). */
 export function usePoleCount(pole: ServicePole) {
   const t = useTranslations('ServicesOverview');
@@ -86,15 +94,22 @@ export function usePoleCount(pole: ServicePole) {
 export function ServiceChapter({
   pole,
   index,
+  data,
 }: {
   pole: ServicePole;
   index: number;
+  /** Contenu piloté par l'API ; absent = repli sur les messages statiques. */
+  data?: PoleContent;
 }) {
   const t = useTranslations('ServicesOverview');
   const config = SERVICE_POLES[pole];
   const tPole = useTranslations(config.namespace);
-  const services = tPole.raw(config.listKey) as RawService[];
-  const count = usePoleCount(pole);
+  const services: RawService[] =
+    data?.offerings ?? (tPole.raw(config.listKey) as RawService[]);
+  const staticCount = usePoleCount(pole);
+  const count = data
+    ? t(pole === 'ing' ? 'fields' : 'services', { count: services.length })
+    : staticCount;
 
   return (
     <section
@@ -122,13 +137,15 @@ export function ServiceChapter({
             className="section-title mt-8 text-4xl text-sand sm:text-5xl lg:text-6xl"
             data-split
           >
-            {t(`poles.${pole}`)}
+            {data?.name ?? t(`poles.${pole}`)}
           </h2>
-          <p className="mt-5 font-heading text-xl font-semibold leading-snug text-pole" data-reveal>
-            {tPole('title')}
-          </p>
+          {(data ? data.tagline : tPole('title')) && (
+            <p className="mt-5 font-heading text-xl font-semibold leading-snug text-pole" data-reveal>
+              {data ? data.tagline : tPole('title')}
+            </p>
+          )}
           <p className="mt-4 max-w-xl text-sm leading-7 text-sand/72 sm:text-base" data-reveal>
-            {tPole('description')}
+            {data?.description ?? tPole('description')}
           </p>
 
           <figure className="relative mt-10 aspect-[4/3] overflow-hidden rounded-sheet" data-image-reveal>
