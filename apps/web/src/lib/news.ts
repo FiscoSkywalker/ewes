@@ -65,3 +65,36 @@ export function readingMinutes(item: NewsItem) {
   const words = item.body.join(' ').split(/\s+/).length;
   return Math.max(1, Math.round(words / 200));
 }
+
+/** Actualités affichées dans le carnet de bord de l'Accueil. */
+export const HOME_NEWS_COUNT = 4;
+
+export interface HomeNews {
+  items: NewsItem[];
+  /** Rubriques publiées et leur nombre d'actualités (liens vers /actualites). */
+  categories: { key: NewsCategory; count: number }[];
+}
+
+/**
+ * Données de la section Actualités de l'Accueil, lues côté serveur (ISR) et
+ * transmises à l'arbre client : aucun appel à l'API depuis le navigateur.
+ * Une API indisponible ne doit pas casser l'Accueil : la section affiche
+ * alors son état vide.
+ */
+export async function getHomeNews(): Promise<HomeNews> {
+  try {
+    const all = await getAllNews();
+    const counts = new Map<NewsCategory, number>();
+    for (const item of all)
+      counts.set(item.category, (counts.get(item.category) ?? 0) + 1);
+    return {
+      items: all.slice(0, HOME_NEWS_COUNT),
+      categories: NEWS_CATEGORIES.filter((key) => counts.has(key)).map(
+        (key) => ({ key, count: counts.get(key)! }),
+      ),
+    };
+  } catch (error) {
+    console.error('[news] Accueil : actualités indisponibles', error);
+    return { items: [], categories: [] };
+  }
+}

@@ -44,14 +44,8 @@ function readLocalTime(locale: string): LocalTime {
   };
 }
 
-/**
- * Carte « Lubumbashi, maintenant » de la page Contact : heure locale du siège
- * et état des bureaux, utile aux partenaires étrangers. Composant client
- * isolé ; l'heure n'est calculée qu'après le montage pour éviter tout écart
- * d'hydratation entre le serveur et le navigateur.
- */
-export function OfficeStatus() {
-  const t = useTranslations('ContactPage.status');
+/** Heure locale du siège, rafraîchie toutes les 15 s (null avant le montage). */
+function useOfficeTime() {
   const locale = useLocale();
   const [time, setTime] = useState<LocalTime | null>(null);
 
@@ -61,6 +55,47 @@ export function OfficeStatus() {
     const id = window.setInterval(tick, 15_000);
     return () => window.clearInterval(id);
   }, [locale]);
+
+  return time;
+}
+
+/**
+ * Version compacte (bloc Contact de l'Accueil) : pastille d'état et heure
+ * locale sur une ligne, pour fonds nuit.
+ */
+export function OfficeStatusInline() {
+  const t = useTranslations('ContactPage.status');
+  const time = useOfficeTime();
+
+  return (
+    <p
+      className={`inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-on-night/15 bg-night/40 px-4 py-2 text-xs text-on-night backdrop-blur-sm transition-opacity duration-500 ${
+        time ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      <span
+        className={`h-2 w-2 rounded-full ${time?.open ? 'pulse-dot bg-malachite-bright' : 'bg-copper-bright'}`}
+        aria-hidden="true"
+      />
+      <span className="font-semibold">
+        {time?.open ? t('open') : t('closed')}
+      </span>
+      <span className="font-mono text-[11px] tabular-nums text-on-night-muted">
+        {time?.label ?? '--:--'} · {t('label')}
+      </span>
+    </p>
+  );
+}
+
+/**
+ * Carte « Lubumbashi, maintenant » de la page Contact : heure locale du siège
+ * et état des bureaux, utile aux partenaires étrangers. Composant client
+ * isolé ; l'heure n'est calculée qu'après le montage pour éviter tout écart
+ * d'hydratation entre le serveur et le navigateur.
+ */
+export function OfficeStatus() {
+  const t = useTranslations('ContactPage.status');
+  const time = useOfficeTime();
 
   const hours = `${EWES_OFFICE_HOURS.opensAt} – ${EWES_OFFICE_HOURS.closesAt}`;
 

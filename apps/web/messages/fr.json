@@ -1004,7 +1004,14 @@
       "directions": "Itinéraire",
       "coordinates": "11°40′ S · 27°29′ E",
       "mapLabel": "Carte stylisée : siège d’EWES à Lubumbashi"
-    }
+    },
+    "errors": {
+      "required": "Ce champ est obligatoire.",
+      "email": "Saisissez une adresse e-mail valide (ex. nom@entreprise.cd).",
+      "messageShort": "Décrivez votre besoin en {min} caractères au moins."
+    },
+    "requiredNote": "Les champs marqués * sont obligatoires.",
+    "privacyNote": "Vos informations servent uniquement à répondre à votre demande."
   },
   "HomeAbout": {
     "eyebrow": "01 · À propos",
@@ -1056,6 +1063,13 @@
       "eau": "Eau",
       "ing": "Travaux d’ingénierie"
     },
+    "chapterLink": "Explorer le pôle",
+    "detailLink": "Fiche détaillée",
+    "allLink": "Tous nos services",
+    "relations": [
+      "oriente",
+      "guide"
+    ],
     "audiencesTitle": "Pour qui nous travaillons"
   },
   "Method": {
@@ -1116,7 +1130,14 @@
         "excerpt": "Une session consacrée à la réalisation des inspections environnementales et sociales dans le secteur minier.",
         "imageAlt": "Analyse de la qualité de l’eau sur le terrain"
       }
-    ]
+    ],
+    "indexLabel": "Dernières actualités",
+    "categoriesLabel": "Rubriques",
+    "pause": "Mettre en pause le défilement des actualités",
+    "play": "Reprendre le défilement des actualités",
+    "empty": "Aucune actualité publiée pour le moment. Retrouvez nos rapports et guides dans la bibliothèque documentaire.",
+    "emptyCta": "Consulter les documents",
+    "readLabel": "Lire l’article : {title}"
   },
   "HomeDocuments": {
     "eyebrow": "05 · Documents",
@@ -1243,6 +1264,18 @@
     "lead": "Étude d’impact, audit environnemental, adduction d’eau, analyses ou formation : quelle que soit la nature de votre projet, l’équipe EWES est à votre écoute.",
     "address": "Adresse",
     "phone": "Téléphone",
-    "email": "E-mail"
+    "email": "E-mail",
+    "titleStart": "Parlons de votre",
+    "titleEnd": ".",
+    "words": {
+      "ENVIRONNEMENT": "étude d’impact",
+      "EAU": "projet d’eau",
+      "ANALYSES": "campagne d’analyses",
+      "GESTION": "gestion des déchets",
+      "INGENIERIE": "chantier",
+      "FORMATION": "formation",
+      "AUTRE": "projet"
+    },
+    "moreLink": "Toutes nos coordonnées"
   }
 }
