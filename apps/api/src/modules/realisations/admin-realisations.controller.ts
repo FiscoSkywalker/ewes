@@ -23,6 +23,9 @@ import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js
 import { RealisationsService } from './realisations.service.js';
 import { CreateRealisationDto } from './dto/create-realisation.dto.js';
 import { UpdateRealisationDto } from './dto/update-realisation.dto.js';
+import { SetRealisationDocumentsDto } from './dto/set-realisation-documents.dto.js';
+import { SetRealisationPartnersDto } from './dto/set-realisation-partners.dto.js';
+import { toAdminView } from './realisation-views.js';
 import { SetRealisationImagesDto } from './dto/set-realisation-images.dto.js';
 import { ListAdminRealisationsDto } from './dto/list-realisations.dto.js';
 
@@ -36,27 +39,28 @@ export class AdminRealisationsController {
 
   @Get()
   @ApiOperation({ summary: 'Lister les réalisations (tous statuts)' })
-  list(@Query() query: ListAdminRealisationsDto) {
-    return this.realisationsService.listAdmin(query);
+  async list(@Query() query: ListAdminRealisationsDto) {
+    const { data, meta } = await this.realisationsService.listAdmin(query);
+    return { data: data.map(toAdminView), meta };
   }
 
   @Get(':id')
-  get(@Param('id', ParseUUIDPipe) id: string) {
-    return this.realisationsService.findById(id);
+  async get(@Param('id', ParseUUIDPipe) id: string) {
+    return toAdminView(await this.realisationsService.findById(id));
   }
 
   @Post()
   @ApiOperation({ summary: 'Créer une réalisation (toujours en brouillon)' })
-  create(@Body() dto: CreateRealisationDto) {
-    return this.realisationsService.create(dto);
+  async create(@Body() dto: CreateRealisationDto) {
+    return toAdminView(await this.realisationsService.create(dto));
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateRealisationDto,
   ) {
-    return this.realisationsService.update(id, dto);
+    return toAdminView(await this.realisationsService.update(id, dto));
   }
 
   @Put(':id/images')
@@ -64,41 +68,64 @@ export class AdminRealisationsController {
     summary:
       'Définir la galerie (images de la médiathèque, dans l’ordre d’affichage)',
   })
-  setImages(
+  async setImages(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SetRealisationImagesDto,
   ) {
-    return this.realisationsService.setImages(id, dto);
+    return toAdminView(await this.realisationsService.setImages(id, dto));
+  }
+
+  @Put(':id/partners')
+  @ApiOperation({
+    summary: 'Définir les partenaires et bailleurs (dans l’ordre d’affichage)',
+  })
+  async setPartners(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: SetRealisationPartnersDto,
+  ) {
+    return toAdminView(await this.realisationsService.setPartners(id, dto));
+  }
+
+  @Put(':id/documents')
+  @ApiOperation({
+    summary:
+      'Définir les documents publics associés (dans l’ordre d’affichage)',
+  })
+  async setDocuments(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: SetRealisationDocumentsDto,
+  ) {
+    return toAdminView(await this.realisationsService.setDocuments(id, dto));
   }
 
   @Post(':id/publish')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Publier explicitement une réalisation' })
-  publish(
+  async publish(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.realisationsService.publish(actor, id);
+    return toAdminView(await this.realisationsService.publish(actor, id));
   }
 
   @Post(':id/unpublish')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Dépublier (retour en brouillon)' })
-  unpublish(
+  async unpublish(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.realisationsService.unpublish(actor, id);
+    return toAdminView(await this.realisationsService.unpublish(actor, id));
   }
 
   @Post(':id/archive')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Archiver (dépublié, conservé pour l’historique)' })
-  archive(
+  async archive(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.realisationsService.archive(actor, id);
+    return toAdminView(await this.realisationsService.archive(actor, id));
   }
 
   @Delete(':id')

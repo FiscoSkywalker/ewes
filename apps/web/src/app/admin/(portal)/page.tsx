@@ -482,6 +482,8 @@ const ACTION_LABELS: Record<string, string> = {
   REALISATION_UNPUBLISHED: 'Réalisation dépubliée',
   REALISATION_ARCHIVED: 'Réalisation archivée',
   REALISATION_DELETED: 'Réalisation supprimée',
+  REALISATION_PARTNER_RENAMED: 'Partenaire renommé',
+  REALISATION_PARTNER_REMOVED: 'Partenaire retiré des réalisations',
   ARTICLE_PUBLISHED: 'Article publié',
   ARTICLE_UNPUBLISHED: 'Article dépublié',
   ARTICLE_ARCHIVED: 'Article archivé',

@@ -32,7 +32,9 @@ import {
   type ChecklistItem,
 } from '@/components/admin/content/publication-panel';
 import { TranslationCard } from '@/components/admin/content/translation-card';
+import { DocumentsCard } from '@/components/admin/realisations/documents-card';
 import { GalleryCard } from '@/components/admin/realisations/gallery-card';
+import { PartnersCard } from '@/components/admin/realisations/partners-card';
 import { RealisationForm } from '@/components/admin/realisations/realisation-form';
 import {
   Badge,
@@ -176,7 +178,7 @@ function Detail({ realisation: r }: { realisation: Realisation }) {
         <div className="space-y-6">
           {/* `key` : après un enregistrement, la galerie repart de ce que le serveur a renvoyé. */}
           <GalleryCard
-            key={r.images.map((image) => image.id).join()}
+            key={`gallery:${r.images.map((image) => image.id).join()}`}
             realisation={r}
             onSaved={(saved) => applySaved(queryClient, saved)}
           />
@@ -200,6 +202,16 @@ function Detail({ realisation: r }: { realisation: Realisation }) {
               await applySaved(queryClient, saved);
               toast.success('Modifications enregistrées');
             }}
+          />
+          {/* `key` : les identifiants des partenaires changent à chaque enregistrement. */}
+          <PartnersCard
+            key={`partners:${r.partners.map((partner) => partner.id).join()}`}
+            realisation={r}
+            onSaved={(saved) => applySaved(queryClient, saved)}
+          />
+          <DocumentsCard
+            realisation={r}
+            onSaved={(saved) => applySaved(queryClient, saved)}
           />
         </div>
 

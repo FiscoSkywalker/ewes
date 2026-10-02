@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ContentStatus } from './public-documents';
+import type { ContentStatus, DocumentCategory } from './public-documents';
 
 /** Types de mission (champ `projectType`), alignés sur les filtres du site public. */
 export const REALISATION_TYPES = [
@@ -41,6 +41,40 @@ export interface RealisationImage {
 /** Plafond de l'API (`MAX_REALISATION_IMAGES`). */
 export const MAX_REALISATION_IMAGES = 12;
 
+/** Plafonds de l'API pour les partenaires et les documents associés. */
+export const MAX_REALISATION_PARTNERS = 20;
+export const MAX_REALISATION_DOCUMENTS = 20;
+export const MAX_PARTNER_NAME = 150;
+
+/** Partenaire ou bailleur cité dans une réalisation. */
+export interface RealisationPartner {
+  id: string;
+  name: string;
+}
+
+/** Document public associé à une réalisation (résumé renvoyé par l'API). */
+export interface RealisationDocument {
+  id: string;
+  slug: string;
+  titleFr: string;
+  titleEn: string | null;
+  category: DocumentCategory;
+  year: number | null;
+  pages: number | null;
+  status: ContentStatus;
+  publishedAt: string | null;
+}
+
+/** Entrée de l'annuaire des partenaires (`GET /admin/realisation-partners`). */
+export interface PartnerEntry {
+  /** Graphie la plus employée. */
+  name: string;
+  /** Autres graphies rencontrées (à unifier par un renommage). */
+  variants: string[];
+  count: number;
+  realisations: { id: string; titleFr: string }[];
+}
+
 /** Réalisation telle que renvoyée par `GET /admin/realisations[/:id]`. */
 export interface Realisation {
   id: string;
@@ -65,6 +99,8 @@ export interface Realisation {
   serviceId: string | null;
   service: { slug: string } | null;
   images: RealisationImage[];
+  partners: RealisationPartner[];
+  documents: RealisationDocument[];
   createdAt: string;
   updatedAt: string;
 }

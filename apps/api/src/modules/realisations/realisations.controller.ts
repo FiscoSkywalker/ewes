@@ -4,6 +4,7 @@ import {
   RealisationsService,
   type RealisationWithRelations,
 } from './realisations.service.js';
+import { publicDocumentsOf } from './realisation-views.js';
 import { ListRealisationsDto } from './dto/list-realisations.dto.js';
 
 /**
@@ -32,6 +33,8 @@ function toPublic(realisation: RealisationWithRelations) {
       altFr,
       altEn,
     })),
+    partners: realisation.partners.map((partner) => partner.name),
+    documents: publicDocumentsOf(realisation),
     serviceSlug: realisation.service?.slug ?? null,
     publishedAt: realisation.publishedAt,
   };

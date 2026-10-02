@@ -29,11 +29,16 @@ describe('Realisations (e2e)', () => {
   const gestionnaireEmail = `e2e-real-gest-${stamp}@ewes.example`;
   const userEmail = `e2e-real-user-${stamp}@ewes.example`;
 
+  // Un jeton par compte : la connexion a sa propre limite de fréquence stricte.
+  const tokens = new Map<string, string>();
   async function login(email: string): Promise<string> {
+    const cached = tokens.get(email);
+    if (cached) return cached;
     const res = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email, password })
       .expect(200);
+    tokens.set(email, res.body.accessToken as string);
     return res.body.accessToken as string;
   }
 
@@ -95,6 +100,9 @@ describe('Realisations (e2e)', () => {
   afterAll(async () => {
     await prisma.media.deleteMany({
       where: { uploadedBy: { email: gestionnaireEmail } },
+    });
+    await prisma.publicDocument.deleteMany({
+      where: { slug: { startsWith: prefix } },
     });
     await prisma.realisation.deleteMany({
       where: { slug: { startsWith: prefix } },
@@ -618,6 +626,380 @@ describe('Realisations (e2e)', () => {
         .delete(`/api/v1/admin/media/${image.id}`)
         .set(auth)
         .expect(204);
+    });
+  });
+
+  describe('partners and associated documents', () => {
+    const putTo = (
+      id: string,
+      resource: 'partners' | 'documents',
+      body: unknown,
+      token?: string,
+    ) =>
+      request(app.getHttpServer())
+        .put(`/api/v1/admin/realisations/${id}/${resource}`)
+        .set(token ? { Authorization: token } : auth)
+        .send(body as object);
+    const getAdmin = async (id: string) =>
+      (
+        await request(app.getHttpServer())
+          .get(`/api/v1/admin/realisations/${id}`)
+          .set(auth)
+          .expect(200)
+      ).body;
+    const publishable = (slug: string) =>
+      create(slug, { year: 2024, projectType: 'AUDIT' });
+    const publish = (id: string) =>
+      request(app.getHttpServer())
+        .post(`/api/v1/admin/realisations/${id}/publish`)
+        .set(auth)
+        .expect(200);
+    const makeDocument = (
+      suffix: string,
+      extra: Record<string, unknown> = {},
+    ) =>
+      prisma.publicDocument.create({
+        data: {
+          slug: `${prefix}-doc-${suffix}`,
+          titleFr: `Document ${suffix}`,
+          category: 'REPORT',
+          storedName: `${prefix}-${suffix}.pdf`,
+          fileUrl: `/documents/files/${prefix}-${suffix}.pdf`,
+          fileType: 'application/pdf',
+          fileSizeBytes: 1234,
+          ...extra,
+        },
+      });
+
+    it('keeps an ordered, tidy list of partners and shows it publicly', async () => {
+      const slug = `${prefix}-partners`;
+      const id = await publishable(slug);
+      expect((await getAdmin(id)).partners).toEqual([]);
+
+      const res = await putTo(id, 'partners', {
+        partners: [
+          '  Banque   Mondiale ',
+          'banque mondiale',
+          'Metalkol',
+          '   ',
+          'FNPSS',
+        ],
+      }).expect(200);
+      // Espaces nettoyés, doublon (casse ignorée) et vide écartés, ordre gardé.
+      expect(res.body.partners.map((p: { name: string }) => p.name)).toEqual([
+        'Banque Mondiale',
+        'Metalkol',
+        'FNPSS',
+      ]);
+
+      const reordered = await putTo(id, 'partners', {
+        partners: ['FNPSS', 'Banque Mondiale'],
+      }).expect(200);
+      expect(
+        reordered.body.partners.map((p: { name: string }) => p.name),
+      ).toEqual(['FNPSS', 'Banque Mondiale']);
+
+      await publish(id);
+      const visible = await request(app.getHttpServer())
+        .get(`/api/v1/realisations/${slug}`)
+        .expect(200);
+      expect(visible.body.partners).toEqual(['FNPSS', 'Banque Mondiale']);
+
+      const cleared = await putTo(id, 'partners', { partners: [] }).expect(200);
+      expect(cleared.body.partners).toEqual([]);
+    });
+
+    it('refuses invalid partner lists and unauthorised callers', async () => {
+      const id = await create(`${prefix}-partners-bad`);
+      await putTo(id, 'partners', { partners: 'Metalkol' }).expect(400);
+      await putTo(id, 'partners', { partners: [42] }).expect(400);
+      await putTo(id, 'partners', { partners: ['x'.repeat(151)] }).expect(400);
+      await putTo(id, 'partners', {
+        partners: Array.from({ length: 21 }, (_, i) => `Partenaire ${i}`),
+      }).expect(400);
+      await putTo(id, 'partners', {}).expect(400);
+      expect((await getAdmin(id)).partners).toEqual([]);
+
+      await request(app.getHttpServer())
+        .put(`/api/v1/admin/realisations/${id}/partners`)
+        .send({ partners: [] })
+        .expect(401);
+      const userToken = await login(userEmail);
+      await putTo(
+        id,
+        'partners',
+        { partners: ['A'] },
+        `Bearer ${userToken}`,
+      ).expect(403);
+      await putTo('00000000-0000-4000-8000-000000000000', 'partners', {
+        partners: [],
+      }).expect(404);
+    });
+
+    it('associates public documents in order and only shows published ones publicly', async () => {
+      const slug = `${prefix}-docs`;
+      const id = await publishable(slug);
+      const published = await makeDocument('a', {
+        status: 'PUBLISHED',
+        publishedAt: new Date(Date.now() - 86_400_000),
+      });
+      const draft = await makeDocument('b');
+      const scheduled = await makeDocument('c', {
+        status: 'PUBLISHED',
+        publishedAt: new Date(Date.now() + 86_400_000),
+      });
+
+      // Dépublié ou archivé : la date de première publication est conservée, le site ne doit pas le montrer.
+      const archived = await makeDocument('e', {
+        status: 'ARCHIVED',
+        publishedAt: new Date(Date.now() - 86_400_000),
+      });
+
+      const res = await putTo(id, 'documents', {
+        documentIds: [draft.id, published.id, scheduled.id, archived.id],
+      }).expect(200);
+      expect(res.body.documents.map((d: { slug: string }) => d.slug)).toEqual([
+        draft.slug,
+        published.slug,
+        scheduled.slug,
+        archived.slug,
+      ]);
+      expect(res.body.documents[0]).toMatchObject({
+        id: draft.id,
+        status: 'DRAFT',
+        titleFr: 'Document b',
+      });
+      // L'administration n'a pas besoin des détails du fichier.
+      expect(res.body.documents[0]).not.toHaveProperty('fileUrl');
+
+      await publish(id);
+      const visible = await request(app.getHttpServer())
+        .get(`/api/v1/realisations/${slug}`)
+        .expect(200);
+      expect(visible.body.documents).toEqual([
+        {
+          slug: published.slug,
+          titleFr: 'Document a',
+          titleEn: null,
+          category: 'REPORT',
+          year: null,
+          pages: null,
+          file: {
+            url: `/documents/files/${prefix}-a.pdf`,
+            mimeType: 'application/pdf',
+            sizeBytes: 1234,
+          },
+        },
+      ]);
+
+      // Le brouillon, une fois publié, apparaît sans autre action.
+      await prisma.publicDocument.update({
+        where: { id: draft.id },
+        data: { status: 'PUBLISHED', publishedAt: new Date(Date.now() - 1000) },
+      });
+      const later = await request(app.getHttpServer())
+        .get(`/api/v1/realisations/${slug}`)
+        .expect(200);
+      expect(later.body.documents.map((d: { slug: string }) => d.slug)).toEqual(
+        [draft.slug, published.slug],
+      );
+
+      // Un document supprimé disparaît des fiches et ne peut plus être associé.
+      await prisma.publicDocument.update({
+        where: { id: published.id },
+        data: { deletedAt: new Date() },
+      });
+      expect(
+        (await getAdmin(id)).documents.map((d: { id: string }) => d.id),
+      ).toEqual([draft.id, scheduled.id, archived.id]);
+      const gone = await putTo(id, 'documents', {
+        documentIds: [published.id],
+      });
+      expect(gone.status).toBe(404);
+      expect(gone.body.code).toBe('PUBLIC_DOCUMENT_NOT_FOUND');
+      expect(gone.body.details).toEqual([published.id]);
+
+      const cleared = await putTo(id, 'documents', { documentIds: [] }).expect(
+        200,
+      );
+      expect(cleared.body.documents).toEqual([]);
+    });
+
+    it('refuses invalid document lists and unauthorised callers', async () => {
+      const id = await create(`${prefix}-docs-bad`);
+      const doc = await makeDocument('d');
+      await putTo(id, 'documents', { documentIds: ['pas-un-uuid'] }).expect(
+        400,
+      );
+      await putTo(id, 'documents', { documentIds: [doc.id, doc.id] }).expect(
+        400,
+      );
+      await putTo(id, 'documents', { documentIds: 'x' }).expect(400);
+      await putTo(id, 'documents', {}).expect(400);
+      await putTo(id, 'documents', {
+        documentIds: Array.from(
+          { length: 21 },
+          (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+        ),
+      }).expect(400);
+      const unknown = await putTo(id, 'documents', {
+        documentIds: [doc.id, '00000000-0000-4000-8000-000000000000'],
+      });
+      expect(unknown.status).toBe(404);
+      // Tout ou rien : le document valide n'a pas été associé.
+      expect((await getAdmin(id)).documents).toEqual([]);
+
+      await request(app.getHttpServer())
+        .put(`/api/v1/admin/realisations/${id}/documents`)
+        .send({ documentIds: [] })
+        .expect(401);
+      const userToken = await login(userEmail);
+      await putTo(
+        id,
+        'documents',
+        { documentIds: [doc.id] },
+        `Bearer ${userToken}`,
+      ).expect(403);
+    });
+
+    it('lists each partner once, renames or merges it everywhere and audits it', async () => {
+      const tag = `${stamp}`;
+      const metalkol = `Metalkol ${tag}`;
+      const fnpss = `FNPSS ${tag}`;
+      const wb = `Banque Mondiale ${tag}`;
+      const worldBank = `World Bank ${tag}`;
+      const r1 = await create(`${prefix}-dir-1`);
+      const r2 = await create(`${prefix}-dir-2`);
+      const ghost = await create(`${prefix}-dir-ghost`);
+      await putTo(r1, 'partners', { partners: [metalkol, fnpss] }).expect(200);
+      await putTo(r2, 'partners', {
+        partners: [metalkol.toUpperCase(), wb, worldBank],
+      }).expect(200);
+      await putTo(ghost, 'partners', { partners: [`Fantôme ${tag}`] }).expect(
+        200,
+      );
+      await request(app.getHttpServer())
+        .delete(`/api/v1/admin/realisations/${ghost}`)
+        .set(auth)
+        .expect(204);
+
+      const directory = (query = '') =>
+        request(app.getHttpServer())
+          .get(
+            `/api/v1/admin/realisation-partners?q=${encodeURIComponent(query || tag)}`,
+          )
+          .set(auth);
+      const listed = await directory().expect(200);
+      const names = listed.body.data.map((p: { name: string }) =>
+        p.name.toLowerCase(),
+      );
+      // Une fiche supprimée ne compte plus ; la casse ne crée pas de doublon.
+      expect(names).toEqual(
+        [fnpss, metalkol, wb, worldBank].map((n) => n.toLowerCase()).sort(),
+      );
+      const m = listed.body.data.find(
+        (p: { name: string }) =>
+          p.name.toLowerCase() === metalkol.toLowerCase(),
+      );
+      expect(m.count).toBe(2);
+      expect(m.variants).toHaveLength(1);
+      expect(m.realisations.map((r: { id: string }) => r.id).sort()).toEqual(
+        [r1, r2].sort(),
+      );
+
+      // Recherche sans accents ni casse.
+      const found = await directory(`BANQUE mondiale ${tag}`).expect(200);
+      expect(found.body.data).toHaveLength(1);
+
+      // Renommer : toutes les graphies, dans toutes les fiches.
+      const renamed = await request(app.getHttpServer())
+        .post('/api/v1/admin/realisation-partners/rename')
+        .set(auth)
+        .send({ from: metalkol.toLowerCase(), to: `Metalkol SA ${tag}` })
+        .expect(200);
+      expect(renamed.body).toEqual({ updated: 2, merged: 0 });
+      expect(
+        (await getAdmin(r1)).partners.map((p: { name: string }) => p.name),
+      ).toEqual([`Metalkol SA ${tag}`, fnpss]);
+
+      // Fusionner : une fiche qui citait les deux ne cite plus qu'un nom.
+      const merged = await request(app.getHttpServer())
+        .post('/api/v1/admin/realisation-partners/rename')
+        .set(auth)
+        .send({ from: worldBank, to: wb })
+        .expect(200);
+      expect(merged.body).toEqual({ updated: 0, merged: 1 });
+      expect(
+        (await getAdmin(r2)).partners.map((p: { name: string }) => p.name),
+      ).toEqual([`Metalkol SA ${tag}`, wb]);
+
+      // Changer seulement la casse d'un nom ne le fait pas disparaître.
+      await request(app.getHttpServer())
+        .post('/api/v1/admin/realisation-partners/rename')
+        .set(auth)
+        .send({ from: fnpss, to: fnpss.toUpperCase() })
+        .expect(200);
+      expect((await getAdmin(r1)).partners[1].name).toBe(fnpss.toUpperCase());
+
+      const missing = await request(app.getHttpServer())
+        .post('/api/v1/admin/realisation-partners/rename')
+        .set(auth)
+        .send({ from: `Inconnu ${tag}`, to: 'X' });
+      expect(missing.status).toBe(404);
+      expect(missing.body.code).toBe('PARTNER_NOT_FOUND');
+      await request(app.getHttpServer())
+        .post('/api/v1/admin/realisation-partners/rename')
+        .set(auth)
+        .send({ from: wb, to: '   ' })
+        .expect(400);
+
+      // Retirer partout.
+      const removed = await request(app.getHttpServer())
+        .post('/api/v1/admin/realisation-partners/remove')
+        .set(auth)
+        .send({ name: `metalkol sa ${tag}` })
+        .expect(200);
+      expect(removed.body).toEqual({ removed: 2 });
+      expect(
+        (await getAdmin(r1)).partners.map((p: { name: string }) => p.name),
+      ).toEqual([fnpss.toUpperCase()]);
+      await request(app.getHttpServer())
+        .post('/api/v1/admin/realisation-partners/remove')
+        .set(auth)
+        .send({ name: `metalkol sa ${tag}` })
+        .expect(404);
+
+      const trail = await prisma.auditLog.findMany({
+        where: {
+          entityType: 'RealisationPartner',
+          action: {
+            in: ['REALISATION_PARTNER_RENAMED', 'REALISATION_PARTNER_REMOVED'],
+          },
+          OR: [{ beforeData: { path: ['name'], string_contains: tag } }],
+        },
+        orderBy: { createdAt: 'asc' },
+      });
+      expect(trail.map((e) => e.action)).toEqual([
+        'REALISATION_PARTNER_RENAMED',
+        'REALISATION_PARTNER_RENAMED',
+        'REALISATION_PARTNER_RENAMED',
+        'REALISATION_PARTNER_REMOVED',
+      ]);
+      expect(trail.every((e) => e.actorId !== null)).toBe(true);
+      expect(trail[0].afterData).toMatchObject({
+        name: `Metalkol SA ${tag}`,
+        realisations: 2,
+      });
+
+      // Réservé au personnel éditorial.
+      await request(app.getHttpServer())
+        .get('/api/v1/admin/realisation-partners')
+        .expect(401);
+      const userToken = await login(userEmail);
+      await request(app.getHttpServer())
+        .get('/api/v1/admin/realisation-partners')
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(403);
     });
   });
 });
