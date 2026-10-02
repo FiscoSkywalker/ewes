@@ -7,7 +7,7 @@ import type { QueryClient } from '@tanstack/react-query';
  */
 export function invalidatePortalData(queryClient: QueryClient) {
   return Promise.all(
-    ['contacts', 'emails', 'signals', 'dashboard'].map((key) =>
+    ['contacts', 'emails', 'documents', 'signals', 'dashboard'].map((key) =>
       queryClient.invalidateQueries({ queryKey: [key] }),
     ),
   );

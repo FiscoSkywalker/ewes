@@ -7,6 +7,8 @@ import {
 import { ContentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
+import { AuditService } from '../audit/audit.service.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import {
   DocumentStorageService,
   documentFileUrl,
@@ -50,6 +52,7 @@ export class DocumentsPublicsService {
     private readonly prisma: PrismaService,
     private readonly storage: DocumentStorageService,
     private readonly revalidator: FrontendRevalidator,
+    private readonly audit: AuditService,
   ) {}
 
   /** Lecture publique : PUBLISHED, non supprimé, date de publication atteinte. */
@@ -106,6 +109,23 @@ export class DocumentsPublicsService {
 
   pathOf(storedName: string) {
     return this.storage.pathOf(storedName);
+  }
+
+  /**
+   * Fichier d'un document quel que soit son statut, pour le personnel : un
+   * brouillon n'a pas d'adresse publique, il faut pourtant pouvoir le relire
+   * avant de le publier.
+   */
+  async findFileForStaff(id: string) {
+    const document = await this.findById(id);
+    if (!(await this.storage.exists(document.storedName))) {
+      throw new NotFoundException({
+        code: 'DOCUMENT_FILE_NOT_FOUND',
+        message: 'Fichier introuvable.',
+        details: [],
+      });
+    }
+    return document;
   }
 
   listAdmin(query: ListAdminPublicDocumentsDto) {
@@ -238,7 +258,7 @@ export class DocumentsPublicsService {
   }
 
   /** Publication explicite : elle exige un fichier présent sur le disque. */
-  async publish(id: string) {
+  async publish(actor: AuthenticatedUser, id: string) {
     const current = await this.findById(id);
     if (current.status === ContentStatus.PUBLISHED) return current;
     if (!(await this.storage.exists(current.storedName))) {
@@ -256,41 +276,68 @@ export class DocumentsPublicsService {
       },
       include: WITH_SERVICE,
     });
+    await this.record(actor, 'PUBLIC_DOCUMENT_PUBLISHED', published, current.status);
     await this.revalidate(published.slug);
     return published;
   }
 
   /** Retire immédiatement le document (et son fichier) du site public. */
-  unpublish(id: string) {
-    return this.setStatus(id, ContentStatus.DRAFT);
+  unpublish(actor: AuthenticatedUser, id: string) {
+    return this.setStatus(actor, id, ContentStatus.DRAFT, 'PUBLIC_DOCUMENT_UNPUBLISHED');
   }
 
   /** Dépublie en conservant le document pour l'historique interne. */
-  archive(id: string) {
-    return this.setStatus(id, ContentStatus.ARCHIVED);
+  archive(actor: AuthenticatedUser, id: string) {
+    return this.setStatus(actor, id, ContentStatus.ARCHIVED, 'PUBLIC_DOCUMENT_ARCHIVED');
   }
 
-  private async setStatus(id: string, status: ContentStatus) {
-    await this.findById(id);
+  private async setStatus(
+    actor: AuthenticatedUser,
+    id: string,
+    status: ContentStatus,
+    action: string,
+  ) {
+    const current = await this.findById(id);
+    if (current.status === status) return current;
     const updated = await this.prisma.publicDocument.update({
       where: { id },
       data: { status },
       include: WITH_SERVICE,
     });
+    await this.record(actor, action, updated, current.status);
     await this.revalidate(updated.slug);
     return updated;
+  }
+
+  /** Publication, dépublication, archivage et suppression sont toujours tracés (blueprint/09 §7). */
+  private record(
+    actor: AuthenticatedUser,
+    action: string,
+    document: { id: string; slug: string; status: ContentStatus },
+    before: ContentStatus,
+    after: Prisma.InputJsonValue = { status: document.status },
+  ) {
+    return this.audit.record({
+      actorId: actor.id,
+      action,
+      entityType: 'PublicDocument',
+      entityId: document.id,
+      before: { status: before, slug: document.slug },
+      after,
+    });
   }
 
   /**
    * Suppression logique : le document disparaît partout (site et
    * administration). Le fichier reste sur le disque, inatteignable.
    */
-  async remove(id: string) {
+  async remove(actor: AuthenticatedUser, id: string) {
     const current = await this.findById(id);
     await this.prisma.publicDocument.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
+    await this.record(actor, 'PUBLIC_DOCUMENT_DELETED', current, current.status, { deleted: true });
     await this.revalidate(current.slug);
   }
 

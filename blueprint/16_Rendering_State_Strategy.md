@@ -38,7 +38,7 @@ Formulaire de contact, filtres de portfolio/actualités, sélecteur de langue, u
 
 # 5. Gestion d'état
 
-État serveur (données métier) : TanStack Query côté admin ; props serveur + revalidation Next.js côté public. État de formulaire : React Hook Form + Zod (validation partagée avec les DTO NestJS autant que possible). État UI éphémère (ouverture de menu, onglet actif) : état local du composant, jamais remonté globalement sans raison. Pas de store global (Redux/Zustand) tant qu'aucun besoin transverse ne le justifie — cohérent avec le principe de sobriété du blueprint.
+État serveur (données métier) : TanStack Query côté admin ; props serveur + revalidation Next.js côté public. État de formulaire : React Hook Form + Zod (validation partagée avec les DTO NestJS autant que possible) — installés le 2026-10-02 avec le premier vrai formulaire (documents publics, `components/admin/documents/document-form.tsx`, schéma dans `lib/admin/public-documents.ts`) : champs en texte validés côté navigateur par confort, refus de l'API (`details` par champ) affichés sous les champs, le champ vide d'un facultatif part en `null`. État UI éphémère (ouverture de menu, onglet actif) : état local du composant, jamais remonté globalement sans raison. Pas de store global (Redux/Zustand) tant qu'aucun besoin transverse ne le justifie — cohérent avec le principe de sobriété du blueprint.
 
 # 6. Règles de mutation (admin)
 

@@ -12,6 +12,8 @@ import {
   Post,
   Put,
   Query,
+  Res,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -20,9 +22,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
+import type { Response } from 'express';
+import { createReadStream } from 'node:fs';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { MAX_DOCUMENT_BYTES } from './document-signature.js';
 import type { UploadedDocument } from './document-storage.service.js';
 import { DocumentsPublicsService } from './documents-publics.service.js';
@@ -65,6 +71,30 @@ export class AdminDocumentsPublicsController {
     return this.documentsService.findById(id);
   }
 
+  @Get(':id/file')
+  @ApiOperation({
+    summary: 'Lire le PDF d’un document, brouillon compris (personnel uniquement)',
+  })
+  async file(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const document = await this.documentsService.findFileForStaff(id);
+    // Jamais en cache partagé : un brouillon ne doit pas survivre à une dépublication.
+    res.set({
+      'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    return new StreamableFile(
+      createReadStream(this.documentsService.pathOf(document.storedName)),
+      {
+        type: document.fileType,
+        // Le slug respecte un motif strict : sans danger dans l'en-tête.
+        disposition: `inline; filename="${document.slug}.pdf"`,
+      },
+    );
+  }
+
   @Post()
   @ApiOperation({ summary: 'Créer un document (brouillon) avec son PDF, 20 Mo max' })
   @ApiConsumes('multipart/form-data')
@@ -101,28 +131,40 @@ export class AdminDocumentsPublicsController {
   @Post(':id/publish')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Publier explicitement un document' })
-  publish(@Param('id', ParseUUIDPipe) id: string) {
-    return this.documentsService.publish(id);
+  publish(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.documentsService.publish(actor, id);
   }
 
   @Post(':id/unpublish')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Dépublier (retour en brouillon)' })
-  unpublish(@Param('id', ParseUUIDPipe) id: string) {
-    return this.documentsService.unpublish(id);
+  unpublish(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.documentsService.unpublish(actor, id);
   }
 
   @Post(':id/archive')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Archiver (dépublié, conservé pour l’historique)' })
-  archive(@Param('id', ParseUUIDPipe) id: string) {
-    return this.documentsService.archive(id);
+  archive(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.documentsService.archive(actor, id);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Supprimer (suppression logique)' })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    await this.documentsService.remove(id);
+  async remove(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    await this.documentsService.remove(actor, id);
   }
 }
