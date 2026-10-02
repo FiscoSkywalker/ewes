@@ -4,6 +4,7 @@ import { getProjects } from '@/lib/api/public-realisations';
 import type { ProjectCategoryOption } from '@/data/projects';
 import { RealisationsGallery } from '@/components/public/realisations-gallery';
 import { SectionHeading } from '@/components/public/section-heading';
+import { resolvePageHeader } from '@/lib/api/public-pages';
 
 /**
  * Page Nos réalisations (blueprint/12_Realisations_Portfolio_System.md) —
@@ -15,7 +16,11 @@ export async function generateMetadata({
 }: PageProps<'/[locale]/realisations'>): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'RealisationsPage' });
-  return { title: t('eyebrow'), description: t('description') };
+  const header = await resolvePageHeader('realisations', locale, {
+    title: t('title'),
+    intro: t('description'),
+  });
+  return { title: t('eyebrow'), description: header.description };
 }
 
 export default async function RealisationsPage({
@@ -24,6 +29,10 @@ export default async function RealisationsPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('RealisationsPage');
+  const header = await resolvePageHeader('realisations', locale, {
+    title: t('title'),
+    intro: t('description'),
+  });
   const tProjects = await getTranslations('Projects');
   const projects = await getProjects(locale);
 
@@ -33,8 +42,8 @@ export default async function RealisationsPage({
         <SectionHeading
           as="h1"
           eyebrow={t('eyebrow')}
-          title={t('title')}
-          description={t('description')}
+          title={header.title}
+          description={header.intro}
           className="mb-14 max-w-4xl"
         />
         <RealisationsGallery

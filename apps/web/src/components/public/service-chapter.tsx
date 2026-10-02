@@ -1,5 +1,7 @@
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { POLE_CODES, POLE_DEFAULT_IMAGES, type PoleKey } from '@/lib/poles';
+import { serviceIcon } from '@/lib/service-icons';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
@@ -23,40 +25,42 @@ import {
   Zap,
 } from 'lucide-react';
 
-export type ServicePole = 'env' | 'eau' | 'ing';
+export type ServicePole = PoleKey;
 
 interface PoleConfig {
   code: string;
   namespace: 'Environment' | 'Water' | 'Engineering';
   /** Clé des prestations dans les messages du pôle. */
   listKey: 'services' | 'items';
+  /** Visuel d'origine, tant qu'aucun visuel n'est choisi dans le portail. */
   image: string;
+  /** Pictogrammes d'origine, par position : repli d'une prestation sans pictogramme choisi. */
   icons: LucideIcon[];
   background: string;
 }
 
 export const SERVICE_POLES: Record<ServicePole, PoleConfig> = {
   env: {
-    code: 'ENV',
+    code: POLE_CODES.env,
     namespace: 'Environment',
     listKey: 'services',
-    image: '/assets/images/ewes-environment-field.png',
+    image: POLE_DEFAULT_IMAGES.env,
     icons: [FileCheck, ClipboardCheck, Droplets, Trash2, Activity, Wind, Microscope, Leaf],
     background: 'bg-paper',
   },
   eau: {
-    code: 'H₂O',
+    code: POLE_CODES.eau,
     namespace: 'Water',
     listKey: 'services',
-    image: '/assets/images/ewes-water-standpipe.jpg',
+    image: POLE_DEFAULT_IMAGES.eau,
     icons: [FileSearch, Recycle, Waves, Filter, Droplets, FlaskConical, GraduationCap, Factory],
     background: 'bg-white',
   },
   ing: {
-    code: 'ING',
+    code: POLE_CODES.ing,
     namespace: 'Engineering',
     listKey: 'items',
-    image: '/assets/images/ewes-laboratory-cinematic.png',
+    image: POLE_DEFAULT_IMAGES.ing,
     icons: [Gauge, Building2, Cpu, Zap],
     background: 'bg-paper',
   },
@@ -67,6 +71,8 @@ interface RawService {
   title: string;
   text?: string;
   desc?: string;
+  /** Clé du pictogramme choisi dans le portail (`droplets`…). */
+  icon?: string | null;
 }
 
 /** Contenu d'un pôle venu de l'API (une seule langue déjà choisie). */
@@ -74,7 +80,9 @@ export interface PoleContent {
   name: string;
   tagline: string | null;
   description: string;
-  offerings: { title: string; text: string }[];
+  /** Visuel choisi dans le portail ; absent, le visuel d'origine du pôle. */
+  image?: { src: string; alt: string | null } | null;
+  offerings: { title: string; text: string; icon?: string | null }[];
 }
 
 /** Nombre de prestations d'un pôle, formaté (« 8 prestations », « 4 volets »). */
@@ -150,8 +158,12 @@ export function ServiceChapter({
 
           <figure className="relative mt-10 aspect-[4/3] overflow-hidden rounded-sheet" data-image-reveal>
             <Image
-              src={config.image}
-              alt={tPole('imageAlt')}
+              src={data?.image?.src ?? config.image}
+              alt={
+                data?.image
+                  ? (data.image.alt ?? data.name)
+                  : tPole('imageAlt')
+              }
               fill
               sizes="(min-width: 1024px) 38vw, 100vw"
               className="object-cover"
@@ -169,7 +181,10 @@ export function ServiceChapter({
         {/* Prestations */}
         <ul className="grid content-start gap-4 sm:grid-cols-2" data-stagger>
           {services.map((service, serviceIndex) => {
-            const Icon = config.icons[serviceIndex] ?? FileCheck;
+            const Icon =
+              serviceIcon(service.icon) ??
+              config.icons[serviceIndex] ??
+              FileCheck;
             return (
               <li
                 key={service.title}

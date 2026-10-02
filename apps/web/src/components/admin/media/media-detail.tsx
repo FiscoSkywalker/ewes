@@ -9,6 +9,7 @@ import {
   Download,
   ExternalLink,
   Info,
+  Layers,
   Newspaper,
   Trash2,
   Hammer,
@@ -26,6 +27,13 @@ import {
   type MediaItem,
 } from '@/lib/admin/media';
 import { Button, Dialog, IconButton, useConfirm, useToast } from '../ui';
+
+/** Pictogramme du type de contenu qui utilise l'image. */
+const USAGE_ICONS = {
+  ARTICLE: Newspaper,
+  REALISATION: Hammer,
+  SERVICE: Layers,
+} as const;
 
 /**
  * Fiche d'une image : aperçu en grand, informations, contenus où elle est
@@ -229,7 +237,7 @@ export function MediaDetail({
               {used ? (
                 <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
                   {media.usages.map((usage) => {
-                    const Icon = usage.type === 'ARTICLE' ? Newspaper : Hammer;
+                    const Icon = USAGE_ICONS[usage.type];
                     return (
                       <li key={`${usage.type}-${usage.id}`}>
                         <Link

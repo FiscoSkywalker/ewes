@@ -10,6 +10,7 @@ import { ScrollLink } from '@/components/public/scroll-link';
 import { SectionHeading } from '@/components/public/section-heading';
 import { TopoContours } from '@/components/public/topo-contours';
 import { buttonClass } from '@/components/public/ui';
+import { resolvePageHeader } from '@/lib/api/public-pages';
 
 /**
  * Page Contact (blueprint/15_Public_Site_Pages.md) — page statique, point
@@ -23,7 +24,11 @@ export async function generateMetadata({
 }: PageProps<'/[locale]/contact'>): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'ContactPage' });
-  return { title: t('eyebrow'), description: t('description') };
+  const header = await resolvePageHeader('contact', locale, {
+    title: t('title'),
+    intro: t('description'),
+  });
+  return { title: t('eyebrow'), description: header.description };
 }
 
 interface ChannelProps {
@@ -65,6 +70,10 @@ export default async function ContactPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('ContactPage');
+  const header = await resolvePageHeader('contact', locale, {
+    title: t('title'),
+    intro: t('description'),
+  });
   const steps = t.raw('steps.items') as { title: string; text: string }[];
 
   return (
@@ -77,8 +86,8 @@ export default async function ContactPage({
               <SectionHeading
                 as="h1"
                 eyebrow={t('eyebrow')}
-                title={t('title')}
-                description={t('description')}
+                title={header.title}
+                description={header.intro}
               />
               <div className="mt-10" data-reveal>
                 <ScrollLink target="formulaire" className={buttonClass()}>

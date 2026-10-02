@@ -53,8 +53,14 @@ export interface PublicationPanelProps<T extends { id: string }> {
   publishLabel?: string;
   /** Page publique du contenu : proposée tant qu'il est en ligne. */
   publicHref?: string;
-  /** Adresse où revenir une fois la fiche supprimée. */
-  afterDeleteHref: string;
+  /** Adresse où revenir une fois la fiche supprimée (inutile si `allowDelete` est faux). */
+  afterDeleteHref?: string;
+  /**
+   * Archiver et supprimer, proposés par défaut. Une page institutionnelle ou un
+   * pôle ne s'archive ni ne se supprime : seule la dépublication existe.
+   */
+  allowArchive?: boolean;
+  allowDelete?: boolean;
   /** Texte de la confirmation de dépublication (ce que le site cesse d'afficher). */
   unpublishImpact: string;
 }
@@ -79,6 +85,8 @@ export function PublicationPanel<T extends { id: string }>({
   publicHref,
   onPublished,
   afterDeleteHref,
+  allowArchive = true,
+  allowDelete = true,
   unpublishImpact,
 }: PublicationPanelProps<T>) {
   const router = useRouter();
@@ -144,7 +152,7 @@ export function PublicationPanel<T extends { id: string }>({
     if (!ok) return;
     await invalidatePortalData(queryClient);
     toast.success(`${capital} ${agree('supprimé')}`);
-    router.replace(afterDeleteHref);
+    if (afterDeleteHref) router.replace(afterDeleteHref);
   }
 
   const published = status === 'PUBLISHED';
@@ -258,7 +266,7 @@ export function PublicationPanel<T extends { id: string }>({
             Dépublier
           </Button>
         )}
-        {status !== 'ARCHIVED' && (
+        {allowArchive && status !== 'ARCHIVED' && (
           <Button
             variant="secondary"
             icon={Archive}
@@ -277,9 +285,11 @@ export function PublicationPanel<T extends { id: string }>({
             Archiver
           </Button>
         )}
-        <Button variant="ghost" icon={Trash2} onClick={remove}>
-          <span className="text-bad">Supprimer</span>
-        </Button>
+        {allowDelete && (
+          <Button variant="ghost" icon={Trash2} onClick={remove}>
+            <span className="text-bad">Supprimer</span>
+          </Button>
+        )}
       </div>
     </Card>
   );
