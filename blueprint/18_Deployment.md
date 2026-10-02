@@ -10,7 +10,7 @@ Local (développement) et production sont isolés, avec bases de données, secre
 
 # 2. Topologie de production
 
-VPS Ubuntu, Docker Compose avec : reverse proxy Nginx (TLS obligatoire), application Next.js, API NestJS, PostgreSQL, volume disque dédié aux fichiers de l'espace documentaire privé (non exposé directement par Nginx). Un second volume (`PUBLIC_MEDIA_PATH`) conserve les images publiques téléversées : il doit être persistant et inclus dans les sauvegardes ; le site les expose via la réécriture `/uploads/*` vers l'API, jamais par un accès direct au disque. PostgreSQL n'est jamais exposé sur une interface publique. Le certificat HTTPS est fourni par le service d'hébergement retenu ou via Let's Encrypt/Certbot si l'hébergement ne l'inclut pas nativement.
+VPS Ubuntu, Docker Compose avec : reverse proxy Nginx (TLS obligatoire), application Next.js, API NestJS, PostgreSQL, volume disque dédié aux fichiers de l'espace documentaire privé (non exposé directement par Nginx). Le volume `PRIVATE_STORAGE_PATH` (documents privés) doit être persistant, hors de toute racine servie par Nginx et inclus dans les sauvegardes chiffrées au même titre que la base. Un second volume (`PUBLIC_MEDIA_PATH`) conserve les images publiques téléversées : il doit être persistant et inclus dans les sauvegardes ; le site les expose via la réécriture `/uploads/*` vers l'API, jamais par un accès direct au disque. PostgreSQL n'est jamais exposé sur une interface publique. Le certificat HTTPS est fourni par le service d'hébergement retenu ou via Let's Encrypt/Certbot si l'hébergement ne l'inclut pas nativement.
 
 # 3. Pipeline de livraison
 
