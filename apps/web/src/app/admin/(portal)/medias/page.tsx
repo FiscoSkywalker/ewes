@@ -1,0 +1,7 @@
+'use client';
+
+import { MediaLibrary } from '@/components/admin/media/media-library';
+
+export default function MediaPage() {
+  return <MediaLibrary />;
+}

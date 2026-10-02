@@ -486,6 +486,7 @@ const ACTION_LABELS: Record<string, string> = {
   ARTICLE_UNPUBLISHED: 'Article dépublié',
   ARTICLE_ARCHIVED: 'Article archivé',
   ARTICLE_DELETED: 'Article supprimé',
+  MEDIA_DELETED: 'Image supprimée de la médiathèque',
 };
 
 function actionLabel(action: string): string {
