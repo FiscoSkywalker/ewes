@@ -4,13 +4,10 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowDownToLine, ArrowRight } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
+import { buttonClass, EmptyState, FilterChip } from '@/components/public/ui';
 
 export type DocumentCategory =
-  | 'report'
-  | 'guide'
-  | 'datasheet'
-  | 'brochure'
-  | 'certificate';
+  'report' | 'guide' | 'datasheet' | 'brochure' | 'certificate';
 export type DocumentPole = 'env' | 'eau' | 'ing';
 
 /**
@@ -146,22 +143,13 @@ export function DocumentsShowcase({
   const [featured, ...others] = filtered;
 
   if (!featured) {
-    return (
-      <p className="max-w-md text-sm leading-7 text-sand/72">{t('empty')}</p>
-    );
+    return <EmptyState variant="plain" message={t('empty')} />;
   }
 
   const meta = (doc: ShowcaseDocument) =>
     [doc.year, doc.pages ? t('pages', { count: doc.pages }) : '', doc.size]
       .filter(Boolean)
       .join(' · ');
-
-  const chip = (active: boolean) =>
-    `inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] transition-colors ${
-      active
-        ? 'border-sand bg-sand text-surface-elevated'
-        : 'border-border text-sand/72 hover:border-sand/40 hover:text-sand'
-    }`;
 
   return (
     <div>
@@ -171,28 +159,22 @@ export function DocumentsShowcase({
         aria-label={t('filterLabel')}
         data-reveal
       >
-        <button
-          type="button"
-          className={chip(category === 'all')}
-          aria-pressed={category === 'all'}
+        <FilterChip
+          active={category === 'all'}
+          count={documents.length}
           onClick={() => setCategory('all')}
         >
           {t('categories.all')}
-          <span className="font-mono text-[10px] opacity-60">
-            {documents.length}
-          </span>
-        </button>
+        </FilterChip>
         {categories.map(([key, count]) => (
-          <button
+          <FilterChip
             key={key}
-            type="button"
-            className={chip(category === key)}
-            aria-pressed={category === key}
+            active={category === key}
+            count={count}
             onClick={() => setCategory(key)}
           >
             {t(`categories.${key}`)}
-            <span className="font-mono text-[10px] opacity-60">{count}</span>
-          </button>
+          </FilterChip>
         ))}
       </div>
 
@@ -228,7 +210,7 @@ export function DocumentsShowcase({
             <DocumentLink
               doc={featured}
               label={`${t('download')} — ${featured.title}`}
-              className="primary-button on-night mt-8"
+              className={buttonClass('night', 'mt-8')}
             >
               <ArrowDownToLine size={15} />
               {t('download')}

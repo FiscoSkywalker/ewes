@@ -7,6 +7,7 @@ import { LogIn, Menu, X } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { BrandLogo } from './brand-logo';
 import { LanguageSelector } from './language-selector';
+import { buttonClass } from '@/components/public/ui';
 
 /**
  * En-tête public partagé par toutes les pages (blueprint/05_UI_UX_System.md
@@ -174,7 +175,7 @@ export function Header() {
         <NextLink
           href="/admin/login"
           onClick={() => setMobileOpen(false)}
-          className="primary-button mt-5 w-full"
+          className={buttonClass('paper', 'mt-5 w-full')}
         >
           <LogIn size={14} />
           {t('login')}

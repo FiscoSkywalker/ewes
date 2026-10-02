@@ -23,6 +23,7 @@ import {
 } from '@/components/public/service-chapter';
 import { Link } from '@/i18n/navigation';
 import { scrollToElement } from '@/lib/smooth-scroll';
+import { TextLink } from '@/components/public/ui';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -119,8 +120,7 @@ function PolePlate({
       <figure
         className="relative mt-6 aspect-[4/5] overflow-hidden rounded-sheet border border-border-subtle bg-background"
         style={{
-          clipPath:
-            'inset(calc((1 - var(--layer)) * 100%) 0 0 0 round 16px)',
+          clipPath: 'inset(calc((1 - var(--layer)) * 100%) 0 0 0 round 16px)',
         }}
       >
         <Image
@@ -290,12 +290,9 @@ export function ServicesOverview({
             <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
               {t('audiencesTitle')}
             </h3>
-            <Link
-              href="/services"
-              className="inline-flex items-center gap-2 border-b border-sand/25 pb-1 text-xs font-bold uppercase tracking-[0.12em] text-sand transition-colors hover:border-sand"
-            >
-              {t('allLink')} <ArrowUpRight size={14} />
-            </Link>
+            <TextLink href="/services" icon={ArrowUpRight}>
+              {t('allLink')}
+            </TextLink>
           </div>
           <ul
             className="mt-8 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-0"

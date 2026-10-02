@@ -12,6 +12,7 @@ import {
 } from '@/data/projects';
 import { Link } from '@/i18n/navigation';
 import { SectionHeading } from './section-heading';
+import { EmptyState, FilterChip } from '@/components/public/ui';
 
 interface RealisationsRegisterProps {
   /** Nombre de lignes affichées avant « Afficher tout » ; tout est affiché si absent. */
@@ -97,13 +98,6 @@ export function RealisationsRegister({
     .filter(Boolean)
     .join(' · ');
 
-  const chipClass = (active: boolean) =>
-    `flex flex-none items-center gap-2 border px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors ${
-      active
-        ? 'border-sand bg-sand text-paper'
-        : 'border-sand/20 text-sand hover:border-sand'
-    }`;
-
   return (
     <section className="bg-paper px-6 py-24 text-sand md:px-16 md:py-32">
       <div className="mx-auto w-full max-w-[1440px]">
@@ -185,30 +179,24 @@ export function RealisationsRegister({
           className="-mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-2 [scrollbar-width:none]"
           data-lenis-prevent
         >
-          <button
-            type="button"
-            aria-pressed={!category}
+          <FilterChip
+            active={!category}
+            count={projects.length}
             onClick={() => selectCategory(null)}
-            className={chipClass(!category)}
+            shape="square"
           >
             {t('all')}
-            <span className="font-mono text-[10px] font-normal opacity-70">
-              {projects.length}
-            </span>
-          </button>
+          </FilterChip>
           {categories.map((c) => (
-            <button
+            <FilterChip
               key={c.key}
-              type="button"
-              aria-pressed={category === c.key}
+              active={category === c.key}
+              count={categoryCounts.get(c.key) ?? 0}
               onClick={() => selectCategory(c.key)}
-              className={chipClass(category === c.key)}
+              shape="square"
             >
               {c.label}
-              <span className="font-mono text-[10px] font-normal opacity-70">
-                {categoryCounts.get(c.key) ?? 0}
-              </span>
-            </button>
+            </FilterChip>
           ))}
         </div>
 
@@ -223,9 +211,11 @@ export function RealisationsRegister({
         </div>
 
         {rows.length === 0 ? (
-          <p className="border-t border-sand py-12 text-sm text-sand/60">
-            {t('emptyState')}
-          </p>
+          <EmptyState
+            variant="plain"
+            className="border-t border-sand py-12"
+            message={t('emptyState')}
+          />
         ) : (
           <ul
             key={`${category ?? 'all'}-${year ?? 'all'}`}

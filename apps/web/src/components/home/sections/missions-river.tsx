@@ -12,6 +12,7 @@ import {
 } from '@/data/projects';
 import { ProjectCover } from '@/components/public/project-cover';
 import { Link } from '@/i18n/navigation';
+import { ButtonLink, TextLink } from '@/components/public/ui';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -428,15 +429,10 @@ export function MissionsRiver({ projects }: { projects: Project[] }) {
                 {tRiver('endText')}
               </p>
               <div className="mt-8 flex flex-col items-start gap-4">
-                <Link href="/realisations" className="primary-button">
-                  {t('viewAll')} <ArrowRight size={14} />
-                </Link>
-                <Link
-                  href="/contact"
-                  className="border-b border-sand/25 pb-0.5 text-xs font-bold uppercase tracking-[0.12em] text-primary transition-colors hover:border-sand hover:text-sand"
-                >
-                  {tRiver('contactCta')}
-                </Link>
+                <ButtonLink href="/realisations" icon={ArrowRight}>
+                  {t('viewAll')}
+                </ButtonLink>
+                <TextLink href="/contact">{tRiver('contactCta')}</TextLink>
               </div>
             </div>
           </div>

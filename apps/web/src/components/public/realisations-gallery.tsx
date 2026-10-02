@@ -2,14 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import {
-  ArrowLeft,
-  ArrowRight,
-  ArrowUpRight,
-  ChevronDown,
-  Search,
-  X,
-} from 'lucide-react';
+import { ArrowUpRight, ChevronDown, Search, X } from 'lucide-react';
 import {
   projectYear,
   type Project,
@@ -20,6 +13,12 @@ import { scrollToElement } from '@/lib/smooth-scroll';
 import { MissionsTimeline } from './missions-timeline';
 import { ProjectCover } from './project-cover';
 import { ProjectSheet } from './project-sheet';
+import {
+  Button,
+  EmptyState,
+  FilterChip,
+  Pagination,
+} from '@/components/public/ui';
 
 /** Réalisations par page (grille de 3 × 3). */
 const PAGE_SIZE = 9;
@@ -30,17 +29,6 @@ function normalize(value: string) {
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase();
-}
-
-/** Numéros de page affichés : extrémités, voisines de la page courante, ellipses. */
-function pageNumbers(current: number, total: number): (number | null)[] {
-  const pages = new Set([1, total, current - 1, current, current + 1]);
-  const list = [...pages]
-    .filter((page) => page >= 1 && page <= total)
-    .sort((a, b) => a - b);
-  return list.flatMap((page, index) =>
-    index > 0 && page - list[index - 1] > 1 ? [null, page] : [page],
-  );
 }
 
 /**
@@ -83,10 +71,7 @@ export function RealisationsGallery({
       counts.set(p.category, (counts.get(p.category) ?? 0) + 1);
     return counts;
   }, [projects]);
-  const years = useMemo(
-    () => [...new Set(sorted.map(projectYear))],
-    [sorted],
-  );
+  const years = useMemo(() => [...new Set(sorted.map(projectYear))], [sorted]);
 
   const stats = [
     { value: String(projects.length), label: t('stats.missions') },
@@ -155,15 +140,9 @@ export function RealisationsGallery({
 
   const openProject = openId ? sorted.find((p) => p.id === openId) : undefined;
   // Navigation dans la fiche : dans la liste filtrée si la fiche en fait partie.
-  const sequence = openProject && filtered.includes(openProject) ? filtered : sorted;
+  const sequence =
+    openProject && filtered.includes(openProject) ? filtered : sorted;
   const openIndex = openProject ? sequence.indexOf(openProject) : -1;
-
-  const chip = (active: boolean) =>
-    `flex flex-none items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors ${
-      active
-        ? 'border-sand bg-sand text-paper'
-        : 'border-sand/20 text-sand/75 hover:border-sand hover:text-sand'
-    }`;
 
   return (
     <div>
@@ -222,7 +201,9 @@ export function RealisationsGallery({
               value={year ?? ''}
               onChange={(event) =>
                 updateFilters(() =>
-                  setYear(event.target.value ? Number(event.target.value) : null),
+                  setYear(
+                    event.target.value ? Number(event.target.value) : null,
+                  ),
                 )
               }
               className="h-13 w-full appearance-none rounded-full border border-border bg-surface-elevated pl-5 pr-11 text-sm font-semibold text-sand outline-none transition-colors focus:border-primary"
@@ -248,30 +229,22 @@ export function RealisationsGallery({
           className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]"
           data-lenis-prevent
         >
-          <button
-            type="button"
-            aria-pressed={!category}
+          <FilterChip
+            active={!category}
+            count={projects.length}
             onClick={() => updateFilters(() => setCategory(null))}
-            className={chip(!category)}
           >
             {t('all')}
-            <span className="font-mono text-[10px] font-normal opacity-70">
-              {projects.length}
-            </span>
-          </button>
+          </FilterChip>
           {categories.map((c) => (
-            <button
+            <FilterChip
               key={c.key}
-              type="button"
-              aria-pressed={category === c.key}
+              active={category === c.key}
+              count={categoryCounts.get(c.key) ?? 0}
               onClick={() => updateFilters(() => setCategory(c.key))}
-              className={chip(category === c.key)}
             >
               {c.label}
-              <span className="font-mono text-[10px] font-normal opacity-70">
-                {categoryCounts.get(c.key) ?? 0}
-              </span>
-            </button>
+            </FilterChip>
           ))}
         </div>
 
@@ -349,76 +322,27 @@ export function RealisationsGallery({
           })}
         </ul>
       ) : (
-        <div className="mt-8 flex flex-col items-start gap-5 rounded-sheet border border-dashed border-sand/25 p-10">
-          <Search size={20} className="text-muted" aria-hidden="true" />
-          <p className="max-w-md text-sm leading-7 text-sand/72">
-            {t('emptyState')}
-          </p>
-          <button type="button" onClick={reset} className="primary-button">
-            {t('reset')}
-          </button>
-        </div>
+        <EmptyState
+          className="mt-8"
+          icon={Search}
+          message={t('emptyState')}
+          action={<Button onClick={reset}>{t('reset')}</Button>}
+        />
       )}
 
-      {/* Pagination */}
-      {pageCount > 1 && (
-        <nav
-          aria-label={t('pagination.label')}
-          className="mt-14 flex items-center justify-center gap-2"
-        >
-          <button
-            type="button"
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            aria-label={t('pagination.previous')}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-sand transition-colors hover:border-sand disabled:pointer-events-none disabled:opacity-30"
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <ol className="flex items-center gap-1.5">
-            {pageNumbers(currentPage, pageCount).map((number, index) =>
-              number === null ? (
-                <li
-                  key={`gap-${index}`}
-                  className="px-1 font-mono text-xs text-muted"
-                  aria-hidden="true"
-                >
-                  …
-                </li>
-              ) : (
-                <li key={number}>
-                  <button
-                    type="button"
-                    onClick={() => goToPage(number)}
-                    aria-current={number === currentPage ? 'page' : undefined}
-                    aria-label={t('pagination.page', { page: number })}
-                    className={`h-11 min-w-11 rounded-full px-3 font-mono text-xs font-bold transition-colors ${
-                      number === currentPage
-                        ? 'bg-sand text-paper'
-                        : 'text-sand hover:bg-paper-muted'
-                    }`}
-                  >
-                    {String(number).padStart(2, '0')}
-                  </button>
-                </li>
-              ),
-            )}
-          </ol>
-          <button
-            type="button"
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === pageCount}
-            aria-label={t('pagination.next')}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-sand transition-colors hover:border-sand disabled:pointer-events-none disabled:opacity-30"
-          >
-            <ArrowRight size={16} />
-          </button>
-        </nav>
-      )}
+      <Pagination
+        page={currentPage}
+        pageCount={pageCount}
+        label={t('pagination.label')}
+        onPageChange={goToPage}
+        className="mt-14"
+      />
 
       <ProjectSheet
         project={openProject ?? null}
-        category={openProject ? categoryById.get(openProject.category) : undefined}
+        category={
+          openProject ? categoryById.get(openProject.category) : undefined
+        }
         previous={openIndex > 0 ? sequence[openIndex - 1] : undefined}
         next={openIndex >= 0 ? sequence[openIndex + 1] : undefined}
         onNavigate={openSheet}

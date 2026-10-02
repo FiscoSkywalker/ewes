@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
-import { ArrowLeft, ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
 import { NewsCard, NewsMeta } from '@/components/public/news-card';
 import { SectionHeading } from '@/components/public/section-heading';
 import { NEWS_CATEGORIES, type NewsCategory } from '@/data/news';
@@ -12,6 +12,12 @@ import {
   parseCategory,
   parsePage,
 } from '@/lib/news';
+import {
+  ButtonLink,
+  EmptyState,
+  FilterChip,
+  Pagination,
+} from '@/components/public/ui';
 
 /**
  * Page Actualités & publications (blueprint/15_Public_Site_Pages.md) —
@@ -69,17 +75,11 @@ export default async function NewsPage({
   const page = Math.min(requestedPage, pageCount);
   const items = pool.slice((page - 1) * NEWS_PAGE_SIZE, page * NEWS_PAGE_SIZE);
 
-  const tab = (active: boolean) =>
-    `inline-flex flex-none items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors ${
-      active
-        ? 'border-sand bg-sand text-paper'
-        : 'border-sand/20 text-sand/75 hover:border-sand hover:text-sand'
-    }`;
-
   return (
     <div className="bg-paper px-6 pb-24 pt-28 text-sand md:px-16 md:pb-32 md:pt-36">
       <div className="mx-auto w-full max-w-[1440px]">
         <SectionHeading
+          as="h1"
           eyebrow={t('eyebrow')}
           title={t('title')}
           description={t('description')}
@@ -87,9 +87,7 @@ export default async function NewsPage({
         />
 
         {all.length === 0 ? (
-          <p className="rounded-sheet border border-dashed border-sand/25 p-12 text-center text-sm text-sand/60">
-            {t('emptyState')}
-          </p>
+          <EmptyState align="center" message={t('emptyState')} />
         ) : (
           <>
             {/* À la une */}
@@ -145,104 +143,53 @@ export default async function NewsPage({
               className="-mx-1 mb-8 flex items-center gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]"
               data-lenis-prevent
             >
-              <Link
+              <FilterChip
                 href={listHref(null)}
-                aria-current={!category ? 'page' : undefined}
-                className={tab(!category)}
+                active={!category}
+                count={all.length}
               >
                 {t('categories.all')}
-                <span className="font-mono text-[10px] font-normal opacity-70">
-                  {all.length}
-                </span>
-              </Link>
+              </FilterChip>
               {categories.map((key) => (
-                <Link
+                <FilterChip
                   key={key}
                   href={listHref(key)}
-                  aria-current={category === key ? 'page' : undefined}
-                  className={tab(category === key)}
+                  active={category === key}
+                  count={counts.get(key)}
                 >
                   {t(`categories.${key}`)}
-                  <span className="font-mono text-[10px] font-normal opacity-70">
-                    {counts.get(key)}
-                  </span>
-                </Link>
+                </FilterChip>
               ))}
             </nav>
 
             {/* Liste */}
             {items.length > 0 ? (
-              <ul className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3" data-stagger>
+              <ul
+                className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3"
+                data-stagger
+              >
                 {items.map((item) => (
                   <li key={item.id}>
-                    <NewsCard item={item} headingLevel={featured ? 'h3' : 'h2'} />
+                    <NewsCard
+                      item={item}
+                      headingLevel={featured ? 'h3' : 'h2'}
+                    />
                   </li>
                 ))}
               </ul>
             ) : (
               !featured && (
-                <p className="rounded-sheet border border-dashed border-sand/25 p-12 text-center text-sm text-sand/60">
-                  {t('emptyCategory')}
-                </p>
+                <EmptyState align="center" message={t('emptyCategory')} />
               )
             )}
 
-            {/* Pagination */}
-            {pageCount > 1 && (
-              <nav
-                aria-label={t('pagination.label')}
-                className="mt-14 flex items-center justify-center gap-2"
-              >
-                {page > 1 ? (
-                  <Link
-                    href={listHref(category, page - 1)}
-                    rel="prev"
-                    aria-label={t('pagination.previous')}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-border transition-colors hover:border-sand"
-                  >
-                    <ArrowLeft size={16} />
-                  </Link>
-                ) : (
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border opacity-30" aria-hidden="true">
-                    <ArrowLeft size={16} />
-                  </span>
-                )}
-                <ol className="flex items-center gap-1.5">
-                  {Array.from({ length: pageCount }, (_, index) => index + 1).map(
-                    (number) => (
-                      <li key={number}>
-                        <Link
-                          href={listHref(category, number)}
-                          aria-current={number === page ? 'page' : undefined}
-                          aria-label={t('pagination.page', { page: number })}
-                          className={`flex h-11 min-w-11 items-center justify-center rounded-full px-3 font-mono text-xs font-bold transition-colors ${
-                            number === page
-                              ? 'bg-sand text-paper'
-                              : 'hover:bg-paper-muted'
-                          }`}
-                        >
-                          {String(number).padStart(2, '0')}
-                        </Link>
-                      </li>
-                    ),
-                  )}
-                </ol>
-                {page < pageCount ? (
-                  <Link
-                    href={listHref(category, page + 1)}
-                    rel="next"
-                    aria-label={t('pagination.next')}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-border transition-colors hover:border-sand"
-                  >
-                    <ArrowRight size={16} />
-                  </Link>
-                ) : (
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border opacity-30" aria-hidden="true">
-                    <ArrowRight size={16} />
-                  </span>
-                )}
-              </nav>
-            )}
+            <Pagination
+              page={page}
+              pageCount={pageCount}
+              label={t('pagination.label')}
+              hrefFor={(number) => listHref(category, number)}
+              className="mt-14"
+            />
           </>
         )}
 
@@ -264,9 +211,13 @@ export default async function NewsPage({
               </p>
             </div>
           </div>
-          <Link href="/documents" className="primary-button w-fit flex-none">
-            {t('library.cta')} <ArrowRight size={15} />
-          </Link>
+          <ButtonLink
+            href="/documents"
+            icon={ArrowRight}
+            className="w-fit flex-none"
+          >
+            {t('library.cta')}
+          </ButtonLink>
         </aside>
       </div>
     </div>

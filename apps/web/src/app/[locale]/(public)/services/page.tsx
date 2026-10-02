@@ -16,7 +16,7 @@ import {
   ServiceChapter,
   type ServicePole,
 } from '@/components/public/service-chapter';
-import { Link } from '@/i18n/navigation';
+import { ButtonLink } from '@/components/public/ui';
 
 /**
  * Page Nos services (blueprint/15_Public_Site_Pages.md) — SSG/ISR, Server
@@ -111,6 +111,7 @@ export default async function ServicesPage({
       <section className="bg-paper-muted px-6 pb-20 pt-28 md:px-16 md:pb-24 md:pt-36">
         <div className="mx-auto grid w-full max-w-[1440px] gap-12 lg:grid-cols-[1.3fr_1fr] lg:items-end lg:gap-20">
           <SectionHeading
+            as="h1"
             eyebrow={tPage('eyebrow')}
             title={tPage('title')}
             description={tPage('description')}
@@ -156,12 +157,18 @@ export default async function ServicesPage({
               title={tMethod('title')}
               tone="night"
             />
-            <p className="max-w-md text-sm leading-7 lg:justify-self-end" data-reveal>
+            <p
+              className="max-w-md text-sm leading-7 lg:justify-self-end"
+              data-reveal
+            >
               {tMethod('text')}
             </p>
           </div>
 
-          <ol className="relative mt-16 grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8" data-stagger>
+          <ol
+            className="relative mt-16 grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8"
+            data-stagger
+          >
             <span
               className="absolute left-6 right-6 top-6 hidden h-px bg-linear-to-r from-primary via-malachite-bright to-copper-bright opacity-60 lg:block"
               aria-hidden="true"
@@ -245,9 +252,9 @@ export default async function ServicesPage({
                 </li>
               ))}
             </ul>
-            <Link href="/contact" className="primary-button mt-10">
-              {tTraining('cta')} <ArrowRight size={15} />
-            </Link>
+            <ButtonLink href="/contact" icon={ArrowRight} className="mt-10">
+              {tTraining('cta')}
+            </ButtonLink>
           </div>
         </div>
       </section>

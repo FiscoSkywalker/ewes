@@ -9,6 +9,7 @@ import { OfficeStatus } from '@/components/public/office-status';
 import { ScrollLink } from '@/components/public/scroll-link';
 import { SectionHeading } from '@/components/public/section-heading';
 import { TopoContours } from '@/components/public/topo-contours';
+import { buttonClass } from '@/components/public/ui';
 
 /**
  * Page Contact (blueprint/15_Public_Site_Pages.md) — page statique, point
@@ -74,12 +75,13 @@ export default async function ContactPage({
           <div className="grid gap-12 lg:grid-cols-[1.35fr_1fr] lg:items-end lg:gap-20">
             <div>
               <SectionHeading
+                as="h1"
                 eyebrow={t('eyebrow')}
                 title={t('title')}
                 description={t('description')}
               />
               <div className="mt-10" data-reveal>
-                <ScrollLink target="formulaire" className="primary-button">
+                <ScrollLink target="formulaire" className={buttonClass()}>
                   {t('heroCta')}
                   <ArrowDown size={15} />
                 </ScrollLink>

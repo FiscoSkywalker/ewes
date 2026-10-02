@@ -7,6 +7,11 @@ interface SectionHeadingProps {
   align?: 'left' | 'center';
   /** `night` : sur fond nuit (sections d'impact). */
   tone?: 'light' | 'night';
+  /**
+   * Niveau du titre. `h1` pour l'en-tête principal d'une page (un seul par
+   * page) ; `h2` par défaut pour les sections ; `h3` pour une sous-partie.
+   */
+  as?: 'h1' | 'h2' | 'h3';
   className?: string;
 }
 
@@ -22,6 +27,7 @@ export function SectionHeading({
   description,
   align = 'left',
   tone = 'light',
+  as: Heading = 'h2',
   className = '',
 }: SectionHeadingProps) {
   const night = tone === 'night';
@@ -36,12 +42,12 @@ export function SectionHeading({
       >
         {eyebrow}
       </div>
-      <h2
+      <Heading
         className={`section-title text-4xl sm:text-5xl lg:text-7xl ${night ? 'text-on-night' : 'text-sand'}`}
         data-split
       >
         {title}
-      </h2>
+      </Heading>
       {description && (
         <p
           className={`mt-6 max-w-2xl text-sm leading-7 sm:text-base ${night ? 'text-on-night-muted' : 'text-sand/72'} ${align === 'center' ? 'mx-auto' : ''}`}

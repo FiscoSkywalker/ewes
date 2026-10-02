@@ -2,8 +2,8 @@
 
 import { useTranslations } from 'next-intl';
 import { ArrowUpRight, ChevronDown, MapPin, ShieldCheck } from 'lucide-react';
-import { Link } from '@/i18n/navigation';
 import { useSectionActivity } from '@/hooks/useSectionActivity';
+import { ButtonLink } from '@/components/public/ui';
 
 interface HeroProps {
   onExplore: () => void;
@@ -52,10 +52,9 @@ export function Hero({ onExplore }: HeroProps) {
           <p className="hero-lead mt-7 text-sand/75">{t('lead')}</p>
 
           <div className="pointer-events-auto mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/contact" className="primary-button">
+            <ButtonLink href="/contact" icon={ArrowUpRight}>
               {t('ctaContact')}
-              <ArrowUpRight size={15} />
-            </Link>
+            </ButtonLink>
             <div className="flex items-center gap-3 border-l border-sand/25 px-5 py-3 text-xs text-sand/70">
               <ShieldCheck size={16} className="text-primary" />
               {t('shieldLabel')}

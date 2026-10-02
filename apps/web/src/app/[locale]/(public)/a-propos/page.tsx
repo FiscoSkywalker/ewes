@@ -7,8 +7,8 @@ import type { Expert } from '@/data/experts';
 import { EWES_CONTACT } from '@/data/contact';
 import { ExpertsGallery } from '@/components/public/experts-gallery';
 import { SectionHeading } from '@/components/public/section-heading';
-import { Link } from '@/i18n/navigation';
 import { fetchPublishedPage, localizePage } from '@/lib/api/public-pages';
+import { ButtonLink } from '@/components/public/ui';
 
 /**
  * Page À propos (blueprint/15_Public_Site_Pages.md) — SSG/ISR, Server
@@ -56,6 +56,7 @@ export default async function AboutPage({
       <section className="bg-paper-muted px-6 pb-20 pt-28 md:px-16 md:pb-28 md:pt-36">
         <div className="mx-auto grid w-full max-w-[1440px] gap-12 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-20">
           <SectionHeading
+            as="h1"
             eyebrow={tPage('eyebrow')}
             title={cms?.title ?? tPage('title')}
             description={cms?.content ?? tPage('description')}
@@ -97,7 +98,10 @@ export default async function AboutPage({
               title={t('title')}
               description={t('description')}
             />
-            <div className="flex flex-col gap-4 text-sm leading-6 text-sand/72" data-reveal>
+            <div
+              className="flex flex-col gap-4 text-sm leading-6 text-sand/72"
+              data-reveal
+            >
               <p className="flex items-start gap-3">
                 <MapPin size={15} className="mt-1 flex-none text-primary" />
                 {t('addressLine1')}
@@ -179,7 +183,10 @@ export default async function AboutPage({
               eyebrow={t('teamTitle')}
               title={tPage('team.title')}
             />
-            <p className="max-w-md text-sm leading-7 text-sand/72 lg:justify-self-end" data-reveal>
+            <p
+              className="max-w-md text-sm leading-7 text-sand/72 lg:justify-self-end"
+              data-reveal
+            >
               {t('teamText')}
             </p>
           </div>
@@ -248,8 +255,14 @@ export default async function AboutPage({
       <section className="bg-white px-6 py-20 md:px-16 md:py-28">
         <div className="mx-auto w-full max-w-[1440px]">
           <div className="mb-12 grid gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-end">
-            <SectionHeading eyebrow={tPage('clientsEyebrow')} title={t('clientsTitle')} />
-            <p className="max-w-md text-sm leading-7 text-sand/72 lg:justify-self-end" data-reveal>
+            <SectionHeading
+              eyebrow={tPage('clientsEyebrow')}
+              title={t('clientsTitle')}
+            />
+            <p
+              className="max-w-md text-sm leading-7 text-sand/72 lg:justify-self-end"
+              data-reveal
+            >
               {t('clientsText')}
             </p>
           </div>
@@ -271,9 +284,14 @@ export default async function AboutPage({
             <h2 className="max-w-xl font-heading text-2xl font-bold leading-tight sm:text-3xl">
               {tPage('cta.title')}
             </h2>
-            <Link href="/contact" className="primary-button on-night w-fit flex-none">
-              {tPage('cta.button')} <ArrowRight size={15} />
-            </Link>
+            <ButtonLink
+              href="/contact"
+              tone="night"
+              icon={ArrowRight}
+              className="w-fit flex-none"
+            >
+              {tPage('cta.button')}
+            </ButtonLink>
           </div>
         </div>
       </section>

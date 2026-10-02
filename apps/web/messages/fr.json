@@ -782,10 +782,7 @@
       "hint": "Cliquez une année pour filtrer, un point pour ouvrir la fiche"
     },
     "pagination": {
-      "label": "Pagination des réalisations",
-      "previous": "Page précédente",
-      "next": "Page suivante",
-      "page": "Page {page}"
+      "label": "Pagination des réalisations"
     },
     "sheet": {
       "eyebrow": "Fiche de réalisation",
@@ -833,10 +830,7 @@
       "communique": "Communiqué"
     },
     "pagination": {
-      "label": "Pagination des actualités",
-      "previous": "Page précédente",
-      "next": "Page suivante",
-      "page": "Page {page}"
+      "label": "Pagination des actualités"
     },
     "library": {
       "title": "Rapports, guides et fiches techniques",
@@ -1291,5 +1285,12 @@
       "AUTRE": "projet"
     },
     "moreLink": "Toutes nos coordonnées"
+  },
+  "Ui": {
+    "pagination": {
+      "previous": "Page précédente",
+      "next": "Page suivante",
+      "page": "Page {page}"
+    }
   }
 }
