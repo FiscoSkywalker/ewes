@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { clientContextHeaders } from '@/lib/api/client-context';
 import {
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
@@ -29,7 +30,10 @@ export async function POST(request: Request) {
 
   const apiRes = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(await clientContextHeaders()),
+    },
     body: JSON.stringify({ email: body.email, password: body.password }),
   });
   const data = await apiRes.json().catch(() => null);

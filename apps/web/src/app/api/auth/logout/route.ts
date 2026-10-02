@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { clientContextHeaders } from '@/lib/api/client-context';
 import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from '@/lib/auth/cookies';
 
 const API_URL =
@@ -12,7 +13,10 @@ export async function POST() {
   if (refreshToken) {
     await fetch(`${API_URL}/auth/logout`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await clientContextHeaders()),
+      },
       body: JSON.stringify({ refreshToken }),
     }).catch(() => undefined);
   }
