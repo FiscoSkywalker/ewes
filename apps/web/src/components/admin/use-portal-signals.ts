@@ -113,8 +113,19 @@ export function usePortalSignals(role: Role) {
     'emails-failed': failedEmails.data?.meta.total,
   };
 
+  // Le panneau ne charge que les `SIGNAL_LIMIT` plus récents de chaque source :
+  // le reste est annoncé (« + N autres ») plutôt que passé sous silence.
+  const hiddenCount = Math.max(
+    0,
+    (contacts.data?.meta.total ?? 0) -
+      (contacts.data?.data.length ?? 0) +
+      (failedEmails.data?.meta.total ?? 0) -
+      (failedEmails.data?.data.length ?? 0),
+  );
+
   return {
     signals,
+    hiddenCount,
     badges,
     isLoading: contacts.isLoading || failedEmails.isLoading,
     isError: contacts.isError || failedEmails.isError,

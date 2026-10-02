@@ -417,6 +417,11 @@ describe('Contact (e2e)', () => {
       beforeData: { status: 'NOUVEAU' },
       afterData: { status: 'TRAITE' },
     });
+    // Le journal nomme l'acteur (tableau de bord) sans exposer son e-mail.
+    expect(audit.body.data[0].actor).toEqual({
+      id: expect.any(String),
+      fullName: expect.any(String),
+    });
     await request(app.getHttpServer())
       .get('/api/v1/admin/contacts/00000000-0000-4000-8000-000000000000')
       .set(auth)
