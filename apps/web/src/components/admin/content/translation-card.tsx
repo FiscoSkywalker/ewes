@@ -10,6 +10,13 @@ export type TranslationPair = [
   en: string | null,
 ];
 
+/** Liste lisible : les premiers éléments, puis « et 3 autres » pour ne pas noyer la carte. */
+function listed(names: string[], max = 4) {
+  if (names.length <= max) return names.join(', ');
+  const rest = names.length - max;
+  return `${names.slice(0, max).join(', ')} et ${rest} autre${rest > 1 ? 's' : ''}`;
+}
+
 /**
  * Avancement de la version anglaise : seuls comptent les textes déjà rédigés
  * en français. Sans version anglaise, le site en anglais affiche le français.
@@ -51,7 +58,7 @@ export function TranslationCard({ pairs }: { pairs: TranslationPair[] }) {
       </div>
       <p className="mt-3 text-xs leading-relaxed text-ink-subtle">
         {missing.length > 0
-          ? `À traduire : ${missing.map(([label]) => label.toLowerCase()).join(', ')}. Sans version anglaise, le site en anglais affiche le texte français.`
+          ? `À traduire : ${listed(missing.map(([label]) => label.toLowerCase()))}. Sans version anglaise, le site en anglais affiche le texte français.`
           : 'Toutes les versions anglaises sont renseignées.'}
       </p>
     </Card>

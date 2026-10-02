@@ -7,7 +7,7 @@ import type { Expert } from '@/data/experts';
 import { EWES_CONTACT } from '@/data/contact';
 import { ExpertsGallery } from '@/components/public/experts-gallery';
 import { SectionHeading } from '@/components/public/section-heading';
-import { fetchPublishedPage, localizePage } from '@/lib/api/public-pages';
+import { resolvePageHeader } from '@/lib/api/public-pages';
 import { ButtonLink } from '@/components/public/ui';
 
 /**
@@ -21,7 +21,11 @@ export async function generateMetadata({
 }: PageProps<'/[locale]/a-propos'>): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'AboutPage' });
-  return { title: t('eyebrow'), description: t('description') };
+  const header = await resolvePageHeader('a-propos', locale, {
+    title: t('title'),
+    intro: t('description'),
+  });
+  return { title: t('eyebrow'), description: header.description };
 }
 
 export default async function AboutPage({
@@ -31,12 +35,14 @@ export default async function AboutPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  // Titre et introduction pilotés par la page `a-propos` du portail admin ;
-  // repli sur les messages statiques si elle n'est pas publiée / API injoignable.
-  const cmsPage = await fetchPublishedPage('a-propos');
-  const cms = cmsPage ? localizePage(cmsPage, locale) : null;
   const t = await getTranslations('World');
   const tPage = await getTranslations('AboutPage');
+  // Titre et introduction pilotés par la page `a-propos` du portail admin ;
+  // repli sur les messages statiques si elle n'est pas publiée / API injoignable.
+  const header = await resolvePageHeader('a-propos', locale, {
+    title: tPage('title'),
+    intro: tPage('description'),
+  });
   const tExpertises = await getTranslations('Expertises');
   const tResearch = await getTranslations('Research');
   const tMetrics = await getTranslations('Metrics');
@@ -58,8 +64,8 @@ export default async function AboutPage({
           <SectionHeading
             as="h1"
             eyebrow={tPage('eyebrow')}
-            title={cms?.title ?? tPage('title')}
-            description={cms?.content ?? tPage('description')}
+            title={header.title}
+            description={header.intro}
           />
           <figure className="relative" data-reveal>
             <div className="relative aspect-[4/3] overflow-hidden rounded-sheet">

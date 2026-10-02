@@ -17,7 +17,7 @@ Tableau de bord (synthèse) ; contenu éditorial (pages, services, experts, méd
 > | Groupe | Entrées (sous-entrées) | Rôles |
 > |---|---|---|
 > | Pilotage | Tableau de bord `/admin` | A, G |
-> | Contenus du site | Pages institutionnelles ; Pôles & services (Pôles d'expertise, Prestations, Experts) ; Réalisations (Toutes, Nouvelle, Partenaires & bailleurs) ; Actualités & publications (Tous les articles, Nouvel article) ; Documents publics (Bibliothèque, Publier un document) ; Médiathèque | A, G |
+> | Contenus du site | Pages institutionnelles ; Pôles & services (Pôles et prestations, Experts) ; Réalisations (Toutes, Nouvelle, Partenaires & bailleurs) ; Actualités & publications (Tous les articles, Nouvel article) ; Documents publics (Bibliothèque, Publier un document) ; Médiathèque | A, G |
 > | Espace documentaire | Dossiers & fichiers ; Recherche ; Archives | A, G, U |
 > | | Droits d'accès (Par dossier, Par document) | A |
 > | Relation client | Messages de contact (À traiter, Traités) — pastille du nombre de messages non traités | A, G |
@@ -49,3 +49,5 @@ Le portail doit être utilisable après la courte formation prévue au contrat (
 # 7. Références
 
 `02_Functional_Requirements.md`, `09_Business_Rules.md`, `10_Security.md`, `11_Document_Management_System.md`.
+
+> Note (2026-10-03) — **Pages institutionnelles** (`/admin/pages`, `/admin/pages/<slug>`) et **Pôles & services** (`/admin/services`, `/admin/services/<id>`) livrés. La sous-entrée « Prestations » est supprimée : les prestations se gèrent dans leur pôle (contexte, pictogramme, aperçu). **Experts** reste « en préparation » (le site affiche encore des profils provisoires, voir `data/experts.ts`). Pages couvertes : À propos, Nos services, Nos réalisations, Actualités & publications, Documents, Contact (registre `lib/site-pages.ts`) ; **l'Accueil n'en fait pas partie** (mise en scène WebGL composée à part). Seul l'en-tête (titre, introduction, description de référencement) est piloté ; les sections riches (chiffres clés, valeurs, équipe, références) restent dans `messages/`. Une page n'existe en base qu'après un premier enregistrement (brouillon) ; tant qu'elle n'est pas publiée, le site affiche son texte d'origine.

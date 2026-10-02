@@ -10,6 +10,8 @@ import {
   Pickaxe,
 } from 'lucide-react';
 import { getPoleServices } from '@/lib/api/public-services';
+import { POLE_KEYS } from '@/lib/poles';
+import { resolvePageHeader } from '@/lib/api/public-pages';
 import { SectionHeading } from '@/components/public/section-heading';
 import {
   SERVICE_POLES,
@@ -30,10 +32,13 @@ export async function generateMetadata({
 }: PageProps<'/[locale]/services'>): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'ServicesPage' });
-  return { title: t('eyebrow'), description: t('description') };
+  const header = await resolvePageHeader('services', locale, {
+    title: t('title'),
+    intro: t('description'),
+  });
+  return { title: t('eyebrow'), description: header.description };
 }
 
-const POLES: ServicePole[] = ['env', 'eau', 'ing'];
 const AUDIENCE_ICONS = [Pickaxe, Landmark, GraduationCap, FlaskConical];
 
 /** Entrée du sommaire (lien d'ancre vers le chapitre du pôle). */
@@ -80,6 +85,10 @@ export default async function ServicesPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const tPage = await getTranslations('ServicesPage');
+  const header = await resolvePageHeader('services', locale, {
+    title: tPage('title'),
+    intro: tPage('description'),
+  });
   const tOverview = await getTranslations('ServicesOverview');
   const tPoles = {
     env: await getTranslations('Environment'),
@@ -113,15 +122,15 @@ export default async function ServicesPage({
           <SectionHeading
             as="h1"
             eyebrow={tPage('eyebrow')}
-            title={tPage('title')}
-            description={tPage('description')}
+            title={header.title}
+            description={header.intro}
           />
           <nav aria-label={tOverview('indexLabel')} data-reveal>
             <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
               {tOverview('indexLabel')}
             </p>
             <ul className="flex flex-col gap-3">
-              {POLES.map((pole, index) => (
+              {POLE_KEYS.map((pole, index) => (
                 <SummaryLink
                   key={pole}
                   pole={pole}
@@ -135,7 +144,7 @@ export default async function ServicesPage({
         </div>
       </section>
 
-      {POLES.map((pole, index) => (
+      {POLE_KEYS.map((pole, index) => (
         <ServiceChapter
           key={pole}
           pole={pole}

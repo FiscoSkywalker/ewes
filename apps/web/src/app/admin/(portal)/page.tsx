@@ -489,6 +489,11 @@ const ACTION_LABELS: Record<string, string> = {
   ARTICLE_ARCHIVED: 'Article archivé',
   ARTICLE_DELETED: 'Article supprimé',
   MEDIA_DELETED: 'Image supprimée de la médiathèque',
+  PAGE_PUBLISHED: 'Page du site publiée',
+  PAGE_UNPUBLISHED: 'Page du site dépubliée',
+  SERVICE_PUBLISHED: 'Pôle publié',
+  SERVICE_UNPUBLISHED: 'Pôle dépublié',
+  SERVICE_OFFERING_REMOVED: 'Prestation retirée',
 };
 
 function actionLabel(action: string): string {

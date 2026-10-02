@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { ArrowRight, BookOpen } from 'lucide-react';
 import { NewsCard, NewsMeta } from '@/components/public/news-card';
 import { SectionHeading } from '@/components/public/section-heading';
 import type { NewsCategory } from '@/data/news';
 import { Link } from '@/i18n/navigation';
+import { resolvePageHeader } from '@/lib/api/public-pages';
 import { getNewsListPage, parseCategory, parsePage } from '@/lib/news';
 import {
   ButtonLink,
@@ -30,10 +31,14 @@ export async function generateMetadata({
   searchParams: SearchParams;
 }): Promise<Metadata> {
   const t = await getTranslations('NewsPage');
+  const header = await resolvePageHeader('actualites', await getLocale(), {
+    title: t('title'),
+    intro: t('description'),
+  });
   const page = parsePage((await searchParams).page);
   return {
     title: page > 1 ? t('pageTitle', { page }) : t('eyebrow'),
-    description: t('description'),
+    description: header.description,
   };
 }
 
@@ -50,6 +55,10 @@ export default async function NewsPage({
   searchParams: SearchParams;
 }) {
   const t = await getTranslations('NewsPage');
+  const header = await resolvePageHeader('actualites', await getLocale(), {
+    title: t('title'),
+    intro: t('description'),
+  });
   const params = await searchParams;
   const category = parseCategory(params.categorie);
   const { featured, items, page, pageCount, total, categories } =
@@ -61,8 +70,8 @@ export default async function NewsPage({
         <SectionHeading
           as="h1"
           eyebrow={t('eyebrow')}
-          title={t('title')}
-          description={t('description')}
+          title={header.title}
+          description={header.intro}
           className="mb-14 max-w-4xl"
         />
 

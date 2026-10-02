@@ -96,12 +96,19 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: FileText,
         tone: 'brand',
         description:
-          'Textes des pages du site public (Accueil, À propos, Contact…), en français et en anglais.',
-        keywords: ['à propos', 'accueil', 'textes', 'contenu'],
+          'Titre, introduction et description pour les moteurs de recherche de chaque page du site, en français et en anglais.',
+        keywords: [
+          'à propos',
+          'contact',
+          'textes',
+          'contenu',
+          'référencement',
+          'seo',
+        ],
         features: [
-          'Modifier les textes FR/EN de chaque page',
-          'Prévisualiser avant de publier',
-          'Publier ou dépublier, avec historique',
+          'Modifier le titre et l’introduction FR/EN de chaque page',
+          'Description pour les moteurs de recherche, avec aperçu',
+          'Publier ou dépublier (le site retrouve le texte d’origine)',
         ],
       },
       {
@@ -112,29 +119,25 @@ export const NAV_GROUPS: NavGroup[] = [
         tone: 'env',
         description:
           'Les trois pôles d’expertise EWES, leurs prestations et les experts associés.',
+        keywords: ['prestations', 'offre', 'offering'],
         children: [
           {
             id: 'services-poles',
-            label: 'Pôles d’expertise',
+            label: 'Pôles et prestations',
             href: '/admin/services',
             description:
-              'Environnement, Eau, Travaux d’ingénierie : présentation et publication.',
-            keywords: ['environnement', 'eau', 'ingénierie', 'pôle'],
-            features: [
-              'Présentation FR/EN de chaque pôle',
-              'Ordre d’affichage sur le site',
-              'Publier ou dépublier un pôle',
+              'Environnement, Eau, Travaux d’ingénierie : présentation, visuel, prestations et publication.',
+            keywords: [
+              'environnement',
+              'eau',
+              'ingénierie',
+              'pôle',
+              'prestations',
             ],
-          },
-          {
-            id: 'services-prestations',
-            label: 'Prestations',
-            href: '/admin/services/prestations',
-            description: 'Le détail des prestations proposées par chaque pôle.',
-            keywords: ['offre', 'offering'],
             features: [
-              'Ajouter, modifier, réordonner les prestations d’un pôle',
-              'Libellés FR/EN',
+              'Présentation et visuel de chaque pôle, FR/EN',
+              'Ajouter, modifier, réordonner les prestations',
+              'Publier ou dépublier un pôle',
             ],
           },
           {
