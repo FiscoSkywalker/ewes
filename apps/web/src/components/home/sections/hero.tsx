@@ -26,7 +26,6 @@ export function Hero({ onExplore }: HeroProps) {
             media="(max-width: 767px)"
             srcSet="/assets/images/ewes-hero-mobile.webp"
           />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/images/ewes-hero-cinematic.webp"
             alt={t('imageAlt')}
