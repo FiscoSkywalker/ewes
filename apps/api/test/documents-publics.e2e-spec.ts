@@ -260,6 +260,64 @@ describe('Documents publics (e2e)', () => {
       .expect(404);
   });
 
+  it('lets staff read a draft PDF privately and audits every publication change', async () => {
+    const created = await create('staff', pdf('staff')).expect(201);
+    const id = created.body.id as string;
+    const fileUrl = `/api/v1/admin/documents-publics/${id}/file`;
+    const read = (headers: Record<string, string> = auth) =>
+      request(app.getHttpServer())
+        .get(fileUrl)
+        .set(headers)
+        .buffer(true)
+        .parse((r, cb) => {
+          const chunks: Buffer[] = [];
+          r.on('data', (c: Buffer) => chunks.push(c));
+          r.on('end', () => cb(null, Buffer.concat(chunks)));
+        });
+
+    // Brouillon : introuvable publiquement, lisible par le personnel, jamais mis en cache partagé.
+    await download(storedNameOf(created.body.fileUrl as string)).expect(404);
+    const draft = await read().expect(200);
+    expect((draft.body as Buffer).equals(pdf('staff'))).toBe(true);
+    expect(draft.headers['content-type']).toBe('application/pdf');
+    expect(draft.headers['content-disposition']).toBe(
+      `inline; filename="${created.body.slug}.pdf"`,
+    );
+    expect(draft.headers['cache-control']).toBe('private, no-store');
+    expect(draft.headers['x-content-type-options']).toBe('nosniff');
+
+    // Sans compte ou sans rôle de personnel : refusé.
+    await request(app.getHttpServer()).get(fileUrl).expect(401);
+    await read({ Authorization: `Bearer ${await login(userEmail)}` }).expect(403);
+
+    await post(`/api/v1/admin/documents-publics/${id}/publish`).expect(200);
+    await post(`/api/v1/admin/documents-publics/${id}/publish`).expect(200); // déjà publié : aucun changement
+    await post(`/api/v1/admin/documents-publics/${id}/unpublish`).expect(200);
+    await post(`/api/v1/admin/documents-publics/${id}/archive`).expect(200);
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/documents-publics/${id}`)
+      .set(auth)
+      .expect(204);
+    await read().expect(404);
+
+    const trail = await prisma.auditLog.findMany({
+      where: { entityType: 'PublicDocument', entityId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(trail.map((e) => e.action)).toEqual([
+      'PUBLIC_DOCUMENT_PUBLISHED',
+      'PUBLIC_DOCUMENT_UNPUBLISHED',
+      'PUBLIC_DOCUMENT_ARCHIVED',
+      'PUBLIC_DOCUMENT_DELETED',
+    ]);
+    expect(trail.every((e) => e.actorId !== null)).toBe(true);
+    expect(trail[0]).toMatchObject({
+      beforeData: { status: 'DRAFT', slug: created.body.slug },
+      afterData: { status: 'PUBLISHED' },
+    });
+    expect(trail[3].afterData).toEqual({ deleted: true });
+  });
+
   it('replaces the PDF and removes the previous file from disk', async () => {
     const created = await create('replace', pdf('v1')).expect(201);
     const id = created.body.id as string;

@@ -474,6 +474,10 @@ const ACTION_LABELS: Record<string, string> = {
   FOLDER_CREATED: 'Dossier créé',
   FOLDER_UPDATED: 'Dossier modifié',
   FOLDER_DELETED: 'Dossier supprimé',
+  PUBLIC_DOCUMENT_PUBLISHED: 'Document public publié',
+  PUBLIC_DOCUMENT_UNPUBLISHED: 'Document public dépublié',
+  PUBLIC_DOCUMENT_ARCHIVED: 'Document public archivé',
+  PUBLIC_DOCUMENT_DELETED: 'Document public supprimé',
 };
 
 function actionLabel(action: string): string {
