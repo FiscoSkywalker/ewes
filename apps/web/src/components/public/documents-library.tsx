@@ -9,6 +9,7 @@ import {
   DocumentLink,
   FileBadge,
   POLE_CLASS,
+  poleClass,
   type DocumentCategory,
   type DocumentPole,
   type ShowcaseDocument,
@@ -71,7 +72,9 @@ export function DocumentsLibrary({
   };
 
   const meta = (doc: ShowcaseDocument) =>
-    [tDoc('pages', { count: doc.pages }), doc.size].join(' · ');
+    [doc.pages ? tDoc('pages', { count: doc.pages }) : '', doc.size]
+      .filter(Boolean)
+      .join(' · ');
 
   const chip = (active: boolean) =>
     `inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] transition-colors ${
@@ -251,7 +254,7 @@ export function DocumentsLibrary({
               <DocumentLink
                 doc={doc}
                 label={`${tDoc('download')} — ${doc.title}`}
-                className={`${POLE_CLASS[doc.pole]} group relative flex h-full flex-col overflow-hidden rounded-sheet border border-border-subtle bg-surface-elevated p-6 transition-all duration-300 hover:-translate-y-1 hover:border-border hover:bg-white hover:shadow-[0_24px_48px_-28px_rgba(21,52,66,0.5)] sm:p-7`}
+                className={`${poleClass(doc.pole)} group relative flex h-full flex-col overflow-hidden rounded-sheet border border-border-subtle bg-surface-elevated p-6 transition-all duration-300 hover:-translate-y-1 hover:border-border hover:bg-white hover:shadow-[0_24px_48px_-28px_rgba(21,52,66,0.5)] sm:p-7`}
               >
                 <div className="flex items-start justify-between">
                   <FileBadge doc={doc} />
@@ -260,7 +263,8 @@ export function DocumentsLibrary({
                   </span>
                 </div>
                 <span className="mt-7 font-mono text-[10px] uppercase tracking-[0.14em] text-pole">
-                  {tDoc(`categories.${doc.category}`)} · {t(`poles.${doc.pole}`)}
+                  {tDoc(`categories.${doc.category}`)}
+                  {doc.pole && ` · ${t(`poles.${doc.pole}`)}`}
                 </span>
                 <h3 className="mt-2 font-heading text-lg font-bold leading-snug text-sand">
                   {doc.title}

@@ -33,6 +33,13 @@ enum ArticleType {
   PUBLICATION
 }
 
+enum DocumentCategory {
+  REPORT
+  GUIDE
+  DATASHEET
+  BROCHURE
+}
+
 /// Précision de la date affichée d'un article (une enquête de 2025 s'affiche « 2025 »).
 enum DatePrecision {
   YEAR
@@ -141,6 +148,7 @@ model Service {
 
   offerings    ServiceOffering[]
   realisations Realisation[]
+  documents    PublicDocument[]
   experts      Expert[]
 
   @@map("services")
@@ -308,20 +316,34 @@ model ArticleDocument {
   @@map("article_documents")
 }
 
+/// Document public téléchargeable (rapport, guide, fiche, brochure). Le fichier
+/// est stocké sous PUBLIC_MEDIA_PATH/documents ; `fileUrl` est son URL publique.
 model PublicDocument {
-  id            String    @id @default(uuid())
+  id            String           @id @default(uuid())
+  slug          String           @unique
   titleFr       String
   titleEn       String?
+  excerptFr     String?
+  excerptEn     String?
+  category      DocumentCategory
+  year          Int?
+  pages         Int?
+  serviceId     String?
+  service       Service?         @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  status        ContentStatus    @default(DRAFT)
+  publishedAt   DateTime?
+  storedName    String           @unique
   fileUrl       String
   fileType      String
   fileSizeBytes Int
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   deletedAt     DateTime?
 
   realisationLinks RealisationDocument[]
   articleLinks     ArticleDocument[]
 
+  @@index([status, publishedAt])
   @@map("public_documents")
 }
 
