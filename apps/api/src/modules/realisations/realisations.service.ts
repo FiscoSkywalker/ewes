@@ -9,17 +9,29 @@ import { ContentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
 import { escapeLike } from '../../common/utils/like.js';
+import { normalizeSearch } from '../../common/utils/normalize.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { MediaService } from '../media/media.service.js';
 import type { CreateRealisationDto } from './dto/create-realisation.dto.js';
+import type { SetRealisationDocumentsDto } from './dto/set-realisation-documents.dto.js';
 import type { SetRealisationImagesDto } from './dto/set-realisation-images.dto.js';
+import type { SetRealisationPartnersDto } from './dto/set-realisation-partners.dto.js';
 import type { UpdateRealisationDto } from './dto/update-realisation.dto.js';
 import type {
   ListAdminRealisationsDto,
   ListRealisationsDto,
 } from './dto/list-realisations.dto.js';
 import { MAX_FEATURED_REALISATIONS } from './realisation-types.js';
+
+const PARTNER_COLLATOR = new Intl.Collator('fr', {
+  sensitivity: 'base',
+  numeric: true,
+});
+
+/** Clé de comparaison d'un nom de partenaire : sans espaces en trop ni casse. */
+const partnerKey = (name: string) =>
+  name.trim().replace(/\s+/g, ' ').toLowerCase();
 
 const REALISATION_NOT_FOUND = {
   code: 'REALISATION_NOT_FOUND',
@@ -44,6 +56,34 @@ const WITH_RELATIONS = {
   images: {
     orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
     select: { id: true, url: true, altFr: true, altEn: true, position: true },
+  },
+  // Partenaires et bailleurs, dans l'ordre choisi.
+  partners: {
+    orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
+    select: { id: true, name: true },
+  },
+  // Documents associés (un document supprimé n'est plus jamais associé), dans l'ordre choisi.
+  documents: {
+    where: { publicDocument: { deletedAt: null } },
+    orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
+    select: {
+      publicDocument: {
+        select: {
+          id: true,
+          slug: true,
+          titleFr: true,
+          titleEn: true,
+          category: true,
+          year: true,
+          pages: true,
+          status: true,
+          publishedAt: true,
+          fileUrl: true,
+          fileType: true,
+          fileSizeBytes: true,
+        },
+      },
+    },
   },
 } satisfies Prisma.RealisationInclude;
 
@@ -260,6 +300,221 @@ export class RealisationsService {
     return this.findById(id);
   }
 
+  /**
+   * Remplace la liste des partenaires et bailleurs (l'ordre est conservé). Les
+   * noms sont nettoyés, et une même organisation n'est gardée qu'une fois.
+   */
+  async setPartners(id: string, dto: SetRealisationPartnersDto) {
+    const current = await this.findById(id);
+
+    const seen = new Set<string>();
+    const names: string[] = [];
+    for (const raw of dto.partners) {
+      const name = raw.trim().replace(/\s+/g, ' ');
+      if (!name || seen.has(partnerKey(name))) continue;
+      seen.add(partnerKey(name));
+      names.push(name);
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.realisationPartner.deleteMany({
+        where: { realisationId: id },
+      }),
+      this.prisma.realisationPartner.createMany({
+        data: names.map((name, position) => ({
+          realisationId: id,
+          name,
+          position,
+        })),
+      }),
+    ]);
+    if (current.status === ContentStatus.PUBLISHED) {
+      await this.revalidate(current.slug);
+    }
+    return this.findById(id);
+  }
+
+  /** Remplace les documents publics associés (l'ordre est conservé). */
+  async setDocuments(id: string, dto: SetRealisationDocumentsDto) {
+    const current = await this.findById(id);
+
+    const found = await this.prisma.publicDocument.findMany({
+      where: { id: { in: dto.documentIds }, deletedAt: null },
+      select: { id: true },
+    });
+    const known = new Set(found.map((d) => d.id));
+    const missing = dto.documentIds.filter(
+      (documentId) => !known.has(documentId),
+    );
+    if (missing.length > 0) {
+      throw new NotFoundException({
+        code: 'PUBLIC_DOCUMENT_NOT_FOUND',
+        message: 'Un document à associer n’existe pas ou a été supprimé.',
+        details: missing,
+      });
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.realisationDocument.deleteMany({
+        where: { realisationId: id },
+      }),
+      this.prisma.realisationDocument.createMany({
+        data: dto.documentIds.map((publicDocumentId, position) => ({
+          realisationId: id,
+          publicDocumentId,
+          position,
+        })),
+      }),
+    ]);
+    if (current.status === ContentStatus.PUBLISHED) {
+      await this.revalidate(current.slug);
+    }
+    return this.findById(id);
+  }
+
+  /**
+   * Annuaire des partenaires : chaque organisation une seule fois (casse
+   * ignorée), avec le nombre de réalisations qui la citent. Sert à l'écran
+   * « Partenaires & bailleurs » et à la saisie assistée des fiches.
+   */
+  async listPartners(q?: string) {
+    const rows = await this.prisma.realisationPartner.findMany({
+      where: { realisation: { deletedAt: null } },
+      select: {
+        name: true,
+        realisation: { select: { id: true, titleFr: true } },
+      },
+    });
+
+    const groups = new Map<
+      string,
+      {
+        spellings: Map<string, number>;
+        realisations: Map<string, { id: string; titleFr: string }>;
+      }
+    >();
+    for (const row of rows) {
+      const key = partnerKey(row.name);
+      const group = groups.get(key) ?? {
+        spellings: new Map(),
+        realisations: new Map(),
+      };
+      group.spellings.set(row.name, (group.spellings.get(row.name) ?? 0) + 1);
+      group.realisations.set(row.realisation.id, row.realisation);
+      groups.set(key, group);
+    }
+
+    const needle = q ? normalizeSearch(q) : null;
+    const data = [...groups.values()]
+      .map((group) => {
+        // Graphie affichée : la plus employée (à égalité, l'ordre alphabétique).
+        const spellings = [...group.spellings.entries()].sort(
+          (a, b) => b[1] - a[1] || PARTNER_COLLATOR.compare(a[0], b[0]),
+        );
+        return {
+          name: spellings[0][0],
+          // Autres graphies présentes : à unifier par un renommage.
+          variants: spellings.slice(1).map(([spelling]) => spelling),
+          count: group.realisations.size,
+          realisations: [...group.realisations.values()].sort((a, b) =>
+            PARTNER_COLLATOR.compare(a.titleFr, b.titleFr),
+          ),
+        };
+      })
+      .filter(
+        (partner) => !needle || normalizeSearch(partner.name).includes(needle),
+      )
+      .sort((a, b) => PARTNER_COLLATOR.compare(a.name, b.name));
+    return { data, meta: { total: data.length } };
+  }
+
+  /**
+   * Renomme un partenaire dans toutes les réalisations (corriger une faute,
+   * unifier deux graphies). Si le nouveau nom existe déjà dans une réalisation
+   * qui citait aussi l'ancien, les deux sont fusionnés.
+   */
+  async renamePartner(actor: AuthenticatedUser, from: string, to: string) {
+    const affected = await this.prisma.realisationPartner.findMany({
+      where: { name: { equals: from, mode: 'insensitive' } },
+      select: {
+        id: true,
+        name: true,
+        realisationId: true,
+        realisation: { select: { slug: true, status: true, deletedAt: true } },
+      },
+    });
+    if (affected.length === 0) {
+      throw new NotFoundException({
+        code: 'PARTNER_NOT_FOUND',
+        message: 'Ce partenaire n’est cité dans aucune réalisation.',
+        details: [],
+      });
+    }
+    // Un autre nom déjà présent dans la même fiche : on garde l'existant.
+    const targetRows = await this.prisma.realisationPartner.findMany({
+      where: {
+        realisationId: { in: affected.map((a) => a.realisationId) },
+        name: { equals: to, mode: 'insensitive' },
+        id: { notIn: affected.map((a) => a.id) },
+      },
+      select: { realisationId: true },
+    });
+    const alreadyThere = new Set(targetRows.map((t) => t.realisationId));
+
+    const toMerge = affected.filter((a) => alreadyThere.has(a.realisationId));
+    const toRename = affected.filter((a) => !alreadyThere.has(a.realisationId));
+    await this.prisma.$transaction([
+      this.prisma.realisationPartner.deleteMany({
+        where: { id: { in: toMerge.map((a) => a.id) } },
+      }),
+      this.prisma.realisationPartner.updateMany({
+        where: { id: { in: toRename.map((a) => a.id) } },
+        data: { name: to },
+      }),
+    ]);
+    await this.audit.record({
+      actorId: actor.id,
+      action: 'REALISATION_PARTNER_RENAMED',
+      entityType: 'RealisationPartner',
+      before: { name: from },
+      after: {
+        name: to,
+        realisations: affected.length,
+        merged: toMerge.length,
+      },
+    });
+    await this.revalidateMany(affected.map((a) => a.realisation));
+    return { updated: toRename.length, merged: toMerge.length };
+  }
+
+  /** Retire un partenaire de toutes les réalisations. */
+  async removePartner(actor: AuthenticatedUser, name: string) {
+    const affected = await this.prisma.realisationPartner.findMany({
+      where: { name: { equals: name, mode: 'insensitive' } },
+      select: {
+        realisation: { select: { slug: true, status: true, deletedAt: true } },
+      },
+    });
+    if (affected.length === 0) {
+      throw new NotFoundException({
+        code: 'PARTNER_NOT_FOUND',
+        message: 'Ce partenaire n’est cité dans aucune réalisation.',
+        details: [],
+      });
+    }
+    await this.prisma.realisationPartner.deleteMany({
+      where: { name: { equals: name, mode: 'insensitive' } },
+    });
+    await this.audit.record({
+      actorId: actor.id,
+      action: 'REALISATION_PARTNER_REMOVED',
+      entityType: 'RealisationPartner',
+      before: { name, realisations: affected.length },
+    });
+    await this.revalidateMany(affected.map((a) => a.realisation));
+    return { removed: affected.length };
+  }
+
   /** Publication explicite ; exige les champs nécessaires au filtrage public. */
   async publish(actor: AuthenticatedUser, id: string) {
     const current = await this.findById(id);
@@ -394,6 +649,22 @@ export class RealisationsService {
         details: [],
       });
     }
+  }
+
+  /** Revalide les fiches publiées touchées par un changement groupé, et la liste. */
+  private async revalidateMany(
+    realisations: {
+      slug: string;
+      status: ContentStatus;
+      deletedAt: Date | null;
+    }[],
+  ) {
+    for (const r of realisations) {
+      if (r.status === ContentStatus.PUBLISHED && !r.deletedAt) {
+        await this.revalidator.revalidate(realisationTag(r.slug));
+      }
+    }
+    await this.revalidator.revalidate(REALISATIONS_LIST_TAG);
   }
 
   private async revalidate(slug: string) {

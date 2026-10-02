@@ -40,3 +40,5 @@ Les messages de contact, les documents privés et les journaux d'audit suivent u
 # 7. Références
 
 `08_API_Specification.md`, `09_Business_Rules.md`, `10_Security.md`, `11_Document_Management_System.md`, `12_Realisations_Portfolio_System.md`.
+
+> Note (2026-10-02) — `RealisationDocument` et `RealisationPartner` portent une colonne `position` (ordre d'affichage choisi, comme `RealisationImage`) ; migration `20261002215356_realisation_links_position`. Un partenaire est un simple nom propre à chaque réalisation (pas d'entité) : l'annuaire de l'administration les regroupe par nom, casse ignorée.

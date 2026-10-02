@@ -18,3 +18,9 @@ export const MAX_FEATURED_REALISATIONS = 6;
 
 /** Images d'une réalisation (galerie) : au-delà, la fiche devient illisible. */
 export const MAX_REALISATION_IMAGES = 12;
+
+/** Partenaires et documents associés à une réalisation : même raison. */
+export const MAX_REALISATION_PARTNERS = 20;
+export const MAX_REALISATION_DOCUMENTS = 20;
+/** Longueur d'un nom de partenaire. */
+export const MAX_PARTNER_NAME = 150;

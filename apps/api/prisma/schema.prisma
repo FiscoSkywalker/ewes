@@ -247,6 +247,7 @@ model RealisationDocument {
   realisation      Realisation    @relation(fields: [realisationId], references: [id], onDelete: Cascade)
   publicDocumentId String
   publicDocument   PublicDocument @relation(fields: [publicDocumentId], references: [id], onDelete: Cascade)
+  position         Int            @default(0)
   createdAt        DateTime       @default(now())
 
   @@unique([realisationId, publicDocumentId])
@@ -258,6 +259,7 @@ model RealisationPartner {
   realisationId String
   realisation   Realisation @relation(fields: [realisationId], references: [id], onDelete: Cascade)
   name          String
+  position      Int         @default(0)
   createdAt     DateTime    @default(now())
 
   @@index([realisationId])
