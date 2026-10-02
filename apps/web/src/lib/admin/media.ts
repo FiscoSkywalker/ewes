@@ -11,6 +11,8 @@ export interface MediaItem {
   id: string;
   /** Adresse publique relative (`/uploads/<nom>`), servie par l'API. */
   url: string;
+  /** Vignette WebP (640 px au plus) : ce qu'on affiche dans les listes et les grilles. */
+  thumbUrl: string;
   mimeType: string;
   sizeBytes: number;
   originalName: string | null;
@@ -52,6 +54,13 @@ export const usageHref = (usage: MediaUsage) =>
   usage.type === 'ARTICLE'
     ? `/admin/actualites/${usage.id}`
     : `/admin/realisations/${usage.id}`;
+
+/**
+ * Vignette d'une image d'après son adresse publique (`/uploads/<nom>`), pour
+ * les écrans qui ne reçoivent que l'adresse (couverture d'un article…).
+ */
+export const thumbOf = (url: string) =>
+  url.startsWith('/uploads/') ? `${url}?size=thumb` : url;
 
 /** Nom affichable : le nom d'origine, s'il a été conservé. */
 export const mediaName = (media: Pick<MediaItem, 'originalName'>) =>

@@ -5,6 +5,9 @@ import request from 'supertest';
 import { App } from 'supertest/types.js';
 import * as argon2 from 'argon2';
 import { Role } from '@prisma/client';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { AppModule } from './../src/app.module.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 import { GlobalHttpExceptionFilter } from './../src/common/filters/http-exception.filter.js';
@@ -18,6 +21,7 @@ import { MAX_FEATURED_REALISATIONS } from './../src/modules/realisations/realisa
 describe('Realisations (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
+  let mediaDir: string;
 
   const password = 'correct horse battery staple';
   const stamp = Date.now();
@@ -45,6 +49,10 @@ describe('Realisations (e2e)', () => {
   }
 
   beforeAll(async () => {
+    // Stockage isolé : aucune image de test dans le dossier de développement.
+    mediaDir = await mkdtemp(join(tmpdir(), 'ewes-real-e2e-'));
+    process.env.PUBLIC_MEDIA_PATH = mediaDir;
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -85,6 +93,9 @@ describe('Realisations (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.media.deleteMany({
+      where: { uploadedBy: { email: gestionnaireEmail } },
+    });
     await prisma.realisation.deleteMany({
       where: { slug: { startsWith: prefix } },
     });
@@ -95,6 +106,7 @@ describe('Realisations (e2e)', () => {
       where: { email: { in: [gestionnaireEmail, userEmail] } },
     });
     await app.close();
+    await rm(mediaDir, { recursive: true, force: true });
   });
 
   it('rejects unauthenticated and under-privileged access to admin routes', async () => {
@@ -181,7 +193,10 @@ describe('Realisations (e2e)', () => {
 
   it('filters, orders and paginates the public list', async () => {
     const make = async (suffix: string, year: number, type: string) => {
-      const id = await create(`${prefix}-${suffix}`, { year, projectType: type });
+      const id = await create(`${prefix}-${suffix}`, {
+        year,
+        projectType: type,
+      });
       await request(app.getHttpServer())
         .post(`/api/v1/admin/realisations/${id}/publish`)
         .set(auth)
@@ -202,9 +217,9 @@ describe('Realisations (e2e)', () => {
     const year = await request(app.getHttpServer())
       .get('/api/v1/realisations?year=2031&limit=100')
       .expect(200);
-    expect(
-      year.body.data.every((r: { year: number }) => r.year === 2031),
-    ).toBe(true);
+    expect(year.body.data.every((r: { year: number }) => r.year === 2031)).toBe(
+      true,
+    );
 
     const paged = await request(app.getHttpServer())
       .get('/api/v1/realisations?limit=1&page=1')
@@ -259,7 +274,9 @@ describe('Realisations (e2e)', () => {
       .expect(200);
 
     const get = (query: string) =>
-      request(app.getHttpServer()).get(`/api/v1/admin/realisations?${query}`).set(auth);
+      request(app.getHttpServer())
+        .get(`/api/v1/admin/realisations?${query}`)
+        .set(auth);
     const letters = (res: request.Response) =>
       (res.body.data as { slug: string }[]).map((r) => r.slug.slice(-1));
 
@@ -282,7 +299,9 @@ describe('Realisations (e2e)', () => {
     const literal = await get('q=%25').expect(200);
     expect(
       (literal.body.data as Record<string, string | null>[]).every((r) =>
-        ['titleFr', 'titleEn', 'clientName', 'location', 'slug'].some((f) => r[f]?.includes('%')),
+        ['titleFr', 'titleEn', 'clientName', 'location', 'slug'].some((f) =>
+          r[f]?.includes('%'),
+        ),
       ),
     ).toBe(true);
     expect(letters(literal)).toContain('c');
@@ -303,20 +322,38 @@ describe('Realisations (e2e)', () => {
 
     // Tri + pagination : chaque ligne apparaît une fois.
     const page = async (n: number) =>
-      letters(await get(`q=${needle}&sort=titleFr&order=asc&limit=1&page=${n}`).expect(200));
-    expect([await page(1), await page(2), await page(3)]).toEqual([['a'], ['b'], ['c']]);
+      letters(
+        await get(
+          `q=${needle}&sort=titleFr&order=asc&limit=1&page=${n}`,
+        ).expect(200),
+      );
+    expect([await page(1), await page(2), await page(3)]).toEqual([
+      ['a'],
+      ['b'],
+      ['c'],
+    ]);
 
     // Paramètres refusés avec le champ fautif ; aucune injection par le champ de tri.
-    for (const bad of ['sort=slug', 'sort=year;drop', 'order=up', `q=${'x'.repeat(101)}`]) {
+    for (const bad of [
+      'sort=slug',
+      'sort=year;drop',
+      'order=up',
+      `q=${'x'.repeat(101)}`,
+    ]) {
       const res = await get(bad).expect(400);
       expect(JSON.stringify(res.body)).toContain(bad.split('=')[0]);
     }
   });
 
   it('deletes logically with a confirmation trail and audits every publication change', async () => {
-    const id = await create(`${prefix}-trail`, { year: 2024, projectType: 'ETUDE' });
+    const id = await create(`${prefix}-trail`, {
+      year: 2024,
+      projectType: 'ETUDE',
+    });
     const post = (action: string) =>
-      request(app.getHttpServer()).post(`/api/v1/admin/realisations/${id}/${action}`).set(auth);
+      request(app.getHttpServer())
+        .post(`/api/v1/admin/realisations/${id}/${action}`)
+        .set(auth);
 
     await post('publish').expect(200);
     await post('publish').expect(200); // déjà publiée : aucun changement, aucune trace
@@ -330,7 +367,9 @@ describe('Realisations (e2e)', () => {
       .delete(`/api/v1/admin/realisations/${id}`)
       .set({ Authorization: `Bearer ${userToken}` })
       .expect(403);
-    await request(app.getHttpServer()).delete(`/api/v1/admin/realisations/${id}`).expect(401);
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/realisations/${id}`)
+      .expect(401);
 
     await post('publish').expect(200);
     await request(app.getHttpServer())
@@ -342,9 +381,17 @@ describe('Realisations (e2e)', () => {
       .expect(204);
 
     // Disparue partout : site, fiche d'administration, liste ; la ligne reste en base.
-    await request(app.getHttpServer()).get(`/api/v1/realisations/${prefix}-trail`).expect(404);
-    await request(app.getHttpServer()).get(`/api/v1/admin/realisations/${id}`).set(auth).expect(404);
-    await request(app.getHttpServer()).delete(`/api/v1/admin/realisations/${id}`).set(auth).expect(404);
+    await request(app.getHttpServer())
+      .get(`/api/v1/realisations/${prefix}-trail`)
+      .expect(404);
+    await request(app.getHttpServer())
+      .get(`/api/v1/admin/realisations/${id}`)
+      .set(auth)
+      .expect(404);
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/realisations/${id}`)
+      .set(auth)
+      .expect(404);
     const row = await prisma.realisation.findUniqueOrThrow({ where: { id } });
     expect(row.deletedAt).not.toBeNull();
 
@@ -396,5 +443,181 @@ describe('Realisations (e2e)', () => {
       .set(auth);
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('REALISATION_FEATURED_LIMIT');
+  });
+
+  describe('gallery', () => {
+    /** PNG 1x1 valide. */
+    const PNG = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    const addImage = async () => {
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/admin/media')
+        .set(auth)
+        .attach('file', PNG, 'chantier.png')
+        .expect(201);
+      return { id: res.body.id as string, url: res.body.url as string };
+    };
+    const put = (id: string, body: unknown, token?: string) => {
+      return request(app.getHttpServer())
+        .put(`/api/v1/admin/realisations/${id}/images`)
+        .set(token ? { Authorization: token } : auth)
+        .send(body as object);
+    };
+    const urlsOf = (images: { url: string }[]) => images.map((i) => i.url);
+
+    it('keeps an ordered gallery, replaces it as a whole and exposes it publicly', async () => {
+      const [a, b, c] = [await addImage(), await addImage(), await addImage()];
+      const slug = `${prefix}-gallery`;
+      const id = await create(slug, { year: 2024, projectType: 'AUDIT' });
+
+      const empty = await request(app.getHttpServer())
+        .get(`/api/v1/admin/realisations/${id}`)
+        .set(auth)
+        .expect(200);
+      expect(empty.body.images).toEqual([]);
+
+      // L'ordre du tableau est l'ordre d'affichage ; un texte vide devient « absent ».
+      const first = await put(id, {
+        images: [
+          { url: b.url, altFr: '  Vue du chantier  ', altEn: '   ' },
+          { url: a.url },
+        ],
+      }).expect(200);
+      expect(urlsOf(first.body.images)).toEqual([b.url, a.url]);
+      expect(
+        first.body.images.map((i: { position: number }) => i.position),
+      ).toEqual([0, 1]);
+      expect(first.body.images[0]).toMatchObject({
+        altFr: 'Vue du chantier',
+        altEn: null,
+      });
+
+      const second = await put(id, {
+        images: [{ url: a.url }, { url: b.url }, { url: c.url }],
+      }).expect(200);
+      expect(urlsOf(second.body.images)).toEqual([a.url, b.url, c.url]);
+      expect(second.body.images[0].altFr).toBeNull();
+
+      // Brouillon : rien de public. Publiée : la galerie, sans identifiants internes.
+      await request(app.getHttpServer())
+        .get(`/api/v1/realisations/${slug}`)
+        .expect(404);
+      await request(app.getHttpServer())
+        .post(`/api/v1/admin/realisations/${id}/publish`)
+        .set(auth)
+        .expect(200);
+      const publicOne = await request(app.getHttpServer())
+        .get(`/api/v1/realisations/${slug}`)
+        .expect(200);
+      expect(publicOne.body.images).toEqual([
+        { url: a.url, altFr: null, altEn: null },
+        { url: b.url, altFr: null, altEn: null },
+        { url: c.url, altFr: null, altEn: null },
+      ]);
+      const publicList = await request(app.getHttpServer())
+        .get('/api/v1/realisations?limit=100')
+        .expect(200);
+      const listed = publicList.body.data.find(
+        (r: { slug: string }) => r.slug === slug,
+      );
+      expect(listed.images).toHaveLength(3);
+
+      // La médiathèque dit où l'image est utilisée et refuse de la supprimer.
+      const library = await request(app.getHttpServer())
+        .get('/api/v1/admin/media?q=chantier&limit=100')
+        .set(auth)
+        .expect(200);
+      const usedA = library.body.data.find(
+        (m: { id: string }) => m.id === a.id,
+      );
+      expect(usedA.usages).toEqual([
+        { type: 'REALISATION', id, title: `Mission ${slug}` },
+      ]);
+      const blocked = await request(app.getHttpServer())
+        .delete(`/api/v1/admin/media/${a.id}`)
+        .set(auth);
+      expect(blocked.status).toBe(409);
+      expect(blocked.body.code).toBe('MEDIA_IN_USE');
+
+      // Galerie vidée : l'image est libre et le site ne la montre plus.
+      const cleared = await put(id, { images: [] }).expect(200);
+      expect(cleared.body.images).toEqual([]);
+      const after = await request(app.getHttpServer())
+        .get(`/api/v1/realisations/${slug}`)
+        .expect(200);
+      expect(after.body.images).toEqual([]);
+      for (const media of [a, b, c]) {
+        await request(app.getHttpServer())
+          .delete(`/api/v1/admin/media/${media.id}`)
+          .set(auth)
+          .expect(204);
+      }
+    });
+
+    it('refuses anything that is not a distinct image of the media library', async () => {
+      const image = await addImage();
+      const id = await create(`${prefix}-gallery-bad`);
+      const unknown = '/uploads/00000000-0000-4000-8000-000000000000.png';
+
+      await put(id, { images: [{ url: '/assets/images/hero.webp' }] }).expect(
+        400,
+      );
+      await put(id, {
+        images: [{ url: 'https://exemple.org/photo.png' }],
+      }).expect(400);
+      await put(id, {
+        images: [{ url: '/uploads/../../etc/passwd.png' }],
+      }).expect(400);
+
+      const missing = await put(id, { images: [{ url: unknown }] });
+      expect(missing.status).toBe(404);
+      expect(missing.body.code).toBe('MEDIA_NOT_FOUND');
+
+      const twice = await put(id, {
+        images: [{ url: image.url }, { url: image.url }],
+      });
+      expect(twice.status).toBe(400);
+      expect(twice.body.code).toBe('REALISATION_IMAGE_DUPLICATE');
+
+      await put(id, {
+        images: [{ url: image.url, altFr: 'x'.repeat(301) }],
+      }).expect(400);
+      await put(id, { images: 'pas-un-tableau' }).expect(400);
+      await put(id, {}).expect(400);
+      // Pas plus de 12 images.
+      await put(id, {
+        images: Array.from({ length: 13 }, (_, i) => ({
+          url: `/uploads/00000000-0000-4000-8000-${String(i).padStart(12, '0')}.png`,
+        })),
+      }).expect(400);
+
+      // Un refus ne laisse rien derrière lui.
+      const unchanged = await request(app.getHttpServer())
+        .get(`/api/v1/admin/realisations/${id}`)
+        .set(auth)
+        .expect(200);
+      expect(unchanged.body.images).toEqual([]);
+
+      await request(app.getHttpServer())
+        .put(`/api/v1/admin/realisations/${id}/images`)
+        .send({ images: [] })
+        .expect(401);
+      const userToken = await login(userEmail);
+      await put(
+        id,
+        { images: [{ url: image.url }] },
+        `Bearer ${userToken}`,
+      ).expect(403);
+      await put('00000000-0000-4000-8000-000000000000', { images: [] }).expect(
+        404,
+      );
+
+      await request(app.getHttpServer())
+        .delete(`/api/v1/admin/media/${image.id}`)
+        .set(auth)
+        .expect(204);
+    });
   });
 });

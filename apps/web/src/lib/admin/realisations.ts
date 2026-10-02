@@ -28,6 +28,19 @@ export const TYPE_LABELS: Record<
 /** Mêmes plafonds que l'API (`MAX_FEATURED_REALISATIONS`). */
 export const MAX_FEATURED = 6;
 
+/** Image de la galerie d'une réalisation (la première est l'image principale). */
+export interface RealisationImage {
+  id: string;
+  /** Adresse publique relative (`/uploads/<nom>`). */
+  url: string;
+  altFr: string | null;
+  altEn: string | null;
+  position: number;
+}
+
+/** Plafond de l'API (`MAX_REALISATION_IMAGES`). */
+export const MAX_REALISATION_IMAGES = 12;
+
 /** Réalisation telle que renvoyée par `GET /admin/realisations[/:id]`. */
 export interface Realisation {
   id: string;
@@ -51,6 +64,7 @@ export interface Realisation {
   publishedAt: string | null;
   serviceId: string | null;
   service: { slug: string } | null;
+  images: RealisationImage[];
   createdAt: string;
   updatedAt: string;
 }

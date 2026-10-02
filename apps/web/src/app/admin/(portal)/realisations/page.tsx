@@ -19,6 +19,7 @@ import {
 import { backendJson, type Paginated } from '@/lib/api/backend';
 import { cx, focusRing } from '@/lib/admin/cx';
 import { relativeTime } from '@/lib/admin/format';
+import { thumbOf } from '@/lib/admin/media';
 import type { ContentStatus } from '@/lib/admin/public-documents';
 import {
   REALISATION_TYPES,
@@ -107,19 +108,33 @@ const COLUMNS: Column<Realisation>[] = [
     sortable: true,
     className: 'min-w-64 max-w-lg',
     cell: (r) => (
-      <span className="block">
-        <span className="flex items-center gap-1.5">
-          <span className="truncate font-medium text-ink">{r.titleFr}</span>
-          {r.isFeatured && (
-            <Star
-              size={13}
-              aria-label="En vitrine"
-              className="shrink-0 fill-warn text-warn"
+      <span className="flex items-center gap-3">
+        {r.images[0] && (
+          <span className="size-11 shrink-0 overflow-hidden rounded-lg bg-sunken">
+            {/* Image publique servie par l'API via `/uploads/*` : pas d'optimisation Next nécessaire dans le portail. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={thumbOf(r.images[0].url)}
+              alt=""
+              loading="lazy"
+              className="size-full object-cover"
             />
-          )}
-        </span>
-        <span className="block truncate text-xs text-ink-subtle">
-          {[r.clientName, r.location].filter(Boolean).join(' · ') || r.slug}
+          </span>
+        )}
+        <span className="min-w-0">
+          <span className="flex items-center gap-1.5">
+            <span className="truncate font-medium text-ink">{r.titleFr}</span>
+            {r.isFeatured && (
+              <Star
+                size={13}
+                aria-label="En vitrine"
+                className="shrink-0 fill-warn text-warn"
+              />
+            )}
+          </span>
+          <span className="block truncate text-xs text-ink-subtle">
+            {[r.clientName, r.location].filter(Boolean).join(' · ') || r.slug}
+          </span>
         </span>
       </span>
     ),
@@ -502,10 +517,22 @@ function RealisationCard({
       href={`/admin/realisations/${r.id}`}
       style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
       className={cx(
-        'animate-rise-in group flex h-full flex-col rounded-2xl border border-line bg-panel p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-panel',
+        'animate-rise-in group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-panel p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-panel',
         focusRing,
       )}
     >
+      {r.images[0] && (
+        <span className="-mx-5 -mt-5 mb-4 block aspect-[16/7] overflow-hidden bg-sunken">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={thumbOf(r.images[0].url)}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="size-full object-cover transition-transform duration-300 motion-safe:group-hover:scale-[1.03]"
+          />
+        </span>
+      )}
       <div className="flex items-start justify-between gap-3">
         <span className="flex flex-col gap-2">
           <span className="text-[26px] font-semibold leading-none tracking-tight text-ink tabular-nums">

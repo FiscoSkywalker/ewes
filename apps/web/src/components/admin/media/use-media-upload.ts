@@ -26,12 +26,20 @@ const CONCURRENCY = 2;
  * puis son sort est suivi séparément : un refus n'arrête pas les autres, et un
  * échec réseau se relance fichier par fichier.
  */
-export function useMediaUpload() {
+export function useMediaUpload(options?: {
+  /** Appelé pour chaque image ajoutée, avec le média tel que renvoyé par l'API. */
+  onUploaded?: (media: MediaItem) => void;
+}) {
   const queryClient = useQueryClient();
   const [items, setItems] = useState<UploadItem[]>([]);
   // Fichiers déjà partis : l'effet de démarrage ne doit jamais en envoyer un deux fois.
   const started = useRef(new Set<number>());
   const nextKey = useRef(1);
+  // Dernier rappel reçu : `send` reste stable, l'appelant peut changer de fonction à chaque rendu.
+  const onUploaded = useRef(options?.onUploaded);
+  useEffect(() => {
+    onUploaded.current = options?.onUploaded;
+  });
 
   const patch = useCallback((key: number, change: Partial<UploadItem>) => {
     setItems((current) =>
@@ -44,11 +52,12 @@ export function useMediaUpload() {
       try {
         const data = new FormData();
         data.append('file', item.file);
-        await backendJson<MediaItem>('admin/media', {
+        const media = await backendJson<MediaItem>('admin/media', {
           method: 'POST',
           body: data,
         });
         patch(item.key, { status: 'done' });
+        onUploaded.current?.(media);
         void queryClient.invalidateQueries({ queryKey: ['media'] });
       } catch (error) {
         const info = describeError(error);

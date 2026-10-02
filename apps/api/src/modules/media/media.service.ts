@@ -7,8 +7,16 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
-import { mkdir, unlink, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  readFile,
+  rename,
+  stat,
+  unlink,
+  writeFile,
+} from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import sharp from 'sharp';
 import { escapeLike } from '../../common/utils/like.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
@@ -35,10 +43,19 @@ const MEDIA_NOT_FOUND = {
 /** URL publique relative (même origine que le site, réécrite vers l'API). */
 export const mediaUrl = (storedName: string) => `/uploads/${storedName}`;
 
+/** Côté le plus long d'une vignette (px) : net sur une tuile de 200 px à 2x. */
+const THUMB_SIZE = 640;
+/** Garde-fou contre les images « bombes » (peu d'octets, des milliards de pixels). */
+const MAX_INPUT_PIXELS = 100_000_000;
+
 const NAME_COLLATOR = new Intl.Collator('fr', {
   sensitivity: 'base',
   numeric: true,
 });
+
+/** Vignette servie par la même route que l'original (`?size=thumb`). */
+export const thumbUrl = (storedName: string) =>
+  `${mediaUrl(storedName)}?size=thumb`;
 
 const URL_PREFIX = '/uploads/';
 const storedNameOf = (url: string) =>
@@ -87,6 +104,63 @@ export class MediaService {
     return join(this.directory, storedName);
   }
 
+  /** Chemin disque de la vignette d'un nom stocké (WebP, dans `thumbs/`). */
+  thumbPathOf(storedName: string) {
+    this.pathOf(storedName); // refuse tout nom hors motif (traversée)
+    return join(
+      this.directory,
+      'thumbs',
+      `${storedName.slice(0, storedName.lastIndexOf('.'))}.webp`,
+    );
+  }
+
+  /**
+   * Fabrique la vignette (redressée selon l'EXIF, métadonnées retirées, WebP) :
+   * écrite dans un fichier temporaire puis renommée, pour qu'une lecture
+   * simultanée ne voie jamais un fichier à moitié écrit.
+   */
+  private async makeThumbnail(storedName: string, source?: Buffer) {
+    const target = this.thumbPathOf(storedName);
+    const input = source ?? (await readFile(this.pathOf(storedName)));
+    const buffer = await sharp(input, {
+      failOn: 'none',
+      limitInputPixels: MAX_INPUT_PIXELS,
+    })
+      .rotate()
+      .resize({
+        width: THUMB_SIZE,
+        height: THUMB_SIZE,
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 76 })
+      .toBuffer();
+    await mkdir(join(this.directory, 'thumbs'), { recursive: true });
+    const temporary = `${target}.${randomUUID()}.tmp`;
+    await writeFile(temporary, buffer);
+    await rename(temporary, target);
+    return target;
+  }
+
+  /**
+   * Vignette d'une image : celle déjà fabriquée, sinon fabriquée maintenant
+   * (images téléversées avant l'existence des vignettes).
+   */
+  async thumbnail(storedName: string) {
+    const target = this.thumbPathOf(storedName);
+    try {
+      await stat(target);
+      return target;
+    } catch {
+      try {
+        return await this.makeThumbnail(storedName);
+      } catch {
+        // Original absent ou illisible : pour le visiteur, une image introuvable.
+        throw new NotFoundException(MEDIA_NOT_FOUND);
+      }
+    }
+  }
+
   async upload(file: UploadedImage, uploadedById: string) {
     const image = detectImage(file.buffer);
     if (!image) {
@@ -103,6 +177,17 @@ export class MediaService {
     await writeFile(this.pathOf(storedName), file.buffer, { flag: 'wx' });
 
     try {
+      // Fabriquer la vignette prouve aussi que l'image se décode : une
+      // signature valide ne suffit pas à accepter un fichier corrompu.
+      try {
+        await this.makeThumbnail(storedName, file.buffer);
+      } catch {
+        throw new UnsupportedMediaTypeException({
+          code: 'MEDIA_UNREADABLE',
+          message: 'Cette image est illisible ou corrompue.',
+          details: [],
+        });
+      }
       const media = await this.prisma.media.create({
         data: {
           storedName,
@@ -288,6 +373,11 @@ export class MediaService {
     return media;
   }
 
+  /** Média d'une adresse publique `/uploads/<nom>` ; 404 si elle n'en désigne aucun. */
+  findByUrl(url: string) {
+    return this.findByStoredName(storedNameOf(url));
+  }
+
   async findById(id: string) {
     const media = await this.prisma.media.findUnique({ where: { id } });
     if (!media) throw new NotFoundException(MEDIA_NOT_FOUND);
@@ -367,10 +457,15 @@ export class MediaService {
   }
 
   private async removeFile(storedName: string) {
-    try {
-      await unlink(this.pathOf(storedName));
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    for (const path of [
+      this.pathOf(storedName),
+      this.thumbPathOf(storedName),
+    ]) {
+      try {
+        await unlink(path);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      }
     }
   }
 
@@ -378,6 +473,7 @@ export class MediaService {
     return {
       id: media.id,
       url: mediaUrl(media.storedName),
+      thumbUrl: thumbUrl(media.storedName),
       mimeType: media.mimeType,
       sizeBytes: media.sizeBytes,
       originalName: media.originalName,

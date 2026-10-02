@@ -15,3 +15,6 @@ export type RealisationType = (typeof REALISATION_TYPES)[number];
 
 /** Nombre maximal de réalisations « vitrine » simultanées (12_Realisations §5). */
 export const MAX_FEATURED_REALISATIONS = 6;
+
+/** Images d'une réalisation (galerie) : au-delà, la fiche devient illisible. */
+export const MAX_REALISATION_IMAGES = 12;

@@ -33,3 +33,5 @@ Sauvegarde quotidienne chiffrée de la base de données et des fichiers de l'esp
 # 7. Références
 
 `10_Security.md`, `17_Testing_Strategy.md`, `20_Project_Roadmap.md`.
+
+> Note (2026-10-02) — **sharp** (vignettes des images, `apps/api`) : bibliothèque native livrée avec ses binaires précompilés (Linux glibc et musl, Windows, macOS) ; l'image Docker de l'API doit installer les dépendances **dans l'image** (`npm ci` sur la plateforme cible, jamais copier un `node_modules` d'une autre machine). Les vignettes vivent dans `PUBLIC_MEDIA_PATH/thumbs/` : elles se refabriquent seules à la première demande, donc **inutiles à sauvegarder** (le volume des images, lui, l'est).

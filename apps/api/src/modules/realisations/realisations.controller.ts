@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   RealisationsService,
-  type RealisationWithService,
+  type RealisationWithRelations,
 } from './realisations.service.js';
 import { ListRealisationsDto } from './dto/list-realisations.dto.js';
 
@@ -10,7 +10,7 @@ import { ListRealisationsDto } from './dto/list-realisations.dto.js';
  * Représentation publique : ni `id`, ni `status`, et le client n'apparaît que
  * si la fiche l'autorise explicitement (`isClientPublic`).
  */
-function toPublic(realisation: RealisationWithService) {
+function toPublic(realisation: RealisationWithRelations) {
   return {
     slug: realisation.slug,
     titleFr: realisation.titleFr,
@@ -27,6 +27,11 @@ function toPublic(realisation: RealisationWithService) {
     resultsFr: realisation.resultsFr,
     resultsEn: realisation.resultsEn,
     isFeatured: realisation.isFeatured,
+    images: realisation.images.map(({ url, altFr, altEn }) => ({
+      url,
+      altFr,
+      altEn,
+    })),
     serviceSlug: realisation.service?.slug ?? null,
     publishedAt: realisation.publishedAt,
   };

@@ -9,6 +9,7 @@ import { existsSync } from 'node:fs';
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import sharp from 'sharp';
 import { AppModule } from './../src/app.module.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 import { GlobalHttpExceptionFilter } from './../src/common/filters/http-exception.filter.js';
@@ -466,6 +467,114 @@ describe('Media (e2e)', () => {
         .expect(200);
       expect(res.body.deleted.sort()).toEqual([ids.alpha, ids.gamma].sort());
       expect((await list('').expect(200)).body.data).toEqual([]);
+    });
+  });
+
+  describe('thumbnails', () => {
+    const served = (name: string, query = '') =>
+      request(app.getHttpServer())
+        .get(`/api/v1/media/${name}${query}`)
+        .buffer(true)
+        .parse((r, cb) => {
+          const chunks: Buffer[] = [];
+          r.on('data', (c: Buffer) => chunks.push(c));
+          r.on('end', () => cb(null, Buffer.concat(chunks)));
+        });
+    const nameOf = (url: string) => url.replace('/uploads/', '').split('?')[0];
+
+    it('serves a small WebP thumbnail next to the untouched original', async () => {
+      const photo = await sharp({
+        create: {
+          width: 2000,
+          height: 1500,
+          channels: 3,
+          background: '#2f7f86',
+        },
+      })
+        .jpeg()
+        .toBuffer();
+      const res = await upload(photo, 'grande-photo.jpg').expect(201);
+      const name = nameOf(res.body.url as string);
+      expect(res.body.thumbUrl).toBe(`/uploads/${name}?size=thumb`);
+
+      const thumb = await served(name, '?size=thumb').expect(200);
+      expect(thumb.headers['content-type']).toBe('image/webp');
+      expect(thumb.headers['x-content-type-options']).toBe('nosniff');
+      expect(thumb.headers['cache-control']).toContain('immutable');
+      const meta = await sharp(thumb.body as Buffer).metadata();
+      expect(meta.format).toBe('webp');
+      expect([meta.width, meta.height]).toEqual([640, 480]);
+      expect((thumb.body as Buffer).length).toBeLessThan(photo.length);
+
+      // Sans paramètre, ou avec une valeur inconnue : l'original, intact.
+      for (const query of ['', '?size=huge']) {
+        const original = await served(name, query).expect(200);
+        expect(original.headers['content-type']).toBe('image/jpeg');
+        expect((original.body as Buffer).equals(photo)).toBe(true);
+      }
+    });
+
+    it('straightens a photo by its EXIF orientation and never enlarges a small one', async () => {
+      const rotated = await sharp({
+        create: { width: 400, height: 200, channels: 3, background: '#be6e32' },
+      })
+        .jpeg()
+        .withMetadata({ orientation: 6 })
+        .toBuffer();
+      const res = await upload(rotated, 'telephone.jpg').expect(201);
+      const thumb = await served(nameOf(res.body.url), '?size=thumb').expect(
+        200,
+      );
+      const meta = await sharp(thumb.body as Buffer).metadata();
+      expect([meta.width, meta.height]).toEqual([200, 400]);
+    });
+
+    it('rebuilds a missing thumbnail on demand and removes it with the image', async () => {
+      const res = await upload(PNG_1X1, 'ancienne.png').expect(201);
+      const name = nameOf(res.body.url as string);
+      const thumbFile = join(
+        mediaDir,
+        'thumbs',
+        `${name.replace('.png', '')}.webp`,
+      );
+      expect(existsSync(thumbFile)).toBe(true);
+
+      // Image téléversée avant les vignettes : fabriquée à la première demande.
+      await rm(thumbFile);
+      await served(name, '?size=thumb').expect(200);
+      expect(existsSync(thumbFile)).toBe(true);
+
+      await request(app.getHttpServer())
+        .delete(`/api/v1/admin/media/${res.body.id}`)
+        .set(auth)
+        .expect(204);
+      expect(existsSync(thumbFile)).toBe(false);
+      await served(name, '?size=thumb').expect(404);
+    });
+
+    it('refuses a file that has an image signature but cannot be decoded', async () => {
+      const before = (await readdir(mediaDir)).sort();
+      const thumbsBefore = (await readdir(join(mediaDir, 'thumbs'))).length;
+      const broken = Buffer.concat([
+        Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+        Buffer.from('ceci n’est pas un vrai PNG'),
+      ]);
+      const res = await upload(broken, 'casse.png');
+      expect(res.status).toBe(415);
+      expect(res.body.code).toBe('MEDIA_UNREADABLE');
+      // Ni original ni vignette laissés sur le disque.
+      expect((await readdir(mediaDir)).sort()).toEqual(before);
+      expect((await readdir(join(mediaDir, 'thumbs'))).length).toBe(
+        thumbsBefore,
+      );
+    });
+
+    it('never builds a thumbnail for an unknown or malformed name', async () => {
+      await served('..%2F..%2Fpackage.json', '?size=thumb').expect(404);
+      await served(
+        '00000000-0000-4000-8000-000000000000.png',
+        '?size=thumb',
+      ).expect(404);
     });
   });
 });
