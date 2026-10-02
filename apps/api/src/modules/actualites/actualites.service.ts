@@ -4,7 +4,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { ContentStatus, Prisma } from '@prisma/client';
+import { ArticleType, ContentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
 import { MediaService, mediaUrl } from '../media/media.service.js';
@@ -14,6 +14,7 @@ import type { UpdateArticleDto } from './dto/update-article.dto.js';
 import type {
   ListAdminArticlesDto,
   ListArticlesDto,
+  ListPublishedArticlesDto,
 } from './dto/list-articles.dto.js';
 
 const ARTICLE_NOT_FOUND = {
@@ -50,17 +51,39 @@ export class ActualitesService {
   ) {}
 
   /** Lecture publique : PUBLISHED, non supprimé, date de publication atteinte. */
-  private publicWhere(query?: ListArticlesDto): Prisma.ArticleWhereInput {
+  private publicWhere(): Prisma.ArticleWhereInput {
     return {
       status: ContentStatus.PUBLISHED,
       deletedAt: null,
       publishedAt: { lte: new Date() },
-      ...(query?.type && { type: query.type }),
     };
   }
 
-  async listPublished(query: ListArticlesDto) {
-    return this.page(this.publicWhere(query), query);
+  /**
+   * Page d'articles publiés ; `meta.types` donne le nombre d'articles publiés
+   * par rubrique, indépendamment des filtres `type` et `exclude` (rubriques
+   * du site et leurs compteurs, sans tout charger).
+   */
+  async listPublished(query: ListPublishedArticlesDto) {
+    const base = this.publicWhere();
+    const [{ data, meta }, groups] = await Promise.all([
+      this.page(
+        {
+          ...base,
+          ...(query.type && { type: query.type }),
+          ...(query.exclude && { slug: { not: query.exclude } }),
+        },
+        query,
+      ),
+      this.prisma.article.groupBy({
+        by: ['type'],
+        where: base,
+        _count: { _all: true },
+      }),
+    ]);
+    const types: Partial<Record<ArticleType, number>> = {};
+    for (const group of groups) types[group.type] = group._count._all;
+    return { data, meta: { ...meta, types } };
   }
 
   async findPublishedBySlug(slug: string) {
