@@ -7,8 +7,8 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowUpRight } from 'lucide-react';
 import { SectionHeading } from '@/components/public/section-heading';
-import { Link } from '@/i18n/navigation';
 import type { Project } from '@/data/projects';
+import { TextLink } from '@/components/public/ui';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -148,12 +148,9 @@ export function AboutSection({ projects }: { projects: Project[] }) {
                 ))}
               </ol>
             </div>
-            <Link
-              href="/a-propos"
-              className="mt-8 inline-flex items-center gap-2 border-b border-sand/25 pb-1 text-xs font-bold uppercase tracking-[0.12em] text-sand transition-colors hover:border-sand"
-            >
-              {t('moreLink')} <ArrowUpRight size={14} />
-            </Link>
+            <TextLink href="/a-propos" icon={ArrowUpRight} className="mt-8">
+              {t('moreLink')}
+            </TextLink>
           </aside>
         </div>
       </div>

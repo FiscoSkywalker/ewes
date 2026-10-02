@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowDownToLine, ArrowRight, Search, X } from 'lucide-react';
-import { Link } from '@/i18n/navigation';
 import {
   DocumentCover,
   DocumentLink,
@@ -14,6 +13,13 @@ import {
   type DocumentPole,
   type ShowcaseDocument,
 } from './documents-showcase';
+import {
+  Button,
+  buttonClass,
+  ButtonLink,
+  EmptyState,
+  FilterChip,
+} from '@/components/public/ui';
 
 const POLES: DocumentPole[] = ['env', 'eau', 'ing'];
 
@@ -76,19 +82,8 @@ export function DocumentsLibrary({
       .filter(Boolean)
       .join(' · ');
 
-  const chip = (active: boolean) =>
-    `inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] transition-colors ${
-      active
-        ? 'border-sand bg-sand text-surface-elevated'
-        : 'border-border text-sand/72 hover:border-sand/40 hover:text-sand'
-    }`;
-
   if (!latest) {
-    return (
-      <p className="max-w-md text-sm leading-7 text-sand/72">
-        {tDoc('empty')}
-      </p>
-    );
+    return <EmptyState variant="plain" message={tDoc('empty')} />;
   }
 
   return (
@@ -139,7 +134,7 @@ export function DocumentsLibrary({
           <DocumentLink
             doc={latest}
             label={`${tDoc('download')} — ${latest.title}`}
-            className="primary-button on-night mt-8"
+            className={buttonClass('night', 'mt-8')}
           >
             <ArrowDownToLine size={15} />
             {tDoc('download')}
@@ -201,30 +196,22 @@ export function DocumentsLibrary({
             role="group"
             aria-label={tDoc('filterLabel')}
           >
-            <button
-              type="button"
-              className={chip(category === 'all')}
-              aria-pressed={category === 'all'}
+            <FilterChip
+              active={category === 'all'}
+              count={documents.length}
               onClick={() => setCategory('all')}
             >
               {tDoc('categories.all')}
-              <span className="font-mono text-[10px] opacity-60">
-                {documents.length}
-              </span>
-            </button>
+            </FilterChip>
             {categories.map(([key, count]) => (
-              <button
+              <FilterChip
                 key={key}
-                type="button"
-                className={chip(category === key)}
-                aria-pressed={category === key}
+                active={category === key}
+                count={count}
                 onClick={() => setCategory(key)}
               >
                 {tDoc(`categories.${key}`)}
-                <span className="font-mono text-[10px] opacity-60">
-                  {count}
-                </span>
-              </button>
+              </FilterChip>
             ))}
           </div>
 
@@ -289,15 +276,12 @@ export function DocumentsLibrary({
           ))}
         </ul>
       ) : (
-        <div className="mt-8 flex flex-col items-start gap-5 rounded-sheet border border-dashed border-sand/25 p-10">
-          <Search size={20} className="text-muted" aria-hidden="true" />
-          <p className="max-w-md text-sm leading-7 text-sand/72">
-            {t('noResults')}
-          </p>
-          <button type="button" onClick={reset} className="primary-button">
-            {t('reset')}
-          </button>
-        </div>
+        <EmptyState
+          className="mt-8"
+          icon={Search}
+          message={t('noResults')}
+          action={<Button onClick={reset}>{t('reset')}</Button>}
+        />
       )}
 
       {/* Demande de document */}
@@ -313,9 +297,13 @@ export function DocumentsLibrary({
             {t('request.text')}
           </p>
         </div>
-        <Link href="/contact" className="primary-button w-fit flex-none">
-          {t('request.cta')} <ArrowRight size={15} />
-        </Link>
+        <ButtonLink
+          href="/contact"
+          icon={ArrowRight}
+          className="w-fit flex-none"
+        >
+          {t('request.cta')}
+        </ButtonLink>
       </aside>
     </div>
   );

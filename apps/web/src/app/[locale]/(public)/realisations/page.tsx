@@ -31,6 +31,7 @@ export default async function RealisationsPage({
     <div className="bg-paper px-6 pb-24 pt-28 text-sand md:px-16 md:pb-32 md:pt-36">
       <div className="mx-auto w-full max-w-[1440px]">
         <SectionHeading
+          as="h1"
           eyebrow={t('eyebrow')}
           title={t('title')}
           description={t('description')}

@@ -9,6 +9,7 @@ import { formatNewsDate } from '@/data/news';
 import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
 import { getAllNews, getNewsItem, readingMinutes } from '@/lib/news';
+import { TextLink } from '@/components/public/ui';
 
 /**
  * Page d'une actualité (`/actualites/{id}`) — Server Component, SSG : une
@@ -76,7 +77,9 @@ export default async function NewsArticlePage({
     [tNav('facts.category'), t(`categories.${item.category}`)],
     [tNav('facts.date'), formatNewsDate(item.date, locale)],
     [tNav('facts.context'), item.context],
-    ...(minutes ? [[tNav('facts.reading'), tNav('minutes', { count: minutes })]] : []),
+    ...(minutes
+      ? [[tNav('facts.reading'), tNav('minutes', { count: minutes })]]
+      : []),
   ];
 
   return (
@@ -108,7 +111,10 @@ export default async function NewsArticlePage({
             <li aria-hidden="true">
               <ChevronRight size={12} />
             </li>
-            <li aria-current="page" className="line-clamp-1 max-w-[40ch] text-sand">
+            <li
+              aria-current="page"
+              className="line-clamp-1 max-w-[40ch] text-sand"
+            >
               {item.title}
             </li>
           </ol>
@@ -147,13 +153,12 @@ export default async function NewsArticlePage({
               </div>
             ) : (
               <div className="rounded-sheet border border-border-subtle bg-surface-elevated p-8">
-                <p className="text-sm leading-7 text-sand/75">{tNav('noBody')}</p>
-                <Link
-                  href="/contact"
-                  className="mt-5 inline-flex items-center gap-2 border-b border-sand/25 pb-0.5 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:border-sand"
-                >
-                  {tNav('contact')} <ArrowRight size={13} />
-                </Link>
+                <p className="text-sm leading-7 text-sand/75">
+                  {tNav('noBody')}
+                </p>
+                <TextLink href="/contact" icon={ArrowRight} className="mt-5">
+                  {tNav('contact')}
+                </TextLink>
               </div>
             )}
           </div>
@@ -165,7 +170,9 @@ export default async function NewsArticlePage({
                   <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
                     {label}
                   </dt>
-                  <dd className="mt-1 text-sm font-semibold leading-6">{value}</dd>
+                  <dd className="mt-1 text-sm font-semibold leading-6">
+                    {value}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -182,8 +189,18 @@ export default async function NewsArticlePage({
             className="mt-20 grid overflow-hidden rounded-sheet border border-border-subtle bg-surface-elevated sm:grid-cols-2"
           >
             {[
-              { entry: older, label: tNav('older'), Icon: ArrowLeft, end: false },
-              { entry: newer, label: tNav('newer'), Icon: ArrowRight, end: true },
+              {
+                entry: older,
+                label: tNav('older'),
+                Icon: ArrowLeft,
+                end: false,
+              },
+              {
+                entry: newer,
+                label: tNav('newer'),
+                Icon: ArrowRight,
+                end: true,
+              },
             ].map(({ entry: other, label, Icon, end }) =>
               other ? (
                 <Link
@@ -192,9 +209,19 @@ export default async function NewsArticlePage({
                   className={`group flex flex-col gap-2 p-7 transition-colors hover:bg-white sm:p-8 ${end ? 'sm:items-end sm:border-l sm:border-border-subtle sm:text-right' : 'border-b border-border-subtle sm:border-b-0'}`}
                 >
                   <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                    {!end && <Icon size={12} className="transition-transform group-hover:-translate-x-1" />}
+                    {!end && (
+                      <Icon
+                        size={12}
+                        className="transition-transform group-hover:-translate-x-1"
+                      />
+                    )}
                     {label}
-                    {end && <Icon size={12} className="transition-transform group-hover:translate-x-1" />}
+                    {end && (
+                      <Icon
+                        size={12}
+                        className="transition-transform group-hover:translate-x-1"
+                      />
+                    )}
                   </span>
                   <span className="line-clamp-2 font-heading text-lg font-bold leading-snug">
                     {other.title}
@@ -218,12 +245,13 @@ export default async function NewsArticlePage({
             <h2 id="related-title" className="font-heading text-3xl font-bold">
               {tNav('related')}
             </h2>
-            <Link
+            <TextLink
               href="/actualites"
-              className="inline-flex flex-none items-center gap-2 border-b border-sand/25 pb-1 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:border-sand"
+              icon={ArrowRight}
+              className="flex-none"
             >
-              {tNav('allNews')} <ArrowRight size={14} />
-            </Link>
+              {tNav('allNews')}
+            </TextLink>
           </div>
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((other) => (

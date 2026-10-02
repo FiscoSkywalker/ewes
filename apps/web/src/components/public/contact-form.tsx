@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { AlertCircle, CheckCircle2, Loader2, Send } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Send } from 'lucide-react';
 import { EWES_CONTACT } from '@/data/contact';
 import {
   CONTACT_MESSAGE_MIN,
@@ -12,6 +12,7 @@ import {
   type ContactOutcome,
   type ContactRequest,
 } from '@/lib/contact-request';
+import { Button } from '@/components/public/ui';
 
 interface Sector {
   value: string;
@@ -174,21 +175,15 @@ export function ContactForm({ onSectorChange }: ContactFormProps) {
         <p className="max-w-md text-sm leading-6 text-on-night-muted">
           {t('submit.successText')}
         </p>
-        <button
-          type="button"
-          onClick={startOver}
-          className="primary-button on-night w-fit"
-        >
+        <Button tone="night" onClick={startOver} className="w-fit">
           {t('submit.again')}
-        </button>
+        </Button>
       </div>
     );
   }
 
   const failure =
-    outcome && outcome.kind !== 'invalid'
-      ? t(`submit.${outcome.kind}`)
-      : null;
+    outcome && outcome.kind !== 'invalid' ? t(`submit.${outcome.kind}`) : null;
 
   return (
     <form
@@ -324,19 +319,9 @@ export function ContactForm({ onSectorChange }: ContactFormProps) {
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-2">
-        <button
-          type="submit"
-          disabled={sending}
-          aria-busy={sending}
-          className="primary-button on-night disabled:cursor-wait disabled:opacity-70"
-        >
+        <Button type="submit" tone="night" pending={sending} icon={Send}>
           {sending ? t('submit.sending') : t('submitLabel')}
-          {sending ? (
-            <Loader2 size={14} className="animate-spin" aria-hidden="true" />
-          ) : (
-            <Send size={14} />
-          )}
-        </button>
+        </Button>
         <p className="max-w-sm text-[11px] leading-5 text-on-night-muted/80">
           {t('requiredNote')} {t('privacyNote')} {t('formNote')}
         </p>

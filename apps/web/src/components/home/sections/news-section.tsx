@@ -15,6 +15,7 @@ import type { HomeNews } from '@/lib/news';
 import { useInView } from '@/hooks/useInView';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Link } from '@/i18n/navigation';
+import { ButtonLink, EmptyState, TextLink } from '@/components/public/ui';
 
 /** Durée d'affichage d'une actualité avant de passer à la suivante (ms). */
 const ROTATION_MS = 7000;
@@ -94,24 +95,25 @@ export function NewsSection({ news }: { news: HomeNews }) {
                 </ul>
               </nav>
             )}
-            <Link
+            <TextLink
               href="/actualites"
-              className="inline-flex w-fit flex-none items-center gap-2 border-b border-sand/25 pb-1 text-xs font-bold uppercase tracking-[0.12em] text-sand transition-colors hover:border-sand"
+              icon={ArrowRight}
+              className="flex-none"
             >
-              {t('viewAll')} <ArrowRight size={14} />
-            </Link>
+              {t('viewAll')}
+            </TextLink>
           </div>
         </div>
 
         {!current ? (
-          <div className="flex flex-col items-start gap-5 rounded-sheet border border-dashed border-sand/25 p-10">
-            <p className="max-w-lg text-sm leading-7 text-sand/72">
-              {t('empty')}
-            </p>
-            <Link href="/documents" className="primary-button">
-              {t('emptyCta')} <ArrowRight size={15} />
-            </Link>
-          </div>
+          <EmptyState
+            message={t('empty')}
+            action={
+              <ButtonLink href="/documents" icon={ArrowRight}>
+                {t('emptyCta')}
+              </ButtonLink>
+            }
+          />
         ) : (
           <div
             className="grid gap-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-14"

@@ -1,7 +1,7 @@
 import NextLink from 'next/link';
 import { useTranslations } from 'next-intl';
 import { ArrowRight, FileDown, Lock, Search } from 'lucide-react';
-import { Link } from '@/i18n/navigation';
+import { buttonClass, EmptyState, TextLink } from '@/components/public/ui';
 
 type Role = 'admin' | 'manager' | 'user';
 
@@ -37,20 +37,19 @@ export function DocumentsOverview({
         <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
           {t('publicTitle')}
         </h3>
-        <div className="mt-5 border-t border-sand py-8">
-          <FileDown size={20} className="text-copper" />
-          <p className="mt-4 max-w-md text-sm leading-7 text-sand/72">
-            {tPage('publicListEmpty')}
-          </p>
-          {showPageLink && (
-            <Link
-              href="/documents"
-              className="mt-6 inline-flex items-center gap-2 border-b border-sand/25 pb-1 text-xs font-bold uppercase tracking-[0.12em] text-sand transition-colors hover:border-sand"
-            >
-              {t('publicLink')} <ArrowRight size={14} />
-            </Link>
-          )}
-        </div>
+        <EmptyState
+          variant="plain"
+          icon={FileDown}
+          className="mt-5 border-t border-sand py-8"
+          message={tPage('publicListEmpty')}
+          action={
+            showPageLink && (
+              <TextLink href="/documents" icon={ArrowRight} className="mt-6">
+                {t('publicLink')}
+              </TextLink>
+            )
+          }
+        />
       </div>
 
       <div className="tone-night self-start bg-night shadow-[12px_12px_0_var(--color-malachite)]">
@@ -95,7 +94,7 @@ export function DocumentsOverview({
           </p>
           <p className="mb-6 mt-3 text-sm leading-6">{t('vault.note')}</p>
           {/* next/link brut : /admin est une branche racine non localisée. */}
-          <NextLink href="/admin/login" className="primary-button on-night">
+          <NextLink href="/admin/login" className={buttonClass('night')}>
             {t('vault.cta')} <ArrowRight size={15} />
           </NextLink>
         </div>

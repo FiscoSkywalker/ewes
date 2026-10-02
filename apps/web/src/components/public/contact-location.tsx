@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 import { ArrowUpRight, MapPin } from 'lucide-react';
 import { EWES_MAPS_URL } from '@/data/contact';
 import { SectionHeading } from './section-heading';
+import { ButtonAnchor } from '@/components/public/ui';
 
 /**
  * Section « Localisation » de la page Contact : adresse du siège et carte
@@ -35,15 +36,15 @@ export function ContactLocation() {
             <p className="max-w-md border-t border-border pt-5 text-sm leading-6 text-sand/65">
               {tWorld('networkLine')}
             </p>
-            <a
+            <ButtonAnchor
               href={EWES_MAPS_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="primary-button w-fit"
+              icon={ArrowUpRight}
+              className="w-fit"
             >
               {t('directions')}
-              <ArrowUpRight size={15} />
-            </a>
+            </ButtonAnchor>
           </div>
         </div>
 

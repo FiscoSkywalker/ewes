@@ -782,10 +782,7 @@
       "hint": "Click a year to filter, a dot to open its sheet"
     },
     "pagination": {
-      "label": "Projects pagination",
-      "previous": "Previous page",
-      "next": "Next page",
-      "page": "Page {page}"
+      "label": "Projects pagination"
     },
     "sheet": {
       "eyebrow": "Project sheet",
@@ -833,10 +830,7 @@
       "communique": "Press release"
     },
     "pagination": {
-      "label": "News pagination",
-      "previous": "Previous page",
-      "next": "Next page",
-      "page": "Page {page}"
+      "label": "News pagination"
     },
     "library": {
       "title": "Reports, guides and datasheets",
@@ -1291,5 +1285,12 @@
       "AUTRE": "project"
     },
     "moreLink": "All our contact details"
+  },
+  "Ui": {
+    "pagination": {
+      "previous": "Previous page",
+      "next": "Next page",
+      "page": "Page {page}"
+    }
   }
 }

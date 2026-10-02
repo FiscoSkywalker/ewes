@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 import { ArrowRight } from 'lucide-react';
 import { SectionHeading } from '@/components/public/section-heading';
 import { TopoContours } from '@/components/public/topo-contours';
-import { Link } from '@/i18n/navigation';
 import type { Project } from '@/data/projects';
+import { ButtonLink } from '@/components/public/ui';
 
 /**
  * « Formation » de l'Accueil, section nuit — homepage uniquement. Le
@@ -16,9 +16,7 @@ import type { Project } from '@/data/projects';
 export function TrainingSection({ projects }: { projects: Project[] }) {
   const t = useTranslations('Training');
   const topics = t.raw('topics') as string[];
-  const trainings = projects.filter(
-    (p) => p.category === 'FORMATION',
-  );
+  const trainings = projects.filter((p) => p.category === 'FORMATION');
   const since = Math.min(...trainings.map((p) => p.year));
 
   return (
@@ -59,10 +57,9 @@ export function TrainingSection({ projects }: { projects: Project[] }) {
             </span>
           </div>
 
-          <Link href="/contact" className="primary-button on-night">
+          <ButtonLink href="/contact" tone="night" icon={ArrowRight}>
             {t('cta')}
-            <ArrowRight size={15} />
-          </Link>
+          </ButtonLink>
         </div>
 
         <div>

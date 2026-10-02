@@ -6,10 +6,10 @@ import { ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react';
 import { EWES_CONTACT } from '@/data/contact';
 import { useInView } from '@/hooks/useInView';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { Link } from '@/i18n/navigation';
 import { ContactForm } from './contact-form';
 import { OfficeStatusInline } from './office-status';
 import { TopoContours } from './topo-contours';
+import { TextLink } from '@/components/public/ui';
 
 /** Ordre de défilement des besoins dans le titre (clés de `ContactPage.sectors`). */
 const SECTOR_KEYS = [
@@ -172,12 +172,14 @@ export function ContactBlock() {
             })}
           </ul>
 
-          <Link
+          <TextLink
             href="/contact"
-            className="mt-8 inline-flex items-center gap-2 border-b border-on-night/25 pb-1 text-xs font-bold uppercase tracking-[0.12em] text-on-night transition-colors hover:border-malachite-bright hover:text-malachite-bright"
+            tone="night"
+            icon={ArrowUpRight}
+            className="mt-8"
           >
-            {t('moreLink')} <ArrowUpRight size={14} />
-          </Link>
+            {t('moreLink')}
+          </TextLink>
         </div>
 
         <ContactForm onSectorChange={setChosen} />
