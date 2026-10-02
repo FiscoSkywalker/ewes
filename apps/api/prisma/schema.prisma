@@ -84,6 +84,7 @@ model User {
   auditLogs            AuditLog[]            @relation("AuditActor")
   notifications        Notification[]
   mediaUploads         Media[]
+  privateUploads       PrivateDocument[]
 
   @@map("users")
 }
@@ -372,18 +373,24 @@ model Folder {
   @@map("folders")
 }
 
+/// Document de l'espace privé. Le fichier est stocké sous PRIVATE_STORAGE_PATH
+/// (hors de toute racine servie) et n'est jamais joignable que par la route API
+/// authentifiée qui vérifie le droit à chaque requête ; `storedName` est interne.
 model PrivateDocument {
   id              String                  @id @default(uuid())
   folderId        String
   folder          Folder                  @relation(fields: [folderId], references: [id])
   name            String
-  fileUrl         String
+  description     String?
+  storedName      String                  @unique
   fileType        String
   fileSizeBytes   Int
   // Surcharge optionnelle de la confidentialité héritée du dossier
   // (blueprint/09_Business_Rules.md §4). null = hérite du dossier.
   confidentiality ConfidentialityLevel?
   status          DocumentLifecycleStatus @default(ACTIVE)
+  uploadedById    String?
+  uploadedBy      User?                   @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
   deletedAt       DateTime?
@@ -455,6 +462,9 @@ model Notification {
   @@map("notifications")
 }
 
+/// Journal d'audit en écriture seule (blueprint/09_Business_Rules.md §7) : un
+/// déclencheur PostgreSQL (migration `audit_log_hardening`) interdit tout
+/// UPDATE/DELETE, sauf l'anonymisation `actorId -> NULL` d'un utilisateur supprimé.
 model AuditLog {
   id         String   @id @default(uuid())
   actorId    String?
@@ -464,9 +474,13 @@ model AuditLog {
   entityId   String?
   beforeData Json?
   afterData  Json?
+  ipAddress  String?
+  userAgent  String?
   createdAt  DateTime @default(now())
 
   @@index([actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([action, createdAt])
   @@map("audit_logs")
 }
 

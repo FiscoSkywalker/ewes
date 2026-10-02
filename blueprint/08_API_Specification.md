@@ -20,6 +20,8 @@ Les erreurs de validation renvoient des détails de champ exploitables par le cl
 | Zone | Ressources |
 |---|---|
 | Public | `/auth`, `/me`, `/pages`, `/services`, `/realisations`, `/articles`, `/documents-publics`, `/contact` |
+| Espace privé | `GET/POST /documents-prives/folders`, `GET/PATCH/DELETE /documents-prives/folders/:id` ; `GET/POST /documents-prives/files` (téléversement multipart, champ `file`), `GET/PATCH/DELETE /documents-prives/files/:id`, `POST …/archive` et `…/restore`, `GET …/download` (droit vérifié et téléchargement audité à chaque requête) ; `GET /documents-prives/search?q=` (plein texte limité au périmètre) |
+| Gouvernance | `/admin/access-grants/folders` et `/documents` (GET, POST, DELETE : Administrateur) ; `GET /admin/audit-logs` (Administrateur, filtres `actorId`, `action`, `entityType`, `entityId`) |
 | Documents publics | `GET /documents-publics` (filtres `category`, `year`, pagination), `GET /documents-publics/:slug`, `GET /documents-publics/files/:fichier` (téléchargement, réécrit en `/files/:fichier` par le site) ; admin : `/admin/documents-publics` (création multipart avec le PDF dans le champ `file`, `PUT :id/file` pour remplacer, `publish`/`unpublish`/`archive`, `DELETE` logique) |
 | Médias | `POST/GET/DELETE /admin/media` (téléversement multipart, champ `file`) ; `GET /media/:fichier` (service public, réécrit en `/uploads/:fichier` par le site) ; `PUT/DELETE /admin/articles/:id/cover` |
 | Portail (Gestionnaire/Administrateur) | `/admin/pages`, `/admin/services`, `/admin/realisations`, `/admin/articles`, `/admin/documents-publics`, `/admin/contacts`, `/admin/dashboard` |
