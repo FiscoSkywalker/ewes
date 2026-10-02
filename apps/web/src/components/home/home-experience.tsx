@@ -19,6 +19,7 @@ import { useResponsive } from '@/hooks/useResponsive';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useWebglAvailable } from '@/hooks/useWebglAvailable';
 import type { PoleContent, ServicePole } from '@/components/public/service-chapter';
+import type { ShowcaseDocument } from '@/components/public/documents-showcase';
 import type { Project } from '@/data/projects';
 import type { HomeNews } from '@/lib/news';
 
@@ -38,10 +39,13 @@ export function HomeExperience({
   news,
   poles,
   projects,
+  documents,
 }: {
   news: HomeNews;
   /** Références publiées (API, repli sur les messages). */
   projects: Project[];
+  /** Documents publics publiés (API). */
+  documents: ShowcaseDocument[];
   /** Pôles de services pilotés par l'API (repli sur les messages si absents). */
   poles?: Partial<Record<ServicePole, PoleContent>>;
 }) {
@@ -79,7 +83,7 @@ export function HomeExperience({
       <MissionsRiver projects={projects} />
       <TrainingSection projects={projects} />
       <NewsSection news={news} />
-      <DocumentsSection />
+      <DocumentsSection documents={documents} />
       <ContactBlock />
     </div>
   );

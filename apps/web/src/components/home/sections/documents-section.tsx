@@ -9,12 +9,14 @@ import { SectionHeading } from '@/components/public/section-heading';
 
 /**
  * « 05 · Documents » de l'Accueil — homepage uniquement. Les documents sont
- * pour l'instant des exemples tirés des messages (`HomeDocuments.items`), en
- * attendant le branchement sur l'API.
+ * lus côté serveur (API `documents-publics`) et transmis en props.
  */
-export function DocumentsSection() {
+export function DocumentsSection({
+  documents,
+}: {
+  documents: ShowcaseDocument[];
+}) {
   const t = useTranslations('HomeDocuments');
-  const documents = t.raw('items') as ShowcaseDocument[];
 
   return (
     <section className="bg-white px-6 py-24 text-sand md:px-16 md:py-32">

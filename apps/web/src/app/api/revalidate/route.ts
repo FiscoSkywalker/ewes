@@ -6,10 +6,11 @@ import { NextResponse } from 'next/server';
  * Revalidation à la demande déclenchée par l'API NestJS à la publication /
  * dépublication d'un contenu (blueprint/16_Rendering_State_Strategy.md §2).
  * Protégée par un secret partagé ; seuls les tags `page:<slug>`, `service:<slug>`, `realisation:<slug>`,
- * `article:<slug>`, `services`, `realisations` et `articles` sont acceptés.
+ * `article:<slug>`, `document:<slug>`, `services`, `realisations`, `articles` et
+ * `documents` sont acceptés.
  */
 const TAG_PATTERN =
-  /^(?:(?:page|service|realisation|article):[a-z0-9]+(?:-[a-z0-9]+)*|services|realisations|articles)$/;
+  /^(?:(?:page|service|realisation|article|document):[a-z0-9]+(?:-[a-z0-9]+)*|services|realisations|articles|documents)$/;
 
 function secretMatches(provided: string | null, expected: string): boolean {
   if (!provided) return false;

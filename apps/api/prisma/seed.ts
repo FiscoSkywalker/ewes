@@ -1,9 +1,12 @@
 import 'dotenv/config';
-import { readFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   ArticleType,
   ContentStatus,
   DatePrecision,
+  DocumentCategory,
   PrismaClient,
   Role,
 } from '@prisma/client';
@@ -259,6 +262,125 @@ async function seedArticles(prisma: PrismaClient) {
   );
 }
 
+interface DocumentMessage {
+  id: string;
+  category: 'report' | 'guide' | 'datasheet' | 'brochure';
+  pole: 'env' | 'eau' | 'ing';
+  year: string;
+  title: string;
+  excerpt: string;
+}
+
+const DOCUMENT_CATEGORIES: Record<DocumentMessage['category'], DocumentCategory> =
+  {
+    report: DocumentCategory.REPORT,
+    guide: DocumentCategory.GUIDE,
+    datasheet: DocumentCategory.DATASHEET,
+    brochure: DocumentCategory.BROCHURE,
+  };
+
+const POLE_SERVICE_SLUGS = {
+  env: 'environnement',
+  eau: 'eau',
+  ing: 'ingenierie',
+} as const;
+
+/** PDF valide d'une page (police standard Helvetica, texte WinAnsi). */
+function buildPlaceholderPdf(lines: string[]): Buffer {
+  const escape = (text: string) =>
+    text.replace(/[\\()]/g, (char) => `\\${char}`);
+  const text = lines
+    .map((line, i) => `${i === 0 ? '' : 'T* '}(${escape(line)}) Tj`)
+    .join('\n');
+  const content = `BT /F1 16 Tf 56 760 Td 22 TL\n${text}\nET`;
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+    `<< /Length ${Buffer.byteLength(content, 'latin1')} >>\nstream\n${content}\nendstream`,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+  ];
+  let body = '%PDF-1.4\n';
+  const offsets: number[] = [];
+  objects.forEach((object, i) => {
+    offsets.push(Buffer.byteLength(body, 'latin1'));
+    body += `${i + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefAt = Buffer.byteLength(body, 'latin1');
+  body += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets) {
+    body += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  }
+  body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF\n`;
+  return Buffer.from(body, 'latin1');
+}
+
+/**
+ * Importe les 6 documents d'exemple du site (`HomeDocuments.items`), publiés,
+ * chacun avec un PDF générique : ces titres sont des exemples fictifs, les
+ * fichiers n'ont aucun contenu réel. À supprimer depuis le portail
+ * d'administration une fois les vrais documents disponibles. Idempotent par slug.
+ */
+async function seedPublicDocuments(prisma: PrismaClient) {
+  const fr = readMessages('fr').HomeDocuments.items as DocumentMessage[];
+  const en = readMessages('en').HomeDocuments.items as DocumentMessage[];
+  const enById = new Map(en.map((item) => [item.id, item]));
+  const directory = resolve(
+    process.env.PUBLIC_MEDIA_PATH ?? './storage/public',
+    'documents',
+  );
+  mkdirSync(directory, { recursive: true });
+
+  let created = 0;
+  for (const item of fr) {
+    if (await prisma.publicDocument.findUnique({ where: { slug: item.id } })) {
+      continue;
+    }
+    const service = await prisma.service.findUnique({
+      where: { slug: POLE_SERVICE_SLUGS[item.pole] },
+    });
+    const pdf = buildPlaceholderPdf([
+      "EWES S.A.R.L. - Document d'exemple",
+      '',
+      // L'apostrophe typographique n'existe pas en latin1/WinAnsi.
+      item.title.replace(/’/g, "'").slice(0, 80),
+      '',
+      'Fichier générique : ce document est un exemple,',
+      'sans contenu réel. Il sera remplacé par la publication',
+      "officielle depuis le portail d'administration.",
+    ]);
+    const storedName = `${randomUUID()}.pdf`;
+    writeFileSync(resolve(directory, storedName), pdf, { flag: 'wx' });
+    const english = enById.get(item.id);
+
+    await prisma.publicDocument.create({
+      data: {
+        slug: item.id,
+        titleFr: item.title,
+        titleEn: english?.title,
+        excerptFr: item.excerpt,
+        excerptEn: english?.excerpt,
+        category: DOCUMENT_CATEGORIES[item.category],
+        year: Number(item.year),
+        pages: 1,
+        serviceId: service?.id,
+        status: ContentStatus.PUBLISHED,
+        publishedAt: new Date(Date.UTC(Number(item.year), 0, 1)),
+        storedName,
+        fileUrl: `/files/${storedName}`,
+        fileType: 'application/pdf',
+        fileSizeBytes: pdf.length,
+      },
+    });
+    created += 1;
+  }
+  console.log(
+    created > 0
+      ? `Documents publics : ${created} créés (${fr.length - created} déjà présents).`
+      : 'Documents publics déjà présents — rien à faire.',
+  );
+}
+
 async function main() {
   const email = (
     process.env.SEED_ADMIN_EMAIL ?? 'admin@ewes.example'
@@ -277,6 +399,7 @@ async function main() {
     await seedServices(prisma);
     await seedRealisations(prisma);
     await seedArticles(prisma);
+    await seedPublicDocuments(prisma);
   } finally {
     await prisma.$disconnect();
   }

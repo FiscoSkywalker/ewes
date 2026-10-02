@@ -80,6 +80,11 @@
   --pole: var(--color-copper);
   --pole-pattern: var(--pattern-ing);
 }
+/* Document public sans pôle rattaché. */
+.pole-neutral {
+  --pole: var(--color-muted);
+  --pole-pattern: var(--pattern-env);
+}
 .tone-night {
   --pole: var(--color-malachite-bright);
   color: var(--color-on-night-muted);

@@ -12,7 +12,14 @@ const nextConfig: NextConfig = {
   // même origine (`/uploads/<fichier>`) pour que next/image et le cache les
   // traitent comme des ressources locales.
   async rewrites() {
-    return [{ source: '/uploads/:name', destination: `${API_URL}/media/:name` }];
+    return [
+      { source: '/uploads/:name', destination: `${API_URL}/media/:name` },
+      // PDF des documents publics, téléchargés en même origine.
+      {
+        source: '/files/:name',
+        destination: `${API_URL}/documents-publics/files/:name`,
+      },
+    ];
   },
   // Nécessaire pour la scène WebGL de la page d'Accueil (three.js/R3F/drei).
   transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],

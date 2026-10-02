@@ -11,14 +11,16 @@ export type DocumentPole = 'env' | 'eau' | 'ing';
 /**
  * Document téléchargeable par les visiteurs. Forme volontairement calquée sur
  * ce que renverra l'API (blueprint/11_Document_Management_System.md) : il
- * suffira de remplacer les exemples des messages par la réponse de l'API.
+ * suffit de mapper la réponse de l'API (`lib/api/public-documents.ts`).
  */
 export interface ShowcaseDocument {
   id: string;
   category: DocumentCategory;
-  pole: DocumentPole;
+  /** Pôle rattaché ; `null` si le document n'est lié à aucun service. */
+  pole: DocumentPole | null;
   year: string;
-  pages: number;
+  /** Nombre de pages ; `null` s'il n'est pas renseigné. */
+  pages: number | null;
   /** Taille déjà formatée selon la locale (« 3,2 Mo » / « 3.2 MB »). */
   size: string;
   format: string;
@@ -33,6 +35,10 @@ export const POLE_CLASS: Record<DocumentPole, string> = {
   eau: 'pole-eau',
   ing: 'pole-ing',
 };
+
+/** Classe de couleur d'un document, neutre s'il n'a pas de pôle. */
+export const poleClass = (pole: DocumentPole | null) =>
+  pole ? POLE_CLASS[pole] : 'pole-neutral';
 
 /** Nombre de documents listés à côté du document à la une. */
 const LIST_SIZE = 4;
@@ -69,7 +75,7 @@ export function DocumentCover({ doc }: { doc: ShowcaseDocument }) {
 
   return (
     <div
-      className={`${POLE_CLASS[doc.pole]} relative mx-auto aspect-3/4 w-full max-w-60`}
+      className={`${poleClass(doc.pole)} relative mx-auto aspect-3/4 w-full max-w-60`}
       aria-hidden="true"
     >
       <div className="absolute inset-0 translate-x-5 translate-y-3 rotate-[5deg] rounded-card bg-on-night/8 transition-transform duration-500 group-hover:translate-x-7 group-hover:rotate-[8deg]" />
@@ -97,7 +103,7 @@ export function DocumentCover({ doc }: { doc: ShowcaseDocument }) {
 export function FileBadge({ doc }: { doc: ShowcaseDocument }) {
   return (
     <span
-      className={`${POLE_CLASS[doc.pole]} relative flex h-14 w-11 flex-none flex-col justify-end overflow-hidden rounded-md border border-border bg-surface-elevated pb-1.5 text-center font-mono text-[9px] font-bold tracking-[0.08em] text-pole transition-colors group-hover:border-pole`}
+      className={`${poleClass(doc.pole)} relative flex h-14 w-11 flex-none flex-col justify-end overflow-hidden rounded-md border border-border bg-surface-elevated pb-1.5 text-center font-mono text-[9px] font-bold tracking-[0.08em] text-pole transition-colors group-hover:border-pole`}
       aria-hidden="true"
     >
       <span className="pattern-swatch absolute inset-x-0 top-0 h-5 border-b border-border-subtle" />
@@ -141,7 +147,9 @@ export function DocumentsShowcase({
   }
 
   const meta = (doc: ShowcaseDocument) =>
-    [doc.year, t('pages', { count: doc.pages }), doc.size].join(' · ');
+    [doc.year, doc.pages ? t('pages', { count: doc.pages }) : '', doc.size]
+      .filter(Boolean)
+      .join(' · ');
 
   const chip = (active: boolean) =>
     `inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] transition-colors ${
@@ -238,7 +246,7 @@ export function DocumentsShowcase({
                 <FileBadge doc={doc} />
                 <span className="min-w-0 flex-1">
                   <span
-                    className={`${POLE_CLASS[doc.pole]} font-mono text-[10px] uppercase tracking-[0.14em] text-pole`}
+                    className={`${poleClass(doc.pole)} font-mono text-[10px] uppercase tracking-[0.14em] text-pole`}
                   >
                     {t(`categories.${doc.category}`)}
                   </span>

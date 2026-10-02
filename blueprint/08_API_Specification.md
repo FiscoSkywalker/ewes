@@ -20,6 +20,7 @@ Les erreurs de validation renvoient des détails de champ exploitables par le cl
 | Zone | Ressources |
 |---|---|
 | Public | `/auth`, `/me`, `/pages`, `/services`, `/realisations`, `/articles`, `/documents-publics`, `/contact` |
+| Documents publics | `GET /documents-publics` (filtres `category`, `year`, pagination), `GET /documents-publics/:slug`, `GET /documents-publics/files/:fichier` (téléchargement, réécrit en `/files/:fichier` par le site) ; admin : `/admin/documents-publics` (création multipart avec le PDF dans le champ `file`, `PUT :id/file` pour remplacer, `publish`/`unpublish`/`archive`, `DELETE` logique) |
 | Médias | `POST/GET/DELETE /admin/media` (téléversement multipart, champ `file`) ; `GET /media/:fichier` (service public, réécrit en `/uploads/:fichier` par le site) ; `PUT/DELETE /admin/articles/:id/cover` |
 | Portail (Gestionnaire/Administrateur) | `/admin/pages`, `/admin/services`, `/admin/realisations`, `/admin/articles`, `/admin/documents-publics`, `/admin/contacts`, `/admin/dashboard` |
 | Espace documentaire privé | `/documents-prives/folders`, `/documents-prives/files`, `/documents-prives/search` |

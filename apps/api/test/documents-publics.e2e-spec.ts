@@ -1,0 +1,303 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import request from 'supertest';
+import { App } from 'supertest/types.js';
+import * as argon2 from 'argon2';
+import { Role } from '@prisma/client';
+import { existsSync } from 'node:fs';
+import { mkdtemp, readdir, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { AppModule } from './../src/app.module.js';
+import { PrismaService } from './../src/prisma/prisma.service.js';
+import { GlobalHttpExceptionFilter } from './../src/common/filters/http-exception.filter.js';
+import { MAX_DOCUMENT_BYTES } from './../src/modules/documents-publics/document-signature.js';
+
+const pdf = (label: string) =>
+  Buffer.from(`%PDF-1.4\n% ${label}\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n`);
+
+/**
+ * Cas de régression : un document ne vaut que par son contenu réel (PDF),
+ * un brouillon / archivé / supprimé n'est jamais téléchargeable, même en
+ * connaissant son nom de fichier (blueprint/10_Security.md, 17 §3).
+ */
+describe('Documents publics (e2e)', () => {
+  let app: INestApplication<App>;
+  let prisma: PrismaService;
+  let mediaDir: string;
+  let documentsDir: string;
+
+  const password = 'correct horse battery staple';
+  const stamp = Date.now();
+  const prefix = `e2e-doc-${stamp}`;
+  const gestionnaireEmail = `e2e-doc-gest-${stamp}@ewes.example`;
+  const userEmail = `e2e-doc-user-${stamp}@ewes.example`;
+  let auth: { Authorization: string };
+
+  async function login(email: string): Promise<string> {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email, password })
+      .expect(200);
+    return res.body.accessToken as string;
+  }
+
+  const create = (
+    suffix: string,
+    file: Buffer = pdf(suffix),
+    fields: Record<string, string> = {},
+  ) => {
+    const req = request(app.getHttpServer())
+      .post('/api/v1/admin/documents-publics')
+      .set(auth)
+      .field('slug', `${prefix}-${suffix}`)
+      .field('titleFr', `Document ${suffix}`)
+      .field('category', 'GUIDE');
+    for (const [key, value] of Object.entries(fields)) req.field(key, value);
+    return req.attach('file', file, `${suffix}.pdf`);
+  };
+
+  const storedNameOf = (fileUrl: string) => fileUrl.replace('/files/', '');
+  const download = (storedName: string) =>
+    request(app.getHttpServer())
+      .get(`/api/v1/documents-publics/files/${storedName}`)
+      .buffer(true)
+      .parse((r, cb) => {
+        const chunks: Buffer[] = [];
+        r.on('data', (c: Buffer) => chunks.push(c));
+        r.on('end', () => cb(null, Buffer.concat(chunks)));
+      });
+  const post = (url: string) =>
+    request(app.getHttpServer()).post(url).set(auth);
+
+  beforeAll(async () => {
+    mediaDir = await mkdtemp(join(tmpdir(), 'ewes-docs-e2e-'));
+    documentsDir = join(mediaDir, 'documents');
+    process.env.PUBLIC_MEDIA_PATH = mediaDir;
+
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api/v1');
+    app.useGlobalFilters(new GlobalHttpExceptionFilter());
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
+    await app.init();
+
+    prisma = app.get(PrismaService);
+    const passwordHash = await argon2.hash(password, {
+      type: argon2.argon2id,
+    });
+    await prisma.user.create({
+      data: {
+        email: gestionnaireEmail,
+        passwordHash,
+        fullName: 'E2E Doc Gestionnaire',
+        role: Role.GESTIONNAIRE,
+      },
+    });
+    await prisma.user.create({
+      data: {
+        email: userEmail,
+        passwordHash,
+        fullName: 'E2E Doc User',
+        role: Role.UTILISATEUR,
+      },
+    });
+    auth = { Authorization: `Bearer ${await login(gestionnaireEmail)}` };
+  });
+
+  afterAll(async () => {
+    await prisma.publicDocument.deleteMany({
+      where: { slug: { startsWith: prefix } },
+    });
+    await prisma.session.deleteMany({
+      where: { user: { email: { in: [gestionnaireEmail, userEmail] } } },
+    });
+    await prisma.user.deleteMany({
+      where: { email: { in: [gestionnaireEmail, userEmail] } },
+    });
+    await app.close();
+    await rm(mediaDir, { recursive: true, force: true });
+  });
+
+  it('rejects unauthenticated and under-privileged access to admin routes', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/documents-publics')
+      .expect(401);
+
+    const userToken = await login(userEmail);
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/admin/documents-publics')
+      .set('Authorization', `Bearer ${userToken}`)
+      .field('slug', `${prefix}-x`)
+      .field('titleFr', 'x')
+      .field('category', 'GUIDE')
+      .attach('file', pdf('x'), 'x.pdf');
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('FORBIDDEN_ROLE');
+  });
+
+  it('judges a file by its content, enforces the size limit and validates fields', async () => {
+    const fake = await create('fake', Buffer.from('MZ\x90\x00 not a pdf'));
+    expect(fake.status).toBe(415);
+    expect(fake.body.code).toBe('DOCUMENT_TYPE_NOT_ALLOWED');
+
+    const big = await create(
+      'big',
+      Buffer.concat([pdf('big'), Buffer.alloc(MAX_DOCUMENT_BYTES)]),
+    );
+    expect(big.status).toBe(413);
+    expect(big.body.code).toBe('PAYLOAD_TOO_LARGE');
+
+    const noFile = await request(app.getHttpServer())
+      .post('/api/v1/admin/documents-publics')
+      .set(auth)
+      .field('slug', `${prefix}-nofile`)
+      .field('titleFr', 'x')
+      .field('category', 'GUIDE');
+    expect(noFile.status).toBe(400);
+    expect(noFile.body.code).toBe('DOCUMENT_FILE_REQUIRED');
+
+    await create('badcat', pdf('badcat'), { category: 'AUTRE' }).expect(400);
+    await create('badyear', pdf('badyear'), { year: 'abc' }).expect(400);
+    await create('badstatus', pdf('badstatus'), { status: 'PUBLISHED' }).expect(
+      400,
+    );
+
+    // Aucun refus n'a laissé de fichier sur le disque.
+    const files = existsSync(documentsDir) ? await readdir(documentsDir) : [];
+    expect(files).toHaveLength(0);
+  });
+
+  it('never serves a draft, archived or deleted document, even by file name', async () => {
+    const created = await create('cycle', pdf('cycle'), {
+      year: '2025',
+      pages: '12',
+      excerptFr: 'Résumé',
+    }).expect(201);
+    expect(created.body.status).toBe('DRAFT');
+    const id = created.body.id as string;
+    const slug = created.body.slug as string;
+    const storedName = storedNameOf(created.body.fileUrl as string);
+    expect(storedName).toMatch(/^[0-9a-f-]{36}\.pdf$/);
+
+    // Brouillon : ni fiche ni fichier.
+    await request(app.getHttpServer())
+      .get(`/api/v1/documents-publics/${slug}`)
+      .expect(404);
+    await download(storedName).expect(404);
+
+    await post(`/api/v1/admin/documents-publics/${id}/publish`).expect(200);
+
+    const visible = await request(app.getHttpServer())
+      .get(`/api/v1/documents-publics/${slug}`)
+      .expect(200);
+    expect(visible.body.file.url).toBe(`/files/${storedName}`);
+    expect(visible.body.file.mimeType).toBe('application/pdf');
+    expect(visible.body.year).toBe(2025);
+    expect(visible.body.pages).toBe(12);
+    expect(visible.body).not.toHaveProperty('id');
+    expect(visible.body).not.toHaveProperty('status');
+    expect(visible.body).not.toHaveProperty('storedName');
+
+    const file = await download(storedName).expect(200);
+    expect(file.headers['content-type']).toBe('application/pdf');
+    expect(file.headers['content-disposition']).toBe(
+      `attachment; filename="${slug}.pdf"`,
+    );
+    expect(file.headers['x-content-type-options']).toBe('nosniff');
+    expect((file.body as Buffer).equals(pdf('cycle'))).toBe(true);
+
+    const listed = await request(app.getHttpServer())
+      .get('/api/v1/documents-publics?category=GUIDE&limit=100')
+      .expect(200);
+    expect(
+      listed.body.data.some((d: { slug: string }) => d.slug === slug),
+    ).toBe(true);
+
+    // Dépublié, archivé puis supprimé : le fichier redevient introuvable.
+    await post(`/api/v1/admin/documents-publics/${id}/unpublish`).expect(200);
+    await download(storedName).expect(404);
+    await post(`/api/v1/admin/documents-publics/${id}/publish`).expect(200);
+    await download(storedName).expect(200);
+    await post(`/api/v1/admin/documents-publics/${id}/archive`).expect(200);
+    await download(storedName).expect(404);
+    await post(`/api/v1/admin/documents-publics/${id}/publish`).expect(200);
+
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/documents-publics/${id}`)
+      .set(auth)
+      .expect(204);
+    await download(storedName).expect(404);
+    await request(app.getHttpServer())
+      .get(`/api/v1/admin/documents-publics/${id}`)
+      .set(auth)
+      .expect(404);
+
+    // Noms hors motif : jamais lus sur le disque.
+    await request(app.getHttpServer())
+      .get('/api/v1/documents-publics/files/..%2F..%2Fpackage.json')
+      .expect(404);
+  });
+
+  it('replaces the PDF and removes the previous file from disk', async () => {
+    const created = await create('replace', pdf('v1')).expect(201);
+    const id = created.body.id as string;
+    const oldName = storedNameOf(created.body.fileUrl as string);
+    await post(`/api/v1/admin/documents-publics/${id}/publish`).expect(200);
+
+    const replaced = await request(app.getHttpServer())
+      .put(`/api/v1/admin/documents-publics/${id}/file`)
+      .set(auth)
+      .attach('file', pdf('v2'), 'v2.pdf')
+      .expect(200);
+    const newName = storedNameOf(replaced.body.fileUrl as string);
+    expect(newName).not.toBe(oldName);
+    expect(existsSync(join(documentsDir, oldName))).toBe(false);
+    expect(
+      ((await download(newName).expect(200)).body as Buffer).equals(pdf('v2')),
+    ).toBe(true);
+    await download(oldName).expect(404);
+
+    const notPdf = await request(app.getHttpServer())
+      .put(`/api/v1/admin/documents-publics/${id}/file`)
+      .set(auth)
+      .attach('file', Buffer.from('nope'), 'nope.pdf');
+    expect(notPdf.status).toBe(415);
+    // L'ancien fichier valide est conservé après un remplacement refusé.
+    await download(newName).expect(200);
+  });
+
+  it('locks the slug after publication and rejects duplicates and unknown services', async () => {
+    const created = await create('lock').expect(201);
+    const id = created.body.id as string;
+
+    const duplicate = await create('lock');
+    expect(duplicate.status).toBe(409);
+    expect(duplicate.body.code).toBe('DOCUMENT_SLUG_TAKEN');
+
+    const unknownService = await request(app.getHttpServer())
+      .patch(`/api/v1/admin/documents-publics/${id}`)
+      .set(auth)
+      .send({ serviceId: '00000000-0000-4000-8000-000000000000' });
+    expect(unknownService.status).toBe(400);
+    expect(unknownService.body.code).toBe('SERVICE_NOT_FOUND');
+
+    await post(`/api/v1/admin/documents-publics/${id}/publish`).expect(200);
+    const locked = await request(app.getHttpServer())
+      .patch(`/api/v1/admin/documents-publics/${id}`)
+      .set(auth)
+      .send({ slug: `${prefix}-lock-2` });
+    expect(locked.status).toBe(409);
+    expect(locked.body.code).toBe('DOCUMENT_SLUG_LOCKED');
+  });
+});
