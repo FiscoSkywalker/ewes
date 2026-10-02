@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -8,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -20,6 +22,7 @@ import { ActualitesService } from './actualites.service.js';
 import { CreateArticleDto } from './dto/create-article.dto.js';
 import { UpdateArticleDto } from './dto/update-article.dto.js';
 import { PublishArticleDto } from './dto/publish-article.dto.js';
+import { SetCoverDto } from './dto/set-cover.dto.js';
 import { ListAdminArticlesDto } from './dto/list-articles.dto.js';
 
 @ApiTags('admin/articles')
@@ -50,6 +53,18 @@ export class AdminArticlesController {
   @Patch(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateArticleDto) {
     return this.actualitesService.update(id, dto);
+  }
+
+  @Put(':id/cover')
+  @ApiOperation({ summary: 'Définir le visuel de couverture (média téléversé)' })
+  setCover(@Param('id', ParseUUIDPipe) id: string, @Body() dto: SetCoverDto) {
+    return this.actualitesService.setCover(id, dto);
+  }
+
+  @Delete(':id/cover')
+  @ApiOperation({ summary: 'Retirer le visuel de couverture' })
+  removeCover(@Param('id', ParseUUIDPipe) id: string) {
+    return this.actualitesService.removeCover(id);
   }
 
   @Post(':id/publish')

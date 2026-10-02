@@ -7,6 +7,8 @@ import {
 import { ContentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
+import { MediaService, mediaUrl } from '../media/media.service.js';
+import type { SetCoverDto } from './dto/set-cover.dto.js';
 import type { CreateArticleDto } from './dto/create-article.dto.js';
 import type { UpdateArticleDto } from './dto/update-article.dto.js';
 import type {
@@ -44,6 +46,7 @@ export class ActualitesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly revalidator: FrontendRevalidator,
+    private readonly media: MediaService,
   ) {}
 
   /** Lecture publique : PUBLISHED, non supprimé, date de publication atteinte. */
@@ -192,6 +195,40 @@ export class ActualitesService {
     });
     await this.revalidate(published.slug);
     return published;
+  }
+
+  /** Définit (remplace) le visuel de couverture à partir d'un média téléversé. */
+  async setCover(id: string, dto: SetCoverDto) {
+    await this.findById(id);
+    const media = await this.media.findById(dto.mediaId);
+    await this.prisma.$transaction([
+      this.prisma.articleImage.deleteMany({ where: { articleId: id } }),
+      this.prisma.articleImage.create({
+        data: {
+          articleId: id,
+          url: mediaUrl(media.storedName),
+          altFr: dto.altFr,
+          altEn: dto.altEn,
+          position: 0,
+        },
+      }),
+    ]);
+    return this.afterCoverChange(id);
+  }
+
+  /** Retire le visuel de couverture (le média reste dans la médiathèque). */
+  async removeCover(id: string) {
+    await this.findById(id);
+    await this.prisma.articleImage.deleteMany({ where: { articleId: id } });
+    return this.afterCoverChange(id);
+  }
+
+  private async afterCoverChange(id: string) {
+    const article = await this.findById(id);
+    if (article.status === ContentStatus.PUBLISHED) {
+      await this.revalidate(article.slug);
+    }
+    return article;
   }
 
   /** Retire immédiatement l'article du site public (retour en brouillon). */
