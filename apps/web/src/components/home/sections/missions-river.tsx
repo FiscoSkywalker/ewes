@@ -50,10 +50,9 @@ const riverY = (x: number) =>
  * chaque image). Mobile et « animations réduites » : frise à faire glisser
  * horizontalement, même rendu. Rendu serveur : tout est affiché, atteint.
  */
-export function MissionsRiver() {
+export function MissionsRiver({ projects }: { projects: Project[] }) {
   const t = useTranslations('Projects');
   const tRiver = useTranslations('Projects.river');
-  const projects = t.raw('items') as Project[];
   const categories = t.raw('categories') as ProjectCategoryOption[];
 
   const missions = useMemo(

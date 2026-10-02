@@ -13,11 +13,10 @@ import type { Project } from '@/data/projects';
  * compteur est calculé à partir du registre des réalisations (missions de
  * type Formation), pas saisi à la main.
  */
-export function TrainingSection() {
+export function TrainingSection({ projects }: { projects: Project[] }) {
   const t = useTranslations('Training');
-  const tProjects = useTranslations('Projects');
   const topics = t.raw('topics') as string[];
-  const trainings = (tProjects.raw('items') as Project[]).filter(
+  const trainings = projects.filter(
     (p) => p.category === 'FORMATION',
   );
   const since = Math.min(...trainings.map((p) => p.year));

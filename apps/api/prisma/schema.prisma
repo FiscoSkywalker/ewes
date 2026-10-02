@@ -182,6 +182,7 @@ model Realisation {
   isClientPublic Boolean       @default(false)
   location       String?
   year           Int?
+  yearEnd        Int?
   projectType    String?
   descriptionFr  String?
   descriptionEn  String?
@@ -192,8 +193,8 @@ model Realisation {
   status         ContentStatus @default(DRAFT)
   isFeatured     Boolean       @default(false)
   publishedAt    DateTime?
-  serviceId      String
-  service        Service       @relation(fields: [serviceId], references: [id])
+  serviceId      String?
+  service        Service?      @relation(fields: [serviceId], references: [id])
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   deletedAt      DateTime?

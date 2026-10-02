@@ -51,8 +51,8 @@ Ce document est le point d'entrée opérationnel de chaque session de travail, q
 - [ ] Pages Nos réalisations, Actualités, Documents — livrées le 2026-09-29 avec un contenu statique (portfolio filtrable partagé avec l'Accueil, actualités et documents publics avec état vide honnête) ; à rebrancher sur `realisations`/`actualites`/`documents-publics` une fois ces modules NestJS construits (Phase 03)
 
 ## Phase 03 — Réalisations & archivage
-- [ ] Module NestJS `realisations` (CRUD, statuts DRAFT/PUBLISHED/ARCHIVED, classement)
-- [ ] Page liste Nos réalisations (ISR + filtre client isolé)
+- [x] Module NestJS `realisations` (CRUD, statuts DRAFT/PUBLISHED/ARCHIVED, classement) — livré le 2026-10-02 (6) ; images, documents associés et partenaires (modèles existants) restent à exposer avec le module `media`
+- [x] Page liste Nos réalisations (ISR + filtre client isolé) — pilotée par l'API, repli sur `messages/`
 - [ ] Page fiche réalisation (SSG/ISR)
 - [ ] Module NestJS `actualites` + pages liste/détail
 - [ ] Module NestJS `documents-publics` + section publique de la page Documents
@@ -107,6 +107,12 @@ Décisions : <choix techniques ou métier tranchés, et pourquoi>
 Blocages : <dépendance non résolue, question ouverte pour EWES ou Planning Events>
 Prochaine étape : <action concrète et immédiatement actionnable pour la prochaine session>
 ```
+
+### Session — 2026-10-02 (6) — Claude Code
+Fait : module NestJS `realisations`. Public : `GET /realisations` (filtres `projectType`, `year`, `location`, `page`, `limit` ≤ 100 ; réponse `{ data, meta }`, ordre année décroissante puis ordre de saisie) et `GET /realisations/:slug` (PUBLISHED, non supprimée, date de publication atteinte ; ni `id` ni `status` ; client masqué si `isClientPublic` est faux). Admin (ADMINISTRATEUR/GESTIONNAIRE) : `/admin/realisations` (liste filtrable par statut, lecture, création, modification, `publish`, `unpublish`, `archive`). Règles : statut jamais accepté dans les DTO ; publication refusée en 422 `REALISATION_PUBLISH_INCOMPLETE` (détails = champs manquants) sans titre, année ou type ; slug verrouillé après première publication ; au plus 6 fiches « vitrine » publiées simultanément (409 `REALISATION_FEATURED_LIMIT`) ; revalidation `realisation:<slug>` + `realisations` (acceptés par `/api/revalidate`). Migration `realisation_year_end_optional_service` : `yearEnd` ajouté, `serviceId` devient facultatif (FK en SET NULL). `npm run db:seed` importe les 34 références (publiées, FR/EN, idempotent). Web : `lib/api/public-realisations.ts` (`getProjects`, pagination suivie, repli messages si API en échec ou liste vide) ; Accueil (`AboutSection`, `MissionsRiver`, `TrainingSection`) et `/realisations` reçoivent `projects` en props. Vérifié en production locale : modifier l'intitulé d'une mission via l'API puis revalider met à jour l'Accueil et `/realisations`, restauration comprise. Build, lint, 14 unitaires, 17 e2e verts.
+Décisions : écart assumé avec `12_Realisations_Portfolio_System.md` §3-4 (note datée ajoutée) : localisation, domaine et image de couverture ne sont pas exigés à la publication, les 34 références du profil n'en ont pas ; à rétablir avec les fiches détaillées et `media`. `serviceId` facultatif plutôt qu'un rattachement inventé catégorie -> pôle. `projectType` limité à 6 valeurs (`REALISATION_TYPES`) alignées sur les filtres du site. Les libellés de catégories restent dans `messages/` (`Projects.categories`). Pas de fiche détail publique (pas de page `/realisations/[slug]`) : le modèle et l'API la permettent, le design n'existe pas encore.
+Blocages : `RealisationsRegister` (`components/public/realisations-register.tsx`) n'est plus monté nulle part et lit encore `messages/` — code mort probable, à supprimer ou rebrancher. Le serveur `nest start --watch` de l'utilisateur s'était arrêté (port 3001 libre) pendant la session : le relancer.
+Prochaine étape : trancher avec l'utilisateur la suite — fiche détail `/realisations/[slug]` (SSG/ISR) ou module `actualites` (même patron, 6 articles dans `messages/` `News.items`, page détail déjà existante `/actualites/[slug]`) ; recommandé : `actualites`, car les pages existent déjà.
 
 ### Session — 2026-10-02 (5) — Claude Code
 Fait : l'aperçu « 02 · Nos services » de l'Accueil lit les mêmes données que /services. `(public)/page.tsx` récupère `getPoleServices(locale)` (en parallèle des actualités) et le passe en props à `HomeExperience` -> `ServicesOverview` -> `PolePlate` (nom, accroche, nombre et liste des prestations au survol) ; repli sur `messages/` par pôle si l'API ne répond pas. Vérifié en production locale : modifier l'accroche du pôle Eau via l'API puis revalider (`services`) met à jour `/fr`, et la restauration aussi. Build/lint verts.

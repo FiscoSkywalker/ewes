@@ -19,6 +19,7 @@ import { useResponsive } from '@/hooks/useResponsive';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useWebglAvailable } from '@/hooks/useWebglAvailable';
 import type { PoleContent, ServicePole } from '@/components/public/service-chapter';
+import type { Project } from '@/data/projects';
 import type { HomeNews } from '@/lib/news';
 
 /**
@@ -36,8 +37,11 @@ import type { HomeNews } from '@/lib/news';
 export function HomeExperience({
   news,
   poles,
+  projects,
 }: {
   news: HomeNews;
+  /** Références publiées (API, repli sur les messages). */
+  projects: Project[];
   /** Pôles de services pilotés par l'API (repli sur les messages si absents). */
   poles?: Partial<Record<ServicePole, PoleContent>>;
 }) {
@@ -54,7 +58,7 @@ export function HomeExperience({
       <ClientsMarquee />
 
       <div ref={aboutRef}>
-        <AboutSection />
+        <AboutSection projects={projects} />
       </div>
 
       <ServicesOverview poles={poles} />
@@ -72,8 +76,8 @@ export function HomeExperience({
       />
 
       <MethodSection />
-      <MissionsRiver />
-      <TrainingSection />
+      <MissionsRiver projects={projects} />
+      <TrainingSection projects={projects} />
       <NewsSection news={news} />
       <DocumentsSection />
       <ContactBlock />

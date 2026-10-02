@@ -31,18 +31,16 @@ interface Milestone {
  * Progression écrite en variables CSS (pas de re-rendu React) ; rendu serveur
  * et « animations réduites » : tout est affiché, net et ouvert.
  */
-export function AboutSection() {
+export function AboutSection({ projects }: { projects: Project[] }) {
   const t = useTranslations('HomeAbout');
   const tResearch = useTranslations('Research');
   const tWorld = useTranslations('World');
-  const tProjects = useTranslations('Projects');
 
   const timeline = t.raw('timeline') as Milestone[];
   const objectives = tResearch.raw('items') as {
     title: string;
     text: string;
   }[];
-  const projects = tProjects.raw('items') as Project[];
   const operators = (tWorld.raw('clients') as string[]).length;
   const firstYear = Math.min(...projects.map((p) => p.year));
   const words = t('lead').split(' ');

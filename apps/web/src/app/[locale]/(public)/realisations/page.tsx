@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import type { Project, ProjectCategoryOption } from '@/data/projects';
+import { getProjects } from '@/lib/api/public-realisations';
+import type { ProjectCategoryOption } from '@/data/projects';
 import { RealisationsGallery } from '@/components/public/realisations-gallery';
 import { SectionHeading } from '@/components/public/section-heading';
 
@@ -24,6 +25,7 @@ export default async function RealisationsPage({
   setRequestLocale(locale);
   const t = await getTranslations('RealisationsPage');
   const tProjects = await getTranslations('Projects');
+  const projects = await getProjects(locale);
 
   return (
     <div className="bg-paper px-6 pb-24 pt-28 text-sand md:px-16 md:pb-32 md:pt-36">
@@ -35,7 +37,7 @@ export default async function RealisationsPage({
           className="mb-14 max-w-4xl"
         />
         <RealisationsGallery
-          projects={tProjects.raw('items') as Project[]}
+          projects={projects}
           categories={tProjects.raw('categories') as ProjectCategoryOption[]}
         />
       </div>
