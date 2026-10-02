@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import '../globals.css';
+import './admin.css';
+import { themeBootScript } from '@/lib/admin/theme';
 import { AdminProviders } from './providers';
 
 /**
@@ -23,6 +24,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'EWES — Portail admin',
   description: "Portail d'administration EWES.",
+  robots: { index: false, follow: false },
 };
 
 /**
@@ -31,6 +33,11 @@ export const metadata: Metadata = {
  * — pattern Next.js "multiple root layouts". Le portail n'est pas localisé
  * par route (outil interne à l'équipe EWES, pas de contrainte SEO/i18n) et
  * traité entièrement en client-side (blueprint/16_Rendering_State_Strategy.md §3).
+ *
+ * `data-theme` est posé par le script du <head> avant le premier rendu
+ * (thème clair/sombre du portail, voir admin.css) : d'où
+ * `suppressHydrationWarning` sur <html>, dont l'attribut diffère du rendu
+ * serveur par construction.
  */
 export default function AdminRootLayout({
   children,
@@ -40,9 +47,13 @@ export default function AdminRootLayout({
   return (
     <html
       lang="fr"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-(--color-surface-muted)">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
+      <body className="portal-body min-h-full">
         <AdminProviders>{children}</AdminProviders>
       </body>
     </html>

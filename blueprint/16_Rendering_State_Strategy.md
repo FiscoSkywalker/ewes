@@ -30,6 +30,8 @@ L'invalidation ciblée (revalidation à la demande déclenchée par la mutation 
 
 Ces zones sont des Client Components sous un layout dédié (`app/(admin)/...`), sans SSR de données métier. La récupération de données utilise TanStack Query (cache, revalidation, état de chargement/erreur standardisé). L'authentification est vérifiée par middleware Next.js avant tout rendu de la zone.
 
+> Implémentation (2026-10-02) : racine `app/admin/` (layout `<html>` propre), écrans authentifiés dans le groupe `app/admin/(portal)/` monté dans `AdminShell` (vérifie `GET /me`, redirige vers la connexion sinon) ; la connexion (`app/admin/login`) reste hors de la coquille. Les appels de données passent par le proxy BFF générique `/api/backend/<chemin>` → `${NEXT_PUBLIC_API_URL}/<chemin>` (`app/api/backend/[...path]/route.ts`) : jeton d'accès lu dans le cookie httpOnly et jamais exposé au navigateur, segments de chemin validés (pas de `..`), mutations refusées si l'en-tête `Origin` n'est pas celui du site, corps transmis en flux (téléversements). Le proxy n'autorise rien : les guards NestJS restent seuls juges. Côté client, `backendJson()` (`lib/api/backend.ts`) s'appuie sur `adminFetch` (une rotation silencieuse du jeton sur 401).
+
 # 4. Isolation des composants interactifs côté public
 
 Formulaire de contact, filtres de portfolio/actualités, sélecteur de langue, uploader (le cas échéant côté public) sont chacun un sous-composant `"use client"` minimal, monté dans une page Server Component par ailleurs statique. Une page publique ne devient jamais un Client Component dans son ensemble pour ce motif.
