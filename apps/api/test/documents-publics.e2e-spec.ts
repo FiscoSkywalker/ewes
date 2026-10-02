@@ -318,6 +318,69 @@ describe('Documents publics (e2e)', () => {
     expect(trail[3].afterData).toEqual({ deleted: true });
   });
 
+  it('searches, sorts and counts the admin library per status without leaking filters between them', async () => {
+    const needle = `srch${stamp}`;
+    const doc = (name: string, category: string, extra: Record<string, string> = {}) =>
+      create(`${needle}-${name.toLowerCase()}`, pdf(name), { titleFr: `${name} ${needle}`, category, ...extra }).expect(201);
+    const charlie = await doc('Charlie', 'GUIDE', { year: '2023' });
+    const alpha = await doc('Alpha', 'REPORT');
+    const bravo = await doc('Bravo', 'GUIDE', { year: '2025', excerptFr: 'Remise de 100%_exacte demandee.' });
+    // Alpha est publié en dernier : c'est aussi le plus récemment modifié.
+    await post(`/api/v1/admin/documents-publics/${alpha.body.id}/publish`).expect(200);
+    void charlie;
+    void bravo;
+
+    const get = (query: string) =>
+      request(app.getHttpServer()).get(`/api/v1/admin/documents-publics?${query}`).set(auth);
+    const titles = (res: request.Response) =>
+      (res.body.data as { titleFr: string }[]).map((d) => d.titleFr.split(' ')[0]);
+
+    // Recherche insensible à la casse (slug compris) ; compteurs par statut.
+    const found = await get(`q=${needle.toUpperCase()}&limit=100`).expect(200);
+    expect(found.body.meta.total).toBe(3);
+    expect(found.body.meta.statuses).toEqual({ DRAFT: 2, PUBLISHED: 1 });
+
+    // Le filtre de statut restreint la liste mais pas les compteurs ; catégorie et recherche, si.
+    const drafts = await get(`q=${needle}&status=DRAFT`).expect(200);
+    expect(drafts.body.meta.total).toBe(2);
+    expect(drafts.body.meta.statuses).toEqual({ DRAFT: 2, PUBLISHED: 1 });
+    const guides = await get(`q=${needle}&category=GUIDE`).expect(200);
+    expect(guides.body.meta.total).toBe(2);
+    expect(guides.body.meta.statuses).toEqual({ DRAFT: 2 });
+
+    // `%` et `_` sont cherchés littéralement, jamais comme jokers.
+    const literal = await get('q=%25').expect(200);
+    expect(
+      (literal.body.data as { excerptFr: string | null }[]).every((d) => d.excerptFr?.includes('%')),
+    ).toBe(true);
+    expect(titles(literal)).toContain('Bravo');
+    expect((await get('q=100%25_exacte').expect(200)).body.meta.total).toBe(1);
+    expect((await get('q=100%25Xexacte').expect(200)).body.meta.total).toBe(0);
+
+    // Tri : titre, année (sans année toujours en dernier), catégorie, date de modification.
+    const sorted = async (sort: string, order: string) =>
+      titles(await get(`q=${needle}&sort=${sort}&order=${order}`).expect(200));
+    expect(await sorted('titleFr', 'asc')).toEqual(['Alpha', 'Bravo', 'Charlie']);
+    expect(await sorted('titleFr', 'desc')).toEqual(['Charlie', 'Bravo', 'Alpha']);
+    expect(await sorted('year', 'asc')).toEqual(['Charlie', 'Bravo', 'Alpha']);
+    expect(await sorted('year', 'desc')).toEqual(['Bravo', 'Charlie', 'Alpha']);
+    expect((await sorted('category', 'asc'))[0]).toBe('Alpha');
+    expect((await sorted('category', 'desc')).at(-1)).toBe('Alpha');
+    expect((await sorted('updatedAt', 'desc'))[0]).toBe('Alpha');
+    expect((await sorted('updatedAt', 'asc')).at(-1)).toBe('Alpha');
+
+    // Tri + pagination : chaque ligne apparaît une fois.
+    const page = async (n: number) =>
+      titles(await get(`q=${needle}&sort=titleFr&order=asc&limit=1&page=${n}`).expect(200));
+    expect([await page(1), await page(2), await page(3)]).toEqual([['Alpha'], ['Bravo'], ['Charlie']]);
+
+    // Paramètres refusés avec le champ fautif ; aucune injection par le champ de tri.
+    for (const bad of ['sort=slug', 'sort=year;drop', 'order=up', `q=${'x'.repeat(101)}`]) {
+      const res = await get(bad).expect(400);
+      expect(JSON.stringify(res.body)).toContain(bad.split('=')[0]);
+    }
+  });
+
   it('replaces the PDF and removes the previous file from disk', async () => {
     const created = await create('replace', pdf('v1')).expect(201);
     const id = created.body.id as string;

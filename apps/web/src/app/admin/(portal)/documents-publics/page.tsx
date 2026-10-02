@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { FilePlus2, Library } from 'lucide-react';
+import { FilePlus2, Library, SearchX } from 'lucide-react';
 import { backendJson, type Paginated } from '@/lib/api/backend';
 import { relativeTime } from '@/lib/admin/format';
 import {
@@ -20,20 +20,39 @@ import {
   DataTable,
   EmptyState,
   Pagination,
+  SearchInput,
   SegmentedControl,
   Select,
   StatusChip,
+  useDebouncedValue,
   type Column,
+  type SortState,
 } from '@/components/admin/ui';
 
 const PAGE_SIZE = 20;
 
 type StatusFilter = ContentStatus | 'ALL';
 
+/** `meta.statuses` : effectifs par statut, hors filtre de statut (recherche et catégorie comprises). */
+type DocumentsPage = Paginated<PublicDocument> & {
+  meta: { statuses: Partial<Record<ContentStatus, number>> };
+};
+
+/** Colonne triable → champ de tri de l'API (`sort` de `GET /admin/documents-publics`). */
+const SORT_FIELDS: Record<string, string> = {
+  title: 'titleFr',
+  category: 'category',
+  year: 'year',
+  updatedAt: 'updatedAt',
+};
+
+const DEFAULT_SORT: SortState = { id: 'updatedAt', direction: 'desc' };
+
 const COLUMNS: Column<PublicDocument>[] = [
   {
     id: 'title',
     header: 'Document',
+    sortable: true,
     className: 'min-w-56 max-w-md',
     cell: (doc) => (
       <span className="block">
@@ -49,12 +68,15 @@ const COLUMNS: Column<PublicDocument>[] = [
   {
     id: 'category',
     header: 'Catégorie',
+    sortable: true,
     hideBelow: 'md',
     cell: (doc) => <Badge>{CATEGORY_LABELS[doc.category]}</Badge>,
   },
   {
     id: 'year',
     header: 'Année',
+    sortable: true,
+    firstDirection: 'desc',
     hideBelow: 'lg',
     className: 'tabular-nums text-ink-muted',
     cell: (doc) => doc.year ?? '—',
@@ -62,6 +84,8 @@ const COLUMNS: Column<PublicDocument>[] = [
   {
     id: 'updatedAt',
     header: 'Modifié',
+    sortable: true,
+    firstDirection: 'desc',
     hideBelow: 'sm',
     className: 'whitespace-nowrap text-ink-muted',
     cell: (doc) => (
@@ -84,20 +108,24 @@ const COLUMNS: Column<PublicDocument>[] = [
 export default function PublicDocumentsPage() {
   const [status, setStatus] = useState<StatusFilter>('ALL');
   const [category, setCategory] = useState<DocumentCategory | ''>('');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
   const [page, setPage] = useState(1);
+  const q = useDebouncedValue(search.trim());
 
   const list = useQuery({
-    queryKey: ['documents', 'list', status, category, page],
+    queryKey: ['documents', 'list', status, category, q, sort, page],
     queryFn: () => {
       const params = new URLSearchParams({
         page: String(page),
         limit: String(PAGE_SIZE),
+        sort: SORT_FIELDS[sort.id],
+        order: sort.direction,
       });
       if (status !== 'ALL') params.set('status', status);
       if (category) params.set('category', category);
-      return backendJson<Paginated<PublicDocument>>(
-        `admin/documents-publics?${params}`,
-      );
+      if (q) params.set('q', q);
+      return backendJson<DocumentsPage>(`admin/documents-publics?${params}`);
     },
     placeholderData: keepPreviousData,
   });
@@ -106,10 +134,19 @@ export default function PublicDocumentsPage() {
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
   if (list.data && page > lastPage) setPage(lastPage);
 
-  const filtered = status !== 'ALL' || category !== '';
+  // Effectifs de la même requête que la liste : aucune requête de plus par onglet.
+  const counts = list.data?.meta.statuses;
+  const countOf = (value: ContentStatus) =>
+    counts ? (counts[value] ?? 0) : undefined;
+  const all = counts
+    ? (counts.DRAFT ?? 0) + (counts.PUBLISHED ?? 0) + (counts.ARCHIVED ?? 0)
+    : undefined;
+
+  const filtered = status !== 'ALL' || category !== '' || q !== '';
   const resetFilters = () => {
     setStatus('ALL');
     setCategory('');
+    setSearch('');
     setPage(1);
   };
 
@@ -127,19 +164,15 @@ export default function PublicDocumentsPage() {
       />
 
       <div className="flex flex-wrap items-center gap-3">
-        <SegmentedControl<StatusFilter>
-          label="Filtrer par statut"
-          value={status}
-          onChange={(next) => {
-            setStatus(next);
+        <SearchInput
+          label="Rechercher un document"
+          placeholder="Rechercher par titre, slug ou description…"
+          value={search}
+          onValueChange={(value) => {
+            setSearch(value);
             setPage(1);
           }}
-          options={[
-            { value: 'ALL', label: 'Tous' },
-            { value: 'DRAFT', label: 'Brouillons' },
-            { value: 'PUBLISHED', label: 'Publiés' },
-            { value: 'ARCHIVED', label: 'Archivés' },
-          ]}
+          className="w-full sm:w-80"
         />
         <Select
           aria-label="Filtrer par catégorie"
@@ -157,6 +190,28 @@ export default function PublicDocumentsPage() {
             </option>
           ))}
         </Select>
+        <SegmentedControl<StatusFilter>
+          label="Filtrer par statut"
+          value={status}
+          onChange={(next) => {
+            setStatus(next);
+            setPage(1);
+          }}
+          options={[
+            { value: 'ALL', label: 'Tous', count: all },
+            { value: 'DRAFT', label: 'Brouillons', count: countOf('DRAFT') },
+            {
+              value: 'PUBLISHED',
+              label: 'Publiés',
+              count: countOf('PUBLISHED'),
+            },
+            {
+              value: 'ARCHIVED',
+              label: 'Archivés',
+              count: countOf('ARCHIVED'),
+            },
+          ]}
+        />
       </div>
 
       <DataTable
@@ -165,11 +220,27 @@ export default function PublicDocumentsPage() {
         rows={list.data?.data}
         getRowId={(doc) => doc.id}
         rowHref={(doc) => `/admin/documents-publics/${doc.id}`}
+        sort={sort}
+        onSortChange={(next) => {
+          setSort(next);
+          setPage(1);
+        }}
         isLoading={list.isLoading}
         error={list.error}
         onRetry={() => list.refetch()}
         empty={
-          filtered ? (
+          q ? (
+            <EmptyState
+              icon={SearchX}
+              title="Aucun résultat"
+              description={`Aucun document ne correspond à « ${q} » avec ces filtres.`}
+              action={
+                <Button variant="secondary" size="sm" onClick={resetFilters}>
+                  Effacer la recherche et les filtres
+                </Button>
+              }
+            />
+          ) : filtered ? (
             <EmptyState
               icon={Library}
               title="Aucun document pour ces filtres"

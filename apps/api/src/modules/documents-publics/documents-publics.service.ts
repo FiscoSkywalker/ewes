@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ContentStatus, Prisma } from '@prisma/client';
+import { escapeLike } from '../../common/utils/like.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
 import { AuditService } from '../audit/audit.service.js';
@@ -128,26 +129,60 @@ export class DocumentsPublicsService {
     return document;
   }
 
-  listAdmin(query: ListAdminPublicDocumentsDto) {
-    return this.page(
-      {
-        deletedAt: null,
-        ...(query.status && { status: query.status }),
-        ...this.filters(query),
-      },
-      query,
-    );
+  /**
+   * Liste d'administration : filtres, recherche et tri au choix. `meta.statuses`
+   * compte les documents de chaque statut, sans tenir compte du filtre de
+   * statut lui-même (il alimente les effectifs des onglets), mais en tenant
+   * compte de la recherche et des autres filtres.
+   */
+  async listAdmin(query: ListAdminPublicDocumentsDto) {
+    const search = query.q ? escapeLike(query.q) : undefined;
+    const base: Prisma.PublicDocumentWhereInput = {
+      deletedAt: null,
+      ...this.filters(query),
+      ...(search && {
+        OR: (['titleFr', 'titleEn', 'slug', 'excerptFr', 'excerptEn'] as const).map(
+          (field) => ({
+            [field]: { contains: search, mode: 'insensitive' as const },
+          }),
+        ),
+      }),
+    };
+    // Année facultative : les documents sans année passent toujours en dernier.
+    const primary: Prisma.PublicDocumentOrderByWithRelationInput | undefined =
+      query.sort === 'year'
+        ? { year: { sort: query.order, nulls: 'last' } }
+        : query.sort
+          ? { [query.sort]: query.order }
+          : undefined;
+    const [{ data, meta }, groups] = await Promise.all([
+      this.page(
+        { ...base, ...(query.status && { status: query.status }) },
+        query,
+        // `id` départage les ex æquo : une page ne doit ni répéter ni sauter de ligne.
+        primary ? [primary, { updatedAt: 'desc' }, { id: 'asc' }] : ORDER,
+      ),
+      this.prisma.publicDocument.groupBy({
+        by: ['status'],
+        where: base,
+        _count: { _all: true },
+      }),
+    ]);
+    const statuses: Partial<Record<ContentStatus, number>> = {};
+    for (const group of groups) statuses[group.status] = group._count._all;
+    return { data, meta: { ...meta, statuses } };
   }
 
   private async page(
     where: Prisma.PublicDocumentWhereInput,
     query: ListPublicDocumentsDto,
+    orderBy: Prisma.PublicDocumentOrderByWithRelationInput[] = ORDER,
   ) {
     const [data, total] = await Promise.all([
       this.prisma.publicDocument.findMany({
         where,
         include: WITH_SERVICE,
-        orderBy: ORDER,
+        orderBy,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
