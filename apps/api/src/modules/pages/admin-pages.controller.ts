@@ -15,6 +15,8 @@ import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { PagesService } from './pages.service.js';
 import { CreatePageDto } from './dto/create-page.dto.js';
 import { UpdatePageDto } from './dto/update-page.dto.js';
@@ -52,14 +54,20 @@ export class AdminPagesController {
   @Post(':id/publish')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Publier explicitement une page' })
-  publish(@Param('id', ParseUUIDPipe) id: string) {
-    return this.pagesService.publish(id);
+  publish(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.pagesService.publish(user, id);
   }
 
   @Post(':id/unpublish')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Dépublier une page (retour en brouillon)' })
-  unpublish(@Param('id', ParseUUIDPipe) id: string) {
-    return this.pagesService.unpublish(id);
+  unpublish(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.pagesService.unpublish(user, id);
   }
 }

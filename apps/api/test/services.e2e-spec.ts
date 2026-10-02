@@ -5,6 +5,9 @@ import request from 'supertest';
 import { App } from 'supertest/types.js';
 import * as argon2 from 'argon2';
 import { Role } from '@prisma/client';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { AppModule } from './../src/app.module.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 import { GlobalHttpExceptionFilter } from './../src/common/filters/http-exception.filter.js';
@@ -16,6 +19,7 @@ import { GlobalHttpExceptionFilter } from './../src/common/filters/http-exceptio
 describe('Services (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
+  let mediaDir: string;
 
   const password = 'correct horse battery staple';
   const stamp = Date.now();
@@ -23,15 +27,25 @@ describe('Services (e2e)', () => {
   const gestionnaireEmail = `e2e-services-gest-${stamp}@ewes.example`;
   const userEmail = `e2e-services-user-${stamp}@ewes.example`;
 
+  // Un jeton par compte : la connexion a sa propre limite de fréquence stricte.
+  const tokens = new Map<string, string>();
   async function login(email: string): Promise<string> {
+    const known = tokens.get(email);
+    if (known) return known;
     const res = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email, password })
       .expect(200);
-    return res.body.accessToken as string;
+    const token = res.body.accessToken as string;
+    tokens.set(email, token);
+    return token;
   }
 
   beforeAll(async () => {
+    // Stockage isolé : aucune image de test dans le dossier de développement.
+    mediaDir = await mkdtemp(join(tmpdir(), 'ewes-services-e2e-'));
+    process.env.PUBLIC_MEDIA_PATH = mediaDir;
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -72,6 +86,9 @@ describe('Services (e2e)', () => {
 
   afterAll(async () => {
     await prisma.service.deleteMany({ where: { slug: { startsWith: slug } } });
+    await prisma.media.deleteMany({
+      where: { uploadedBy: { email: gestionnaireEmail } },
+    });
     await prisma.session.deleteMany({
       where: { user: { email: { in: [gestionnaireEmail, userEmail] } } },
     });
@@ -79,10 +96,13 @@ describe('Services (e2e)', () => {
       where: { email: { in: [gestionnaireEmail, userEmail] } },
     });
     await app.close();
+    await rm(mediaDir, { recursive: true, force: true });
   });
 
   it('rejects unauthenticated and under-privileged access to admin routes', async () => {
-    await request(app.getHttpServer()).get('/api/v1/admin/services').expect(401);
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/services')
+      .expect(401);
 
     const userToken = await login(userEmail);
     const res = await request(app.getHttpServer())
@@ -259,5 +279,255 @@ describe('Services (e2e)', () => {
       .send({ slug: `${lockedSlug}-3` });
     expect(locked.status).toBe(409);
     expect(locked.body.code).toBe('SERVICE_SLUG_LOCKED');
+  });
+
+  it('appends new services and offerings last, and applies a full offering order atomically', async () => {
+    const auth = { Authorization: `Bearer ${await login(gestionnaireEmail)}` };
+    const orderSlug = `${slug}-order`;
+
+    const [a, b] = [
+      await request(app.getHttpServer())
+        .post('/api/v1/admin/services')
+        .set(auth)
+        .send({ slug: `${orderSlug}-a`, nameFr: 'A', descriptionFr: 'D' })
+        .expect(201),
+      await request(app.getHttpServer())
+        .post('/api/v1/admin/services')
+        .set(auth)
+        .send({ slug: `${orderSlug}-b`, nameFr: 'B', descriptionFr: 'D' })
+        .expect(201),
+    ];
+    // Sans position donnée, un service se range après tous les autres.
+    expect(b.body.sortOrder).toBe(a.body.sortOrder + 1);
+
+    // Même règle pour les prestations d'un service.
+    const id = a.body.id as string;
+    const offering = async (titleFr: string, icon?: string) =>
+      (
+        await request(app.getHttpServer())
+          .post(`/api/v1/admin/services/${id}/offerings`)
+          .set(auth)
+          .send({ titleFr, descriptionFr: 'd', ...(icon && { icon }) })
+          .expect(201)
+      ).body as { id: string; sortOrder: number; icon: string | null };
+    const first = await offering('Une', 'droplets');
+    const second = await offering('Deux');
+    const third = await offering('Trois', 'zap');
+    expect([first.sortOrder, second.sortOrder, third.sortOrder]).toEqual([
+      0, 1, 2,
+    ]);
+    expect(second.icon).toBeNull();
+
+    const reordered = await request(app.getHttpServer())
+      .put(`/api/v1/admin/services/${id}/offerings/order`)
+      .set(auth)
+      .send({ ids: [third.id, first.id, second.id] })
+      .expect(200);
+    expect(
+      reordered.body.offerings.map((o: { titleFr: string }) => o.titleFr),
+    ).toEqual(['Trois', 'Une', 'Deux']);
+    const incomplete = await request(app.getHttpServer())
+      .put(`/api/v1/admin/services/${id}/offerings/order`)
+      .set(auth)
+      .send({ ids: [third.id, first.id] });
+    expect(incomplete.status).toBe(400);
+    expect(incomplete.body.code).toBe('SERVICE_OFFERING_ORDER_MISMATCH');
+    // Les prestations d'un autre service ne se glissent pas dans cet ordre.
+    const foreign = await request(app.getHttpServer())
+      .put(`/api/v1/admin/services/${id}/offerings/order`)
+      .set(auth)
+      .send({ ids: [third.id, first.id, b.body.id] });
+    expect(foreign.status).toBe(400);
+  });
+
+  it('exposes the offering icon publicly and refuses an invalid one', async () => {
+    const auth = { Authorization: `Bearer ${await login(gestionnaireEmail)}` };
+    const iconSlug = `${slug}-icon`;
+    const created = await request(app.getHttpServer())
+      .post('/api/v1/admin/services')
+      .set(auth)
+      .send({ slug: iconSlug, nameFr: 'I', descriptionFr: 'D' })
+      .expect(201);
+    const id = created.body.id as string;
+
+    const bad = await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/offerings`)
+      .set(auth)
+      .send({ titleFr: 'T', descriptionFr: 'd', icon: 'Droplets<script>' });
+    expect(bad.status).toBe(400);
+
+    const ok = await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/offerings`)
+      .set(auth)
+      .send({ titleFr: 'T', descriptionFr: 'd', icon: 'flask-conical' })
+      .expect(201);
+    // Changer de pictogramme, puis le retirer (`null`).
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/services/${id}/offerings/${ok.body.id}`)
+      .set(auth)
+      .send({ icon: 'leaf' })
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/publish`)
+      .set(auth)
+      .expect(200);
+    const visible = await request(app.getHttpServer())
+      .get(`/api/v1/services/${iconSlug}`)
+      .expect(200);
+    expect(visible.body.offerings[0].icon).toBe('leaf');
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/services/${id}/offerings/${ok.body.id}`)
+      .set(auth)
+      .send({ icon: null })
+      .expect(200);
+    const cleared = await request(app.getHttpServer())
+      .get(`/api/v1/services/${iconSlug}`)
+      .expect(200);
+    expect(cleared.body.offerings[0].icon).toBeNull();
+  });
+
+  describe('visual', () => {
+    /** PNG 1x1 valide. */
+    const PNG = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      'base64',
+    );
+
+    it('only accepts an image of the media library, shows it publicly and protects it from deletion while used', async () => {
+      const auth = {
+        Authorization: `Bearer ${await login(gestionnaireEmail)}`,
+      };
+      const visualSlug = `${slug}-visual`;
+      const created = await request(app.getHttpServer())
+        .post('/api/v1/admin/services')
+        .set(auth)
+        .send({ slug: visualSlug, nameFr: 'V', descriptionFr: 'D' })
+        .expect(201);
+      const id = created.body.id as string;
+      const patch = (body: object) =>
+        request(app.getHttpServer())
+          .patch(`/api/v1/admin/services/${id}`)
+          .set(auth)
+          .send(body);
+
+      // Jamais une adresse quelconque : le site l'afficherait telle quelle.
+      expect(
+        (await patch({ imageUrl: 'https://exemple.test/x.png' })).status,
+      ).toBe(400);
+      const unknown = await patch({
+        imageUrl: '/uploads/00000000-0000-4000-8000-000000000000.png',
+      });
+      expect(unknown.status).toBe(404);
+      expect(unknown.body.code).toBe('MEDIA_NOT_FOUND');
+
+      const media = await request(app.getHttpServer())
+        .post('/api/v1/admin/media')
+        .set(auth)
+        .attach('file', PNG, 'pole.png')
+        .expect(201);
+      const url = media.body.url as string;
+
+      const saved = await patch({
+        imageUrl: url,
+        imageAltFr: '  Prélèvement d’eau  ',
+      }).expect(200);
+      expect(saved.body.imageUrl).toBe(url);
+
+      await request(app.getHttpServer())
+        .post(`/api/v1/admin/services/${id}/publish`)
+        .set(auth)
+        .expect(200);
+      const visible = await request(app.getHttpServer())
+        .get(`/api/v1/services/${visualSlug}`)
+        .expect(200);
+      expect(visible.body.imageUrl).toBe(url);
+      expect(visible.body.imageAltEn).toBeNull();
+
+      // La médiathèque sait qu'un pôle l'utilise et refuse de la supprimer.
+      const library = await request(app.getHttpServer())
+        .get('/api/v1/admin/media')
+        .set(auth)
+        .expect(200);
+      const entry = library.body.data.find(
+        (m: { id: string }) => m.id === media.body.id,
+      );
+      expect(entry.usages).toEqual([{ type: 'SERVICE', id, title: 'V' }]);
+      const blocked = await request(app.getHttpServer())
+        .delete(`/api/v1/admin/media/${media.body.id}`)
+        .set(auth);
+      expect(blocked.status).toBe(409);
+      expect(blocked.body.code).toBe('MEDIA_IN_USE');
+
+      // Retirer le visuel (`null`) libère l'image : le site retrouve son visuel d'origine.
+      await patch({ imageUrl: null }).expect(200);
+      const cleared = await request(app.getHttpServer())
+        .get(`/api/v1/services/${visualSlug}`)
+        .expect(200);
+      expect(cleared.body.imageUrl).toBeNull();
+      await request(app.getHttpServer())
+        .delete(`/api/v1/admin/media/${media.body.id}`)
+        .set(auth)
+        .expect(204);
+    });
+  });
+
+  it('traces publication, unpublication and the removal of an offering, with the actor', async () => {
+    const auth = { Authorization: `Bearer ${await login(gestionnaireEmail)}` };
+    const auditSlug = `${slug}-audit`;
+    const created = await request(app.getHttpServer())
+      .post('/api/v1/admin/services')
+      .set(auth)
+      .send({ slug: auditSlug, nameFr: 'Audit', descriptionFr: 'D' })
+      .expect(201);
+    const id = created.body.id as string;
+    const offering = await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/offerings`)
+      .set(auth)
+      .send({ titleFr: 'À retirer', descriptionFr: 'd' })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/publish`)
+      .set(auth)
+      .expect(200);
+    // Répéter une action sans effet n'écrit pas de ligne en plus.
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/publish`)
+      .set(auth)
+      .expect(200);
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/unpublish`)
+      .set(auth)
+      .expect(200);
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/services/${id}/unpublish`)
+      .set(auth)
+      .expect(200);
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/services/${id}/offerings/${offering.body.id}`)
+      .set(auth)
+      .expect(204);
+
+    const trail = await prisma.auditLog.findMany({
+      where: { entityId: { in: [id, offering.body.id as string] } },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(trail.map((e) => e.action)).toEqual([
+      'SERVICE_PUBLISHED',
+      'SERVICE_UNPUBLISHED',
+      'SERVICE_OFFERING_REMOVED',
+    ]);
+    expect(trail.every((e) => e.actorId !== null)).toBe(true);
+    expect(trail[0]).toMatchObject({
+      entityType: 'Service',
+      beforeData: { status: 'DRAFT', slug: auditSlug },
+      afterData: { status: 'PUBLISHED' },
+    });
+    expect(trail[2]).toMatchObject({
+      entityType: 'ServiceOffering',
+      beforeData: { service: auditSlug, titleFr: 'À retirer' },
+    });
   });
 });

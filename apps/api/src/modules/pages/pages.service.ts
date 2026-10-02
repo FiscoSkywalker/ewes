@@ -8,6 +8,8 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import type { CreatePageDto } from './dto/create-page.dto.js';
 import type { UpdatePageDto } from './dto/update-page.dto.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
+import { AuditService } from '../audit/audit.service.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 
 const PAGE_NOT_FOUND = {
   code: 'PAGE_NOT_FOUND',
@@ -20,6 +22,7 @@ export class PagesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly revalidator: FrontendRevalidator,
+    private readonly audit: AuditService,
   ) {}
 
   /** Lecture publique : seules les pages PUBLISHED existent pour le visiteur. */
@@ -77,7 +80,7 @@ export class PagesService {
     return updated;
   }
 
-  async publish(id: string) {
+  async publish(actor: AuthenticatedUser, id: string) {
     const current = await this.findById(id);
     if (current.status === ContentStatus.PUBLISHED) return current;
     const published = await this.prisma.page.update({
@@ -87,19 +90,39 @@ export class PagesService {
         publishedAt: current.publishedAt ?? new Date(),
       },
     });
+    await this.record(actor, 'PAGE_PUBLISHED', published, current.status);
     await this.revalidator.revalidate(`page:${published.slug}`);
     return published;
   }
 
   /** Retire immédiatement la page du site public (retour en brouillon). */
-  async unpublish(id: string) {
-    await this.findById(id);
+  async unpublish(actor: AuthenticatedUser, id: string) {
+    const current = await this.findById(id);
+    if (current.status === ContentStatus.DRAFT) return current;
     const unpublished = await this.prisma.page.update({
       where: { id },
       data: { status: ContentStatus.DRAFT },
     });
+    await this.record(actor, 'PAGE_UNPUBLISHED', unpublished, current.status);
     await this.revalidator.revalidate(`page:${unpublished.slug}`);
     return unpublished;
+  }
+
+  /** Publication et dépublication sont toujours tracées (blueprint/09 §7). */
+  private record(
+    actor: AuthenticatedUser,
+    action: string,
+    page: { id: string; slug: string; status: ContentStatus },
+    before: ContentStatus,
+  ) {
+    return this.audit.record({
+      actorId: actor.id,
+      action,
+      entityType: 'Page',
+      entityId: page.id,
+      before: { status: before, slug: page.slug },
+      after: { status: page.status },
+    });
   }
 
   private translateSlugConflict(error: unknown): unknown {

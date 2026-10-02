@@ -32,7 +32,9 @@ export class CreateServiceDto {
   @MaxLength(200)
   nameEn?: string;
 
-  @ApiPropertyOptional({ description: 'Accroche courte sous le nom du service.' })
+  @ApiPropertyOptional({
+    description: 'Accroche courte sous le nom du service.',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(200)
@@ -54,7 +56,33 @@ export class CreateServiceDto {
   @IsString()
   descriptionEn?: string;
 
-  @ApiPropertyOptional({ description: 'Position dans la liste (croissant).' })
+  @ApiPropertyOptional({
+    description:
+      'Visuel du pôle : adresse d’une image de la médiathèque (`/uploads/<nom>`). `null` : retire le visuel.',
+    example: '/uploads/3f2b8c1e-5d4a-4e7b-9c10-2a6f8d1e0b44.jpg',
+  })
+  @IsOptional()
+  @Matches(/^\/uploads\/[0-9a-f-]{36}\.(jpg|png|webp)$/, {
+    message: 'L’adresse doit désigner une image de la médiathèque.',
+  })
+  imageUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Texte alternatif du visuel, FR.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  imageAltFr?: string;
+
+  @ApiPropertyOptional({ description: 'Texte alternatif du visuel, EN.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  imageAltEn?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Position dans la liste (croissant) ; absente, le service est ajouté en dernier.',
+  })
   @IsOptional()
   @IsInt()
   @Min(0)

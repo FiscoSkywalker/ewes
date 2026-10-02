@@ -61,9 +61,9 @@ const URL_PREFIX = '/uploads/';
 const storedNameOf = (url: string) =>
   url.startsWith(URL_PREFIX) ? url.slice(URL_PREFIX.length) : url;
 
-/** Contenu qui affiche une image : un article ou une réalisation non supprimé. */
+/** Contenu qui affiche une image : un article, une réalisation non supprimé ou un pôle. */
 export interface MediaUsage {
-  type: 'ARTICLE' | 'REALISATION';
+  type: 'ARTICLE' | 'REALISATION' | 'SERVICE';
   id: string;
   title: string;
 }
@@ -213,7 +213,7 @@ export class MediaService {
     storedNames?: string[],
   ): Promise<Map<string, MediaUsage[]>> {
     const urls = storedNames && { in: storedNames.map(mediaUrl) };
-    const [articles, realisations] = await Promise.all([
+    const [articles, realisations, services] = await Promise.all([
       this.prisma.articleImage.findMany({
         where: { ...(urls && { url: urls }), article: { deletedAt: null } },
         select: { url: true, article: { select: { id: true, titleFr: true } } },
@@ -227,6 +227,10 @@ export class MediaService {
           url: true,
           realisation: { select: { id: true, titleFr: true } },
         },
+      }),
+      this.prisma.service.findMany({
+        where: urls ? { imageUrl: urls } : { imageUrl: { not: null } },
+        select: { id: true, nameFr: true, imageUrl: true },
       }),
     ]);
 
@@ -253,6 +257,10 @@ export class MediaService {
         id: row.realisation.id,
         title: row.realisation.titleFr,
       });
+    }
+    for (const row of services) {
+      if (!row.imageUrl) continue;
+      add(row.imageUrl, { type: 'SERVICE', id: row.id, title: row.nameFr });
     }
     return usage;
   }

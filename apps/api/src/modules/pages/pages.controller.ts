@@ -17,6 +17,8 @@ export class PagesController {
       titleEn: page.titleEn,
       contentFr: page.contentFr,
       contentEn: page.contentEn,
+      metaDescriptionFr: page.metaDescriptionFr,
+      metaDescriptionEn: page.metaDescriptionEn,
       publishedAt: page.publishedAt,
       updatedAt: page.updatedAt,
     };

@@ -118,17 +118,20 @@ model PasswordResetToken {
 
 // --- Contenu institutionnel ---
 
+/// En-tête d'une page du site public : titre (h1), introduction et description pour les moteurs de recherche.
 model Page {
-  id          String        @id @default(uuid())
-  slug        String        @unique
-  titleFr     String
-  titleEn     String?
-  contentFr   String
-  contentEn   String?
-  status      ContentStatus @default(DRAFT)
-  publishedAt DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id                String        @id @default(uuid())
+  slug              String        @unique
+  titleFr           String
+  titleEn           String?
+  contentFr         String
+  contentEn         String?
+  metaDescriptionFr String?
+  metaDescriptionEn String?
+  status            ContentStatus @default(DRAFT)
+  publishedAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   @@map("pages")
 }
@@ -142,6 +145,10 @@ model Service {
   taglineEn     String?
   descriptionFr String
   descriptionEn String?
+  /// Visuel du pôle : adresse d'une image de la médiathèque (`/uploads/<nom>`) ; absent = visuel d'origine du site.
+  imageUrl      String?
+  imageAltFr    String?
+  imageAltEn    String?
   sortOrder     Int           @default(0)
   status        ContentStatus @default(DRAFT)
   publishedAt   DateTime?
@@ -164,6 +171,8 @@ model ServiceOffering {
   titleEn       String?
   descriptionFr String
   descriptionEn String?
+  /// Pictogramme choisi dans la liste du site (ex. `droplets`) ; absent = pictogramme par défaut.
+  icon          String?
   sortOrder     Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

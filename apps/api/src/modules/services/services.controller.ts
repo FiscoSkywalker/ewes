@@ -13,12 +13,16 @@ function toPublic(service: Service & { offerings: ServiceOffering[] }) {
     taglineEn: service.taglineEn,
     descriptionFr: service.descriptionFr,
     descriptionEn: service.descriptionEn,
+    imageUrl: service.imageUrl,
+    imageAltFr: service.imageAltFr,
+    imageAltEn: service.imageAltEn,
     publishedAt: service.publishedAt,
     offerings: service.offerings.map((offering) => ({
       titleFr: offering.titleFr,
       titleEn: offering.titleEn,
       descriptionFr: offering.descriptionFr,
       descriptionEn: offering.descriptionEn,
+      icon: offering.icon,
     })),
   };
 }
