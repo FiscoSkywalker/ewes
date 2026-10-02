@@ -12,6 +12,7 @@ import {
 import { homePathFor } from '@/lib/admin/roles';
 import { SessionContext, useMeQuery, type Session } from './session';
 import { AccessDenied } from './states';
+import { ConfirmProvider, NetworkBanner, ToastProvider } from './ui';
 import { usePortalSignals, useSeenAt } from './use-portal-signals';
 import { CommandPalette } from './shell/command-palette';
 import { NotificationsMenu } from './shell/notifications-menu';
@@ -56,9 +57,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const allowed = canAccess(pathname, session.role);
   return (
     <SessionContext.Provider value={session}>
-      <PortalFrame session={session} pathname={pathname} allowed={allowed}>
-        {allowed ? children : <AccessDenied homeHref={home} />}
-      </PortalFrame>
+      <ToastProvider>
+        <ConfirmProvider>
+          <PortalFrame session={session} pathname={pathname} allowed={allowed}>
+            {allowed ? children : <AccessDenied homeHref={home} />}
+          </PortalFrame>
+        </ConfirmProvider>
+      </ToastProvider>
     </SessionContext.Provider>
   );
 }
@@ -229,6 +234,8 @@ function PortalFrame({
               </>
             }
           />
+
+          <NetworkBanner />
 
           <main
             ref={mainRef}

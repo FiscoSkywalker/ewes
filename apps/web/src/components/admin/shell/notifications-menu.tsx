@@ -13,6 +13,7 @@ import {
 import { dayLabel, relativeTime } from '@/lib/admin/format';
 import type { PortalSignal, SignalKind } from '../use-portal-signals';
 import { usePopover } from '../use-popover';
+import { Button } from '../ui';
 
 const KIND_STYLE: Record<
   SignalKind,
@@ -183,14 +184,15 @@ export function NotificationsMenu({
                 <p className="mt-1 text-xs text-ink-muted">
                   Le serveur n’a pas répondu. Vos données ne sont pas affectées.
                 </p>
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={RefreshCw}
                   onClick={onRetry}
-                  className="mt-4 inline-flex h-8 items-center gap-1.5 rounded-lg border border-line-strong px-3 text-xs font-medium text-ink hover:bg-ink/5"
+                  className="mt-4"
                 >
-                  <RefreshCw size={14} aria-hidden="true" />
                   Réessayer
-                </button>
+                </Button>
               </div>
             ) : visible.length === 0 ? (
               <EmptyNotifications

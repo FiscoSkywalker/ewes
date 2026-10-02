@@ -12,6 +12,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { ROLE_LABELS } from '@/lib/admin/roles';
+import { StatusChip } from '../ui';
 import type { ThemePreference } from '@/lib/admin/theme';
 import { initialsOf, type Session } from '../session';
 import { useTheme } from '../theme-provider';
@@ -26,12 +27,6 @@ const THEME_OPTIONS: {
   { value: 'dark', label: 'Sombre', icon: Moon },
   { value: 'system', label: 'Système', icon: Monitor },
 ];
-
-const ROLE_CHIP: Record<Session['role'], string> = {
-  ADMINISTRATEUR: 'bg-ing-soft text-ing',
-  GESTIONNAIRE: 'bg-env-soft text-env',
-  UTILISATEUR: 'bg-brand-soft text-brand',
-};
 
 export function Avatar({
   session,
@@ -48,16 +43,6 @@ export function Avatar({
       }`}
     >
       {initialsOf(session.fullName)}
-    </span>
-  );
-}
-
-export function RoleChip({ role }: { role: Session['role'] }) {
-  return (
-    <span
-      className={`inline-flex h-5 items-center rounded-full px-2 text-[11px] font-medium ${ROLE_CHIP[role]}`}
-    >
-      {ROLE_LABELS[role]}
     </span>
   );
 }
@@ -116,7 +101,7 @@ export function UserMenu({
                 {session.email}
               </p>
               <div className="mt-1.5">
-                <RoleChip role={session.role} />
+                <StatusChip kind="role" value={session.role} />
               </div>
             </div>
           </div>
