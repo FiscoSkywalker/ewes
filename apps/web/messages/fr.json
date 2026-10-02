@@ -808,6 +808,32 @@
       "AGREMENT": "L’accompagnement aux agréments et certificats couvre la constitution et le suivi des dossiers réglementaires nécessaires à l’exercice d’une activité, jusqu’à l’obtention du document auprès de l’autorité compétente.",
       "FORMATION": "Les formations EWES renforcent les compétences des équipes techniques et des institutions en gestion environnementale et sociale, à travers des sessions alliant cadre réglementaire, méthodes et cas pratiques.",
       "ETUDE": "Les études et travaux de recherche produisent des données et des analyses utiles à la décision : enquêtes de terrain, diagnostics sectoriels et publications sur les enjeux environnementaux et sociaux."
+    },
+    "detail": {
+      "breadcrumb": "Fil d’Ariane",
+      "home": "Accueil",
+      "sections": {
+        "description": "Présentation de la mission",
+        "objectives": "Objectifs",
+        "results": "Résultats",
+        "nature": "Nature de la mission",
+        "gallery": "Galerie",
+        "documents": "Documents à télécharger"
+      },
+      "facts": {
+        "partners": "Partenaires & bailleurs"
+      },
+      "noDetail": "Le détail de cette mission n’est pas encore publié. L’équipe EWES se tient à votre disposition pour vous présenter sa démarche et ses résultats.",
+      "contact": "Contacter l’équipe",
+      "download": "Télécharger",
+      "downloadLabel": "Télécharger {title} ({format}, {size})",
+      "pages": "{count, plural, one {# page} other {# pages}}",
+      "galleryImage": "Image {index} sur {count}",
+      "related": "Autres missions de ce type",
+      "allProjects": "Toutes les réalisations",
+      "shareNative": "Partager cette réalisation",
+      "backToList": "Retour aux réalisations",
+      "openSheet": "Voir la fiche complète"
     }
   },
   "NewsPage": {

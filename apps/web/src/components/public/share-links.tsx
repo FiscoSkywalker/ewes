@@ -9,19 +9,31 @@ import { Check, Link2, Mail, Share2 } from 'lucide-react';
  * sinon liens de partage classiques (simples URL, aucun script tiers chargé)
  * et copie du lien.
  */
-export function ShareLinks({ title }: { title: string }) {
+export function ShareLinks({
+  title,
+  nativeLabel,
+}: {
+  title: string;
+  /** Libellé du bouton de partage natif (par défaut : « Partager cet article »). */
+  nativeLabel?: string;
+}) {
   const t = useTranslations('NewsPage.article');
   const [copied, setCopied] = useState(false);
 
   const url = () => window.location.href.split('#')[0];
   const open = (build: (url: string, title: string) => string) => () =>
-    window.open(build(encodeURIComponent(url()), encodeURIComponent(title)), '_blank', 'noopener,noreferrer');
+    window.open(
+      build(encodeURIComponent(url()), encodeURIComponent(title)),
+      '_blank',
+      'noopener,noreferrer',
+    );
 
   const targets = [
     {
       label: 'LinkedIn',
       short: 'in',
-      build: (u: string) => `https://www.linkedin.com/sharing/share-offsite/?url=${u}`,
+      build: (u: string) =>
+        `https://www.linkedin.com/sharing/share-offsite/?url=${u}`,
     },
     {
       label: 'Facebook',
@@ -36,7 +48,8 @@ export function ShareLinks({ title }: { title: string }) {
     {
       label: 'X',
       short: 'x',
-      build: (u: string, ti: string) => `https://x.com/intent/post?url=${u}&text=${ti}`,
+      build: (u: string, ti: string) =>
+        `https://x.com/intent/post?url=${u}&text=${ti}`,
     },
   ];
 
@@ -53,7 +66,7 @@ export function ShareLinks({ title }: { title: string }) {
           <button
             type="button"
             className={button}
-            aria-label={t('shareNative')}
+            aria-label={nativeLabel ?? t('shareNative')}
             onClick={async () => {
               if (navigator.share) {
                 try {
@@ -112,7 +125,10 @@ export function ShareLinks({ title }: { title: string }) {
           </button>
         </li>
       </ul>
-      <p className="mt-2 h-4 font-mono text-[10px] text-malachite" aria-live="polite">
+      <p
+        className="mt-2 h-4 font-mono text-[10px] text-malachite"
+        aria-live="polite"
+      >
         {copied ? t('copied') : ''}
       </p>
     </div>

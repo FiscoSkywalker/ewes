@@ -808,6 +808,32 @@
       "AGREMENT": "Support with approvals and certificates covers preparing and following up the regulatory files required to carry out an activity, until the document is issued by the competent authority.",
       "FORMATION": "EWES training builds the skills of technical teams and institutions in environmental and social management, through sessions combining the regulatory framework, methods and practical cases.",
       "ETUDE": "Studies and research produce data and analysis to support decision-making: field surveys, sector assessments and publications on environmental and social issues."
+    },
+    "detail": {
+      "breadcrumb": "Breadcrumb",
+      "home": "Home",
+      "sections": {
+        "description": "About the assignment",
+        "objectives": "Objectives",
+        "results": "Results",
+        "nature": "Type of assignment",
+        "gallery": "Gallery",
+        "documents": "Documents to download"
+      },
+      "facts": {
+        "partners": "Partners & funders"
+      },
+      "noDetail": "The details of this assignment are not published yet. The EWES team will be happy to walk you through its approach and results.",
+      "contact": "Contact the team",
+      "download": "Download",
+      "downloadLabel": "Download {title} ({format}, {size})",
+      "pages": "{count, plural, one {# page} other {# pages}}",
+      "galleryImage": "Image {index} of {count}",
+      "related": "More assignments of this type",
+      "allProjects": "All projects",
+      "shareNative": "Share this project",
+      "backToList": "Back to projects",
+      "openSheet": "View the full page"
     }
   },
   "NewsPage": {
