@@ -8,13 +8,15 @@ import {
   Circle,
   EyeOff,
   Send,
+  ExternalLink,
   Trash2,
 } from 'lucide-react';
 import { backendJson } from '@/lib/api/backend';
 import { invalidatePortalData } from '@/lib/admin/invalidate';
 import { cx } from '@/lib/admin/cx';
 import type { ContentStatus } from '@/lib/admin/public-documents';
-import { Button, Card, StatusChip, useConfirm, useToast } from '../ui';
+import { ButtonLink, Button, Card, useConfirm, useToast } from '../ui';
+import { PublicationBadge, isScheduled } from './publication-badge';
 
 const dateTime = new Intl.DateTimeFormat('fr', {
   dateStyle: 'long',
@@ -26,6 +28,8 @@ export interface ChecklistItem {
   done: boolean;
   /** Précision affichée sous un élément manquant. */
   hint?: string;
+  /** Recommandé mais non bloquant : la publication reste possible sans lui. */
+  optional?: boolean;
 }
 
 export interface PublicationPanelProps<T extends { id: string }> {
@@ -45,6 +49,10 @@ export interface PublicationPanelProps<T extends { id: string }> {
   publishBody?: () => unknown;
   /** Reçoit la fiche renvoyée par le serveur après publication. */
   onPublished: (saved: T) => Promise<unknown> | unknown;
+  /** Libellé du bouton de publication (ex. « Programmer la parution »). */
+  publishLabel?: string;
+  /** Page publique du contenu : proposée tant qu'il est en ligne. */
+  publicHref?: string;
   /** Adresse où revenir une fois la fiche supprimée. */
   afterDeleteHref: string;
   /** Texte de la confirmation de dépublication (ce que le site cesse d'afficher). */
@@ -67,6 +75,8 @@ export function PublicationPanel<T extends { id: string }>({
   checklist,
   children,
   publishBody,
+  publishLabel,
+  publicHref,
   onPublished,
   afterDeleteHref,
   unpublishImpact,
@@ -76,7 +86,10 @@ export function PublicationPanel<T extends { id: string }>({
   const toast = useToast();
   const confirm = useConfirm();
 
-  const demonstrative = noun.feminine ? 'cette' : 'ce';
+  // Devant une voyelle : « cet article », « l’article ».
+  const vowel = /^[aeiouyàâéèêëîïôûh]/i.test(noun.label);
+  const demonstrative = noun.feminine ? 'cette' : vowel ? 'cet' : 'ce';
+  const the = vowel ? 'l’' : noun.feminine ? 'la ' : 'le ';
   const pronoun = noun.feminine ? 'Elle' : 'Il';
   const agree = (word: string) => (noun.feminine ? `${word}e` : word);
   const capital = noun.label.charAt(0).toUpperCase() + noun.label.slice(1);
@@ -93,6 +106,14 @@ export function PublicationPanel<T extends { id: string }>({
     mutationFn: () => post('publish', publishBody?.()),
     onSuccess: async (saved) => {
       await onPublished(saved);
+      // Parution programmée : le contenu n'est pas encore en ligne, le message ne doit pas le prétendre.
+      const at = (saved as { publishedAt?: string | null }).publishedAt ?? null;
+      if (isScheduled('PUBLISHED', at)) {
+        toast.success('Parution programmée', {
+          description: `${pronoun} sera visible à partir du ${dateTime.format(new Date(at as string))}.`,
+        });
+        return;
+      }
       toast.success(`${capital} ${agree('publié')}`, {
         description: `${pronoun} est visible sur le site public.`,
       });
@@ -116,7 +137,7 @@ export function PublicationPanel<T extends { id: string }>({
       title: `Supprimer ${demonstrative} ${noun.label} ?`,
       description: `${pronoun} disparaît du site et du portail. Cette action est tracée dans le journal d’audit.`,
       tone: 'danger',
-      confirmLabel: `Supprimer ${noun.feminine ? 'la' : 'le'} ${noun.label}`,
+      confirmLabel: `Supprimer ${the}${noun.label}`,
       confirmationText: slug,
       onConfirm: () => backendJson<void>(endpoint, { method: 'DELETE' }),
     });
@@ -127,17 +148,23 @@ export function PublicationPanel<T extends { id: string }>({
   }
 
   const published = status === 'PUBLISHED';
-  const missing = checklist?.filter((item) => !item.done) ?? [];
+  const scheduled = isScheduled(status, publishedAt);
+  const missing =
+    checklist?.filter((item) => !item.done && !item.optional) ?? [];
   const blocked = !published && missing.length > 0;
 
   return (
     <Card title="Publication">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <StatusChip kind="content" value={status} feminine={noun.feminine} />
+          <PublicationBadge
+            status={status}
+            publishedAt={publishedAt}
+            feminine={noun.feminine}
+          />
           <p className="mt-2 text-xs text-ink-subtle">
             {publishedAt
-              ? `Première publication le ${dateTime.format(new Date(publishedAt))}`
+              ? `${scheduled ? 'Parution programmée le' : 'Première publication le'} ${dateTime.format(new Date(publishedAt))}`
               : `Jamais ${agree('publié')}`}
           </p>
           <p className="text-xs text-ink-subtle">
@@ -197,8 +224,20 @@ export function PublicationPanel<T extends { id: string }>({
             disabled={blocked}
             onClick={() => publish.mutate()}
           >
-            {status === 'ARCHIVED' ? 'Republier' : 'Publier sur le site'}
+            {publishLabel ??
+              (status === 'ARCHIVED' ? 'Republier' : 'Publier sur le site')}
           </Button>
+        )}
+        {published && publicHref && !scheduled && (
+          <ButtonLink
+            href={publicHref}
+            target="_blank"
+            rel="noopener"
+            variant="secondary"
+            icon={ExternalLink}
+          >
+            Voir sur le site
+          </ButtonLink>
         )}
         {published && (
           <Button

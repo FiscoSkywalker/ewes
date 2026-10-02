@@ -7,6 +7,9 @@ import {
 import { ArticleType, ContentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
+import { escapeLike } from '../../common/utils/like.js';
+import { AuditService } from '../audit/audit.service.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { MediaService, mediaUrl } from '../media/media.service.js';
 import type { SetCoverDto } from './dto/set-cover.dto.js';
 import type { CreateArticleDto } from './dto/create-article.dto.js';
@@ -48,6 +51,7 @@ export class ActualitesService {
     private readonly prisma: PrismaService,
     private readonly revalidator: FrontendRevalidator,
     private readonly media: MediaService,
+    private readonly audit: AuditService,
   ) {}
 
   /** Lecture publique : PUBLISHED, non supprimé, date de publication atteinte. */
@@ -95,23 +99,60 @@ export class ActualitesService {
     return article;
   }
 
+  /**
+   * Liste d'administration : filtres, recherche et tri au choix. `meta.statuses`
+   * compte les articles de chaque statut, sans tenir compte du filtre de
+   * statut lui-même (il alimente les effectifs des onglets) mais en tenant
+   * compte de la recherche et de la rubrique.
+   */
   async listAdmin(query: ListAdminArticlesDto) {
-    return this.page(
-      {
-        deletedAt: null,
-        ...(query.status && { status: query.status }),
-        ...(query.type && { type: query.type }),
-      },
-      query,
-    );
+    const search = query.q ? escapeLike(query.q) : undefined;
+    const base: Prisma.ArticleWhereInput = {
+      deletedAt: null,
+      ...(query.type && { type: query.type }),
+      ...(search && {
+        OR: (
+          ['titleFr', 'titleEn', 'slug', 'excerptFr', 'excerptEn', 'contextFr', 'contextEn'] as const
+        ).map((field) => ({
+          [field]: { contains: search, mode: 'insensitive' as const },
+        })),
+      }),
+    };
+    // Une parution absente (brouillon) passe toujours en dernier.
+    const primary: Prisma.ArticleOrderByWithRelationInput | undefined =
+      query.sort === 'publishedAt'
+        ? { publishedAt: { sort: query.order, nulls: 'last' } }
+        : query.sort
+          ? { [query.sort]: query.order }
+          : undefined;
+    const [{ data, meta }, groups] = await Promise.all([
+      this.page(
+        { ...base, ...(query.status && { status: query.status }) },
+        query,
+        // `id` départage les ex æquo : une page ne doit ni répéter ni sauter de ligne.
+        primary ? [primary, { updatedAt: 'desc' }, { id: 'asc' }] : ORDER,
+      ),
+      this.prisma.article.groupBy({
+        by: ['status'],
+        where: base,
+        _count: { _all: true },
+      }),
+    ]);
+    const statuses: Partial<Record<ContentStatus, number>> = {};
+    for (const group of groups) statuses[group.status] = group._count._all;
+    return { data, meta: { ...meta, statuses } };
   }
 
-  private async page(where: Prisma.ArticleWhereInput, query: ListArticlesDto) {
+  private async page(
+    where: Prisma.ArticleWhereInput,
+    query: ListArticlesDto,
+    orderBy: Prisma.ArticleOrderByWithRelationInput[] = ORDER,
+  ) {
     const [data, total] = await Promise.all([
       this.prisma.article.findMany({
         where,
         include: WITH_COVER,
-        orderBy: ORDER,
+        orderBy,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
@@ -188,7 +229,7 @@ export class ActualitesService {
    * Publication explicite. `publishedAt` peut être antidaté ou futur
    * (parution programmée : invisible jusqu'à cette date).
    */
-  async publish(id: string, publishedAt?: string) {
+  async publish(actor: AuthenticatedUser, id: string, publishedAt?: string) {
     const current = await this.findById(id);
     if (current.status === ContentStatus.PUBLISHED) return current;
 
@@ -210,11 +251,19 @@ export class ActualitesService {
       where: { id },
       data: {
         status: ContentStatus.PUBLISHED,
+        // Sans date choisie : la première date de publication est conservée, sauf si
+        // l'article n'est jamais paru (date future d'une parution annulée) : il paraît maintenant.
         publishedAt: publishedAt
           ? new Date(publishedAt)
-          : (current.publishedAt ?? new Date()),
+          : current.publishedAt && current.publishedAt.getTime() <= Date.now()
+            ? current.publishedAt
+            : new Date(),
       },
       include: WITH_COVER,
+    });
+    await this.record(actor, 'ARTICLE_PUBLISHED', published, current.status, {
+      status: published.status,
+      publishedAt: published.publishedAt?.toISOString() ?? null,
     });
     await this.revalidate(published.slug);
     return published;
@@ -255,24 +304,63 @@ export class ActualitesService {
   }
 
   /** Retire immédiatement l'article du site public (retour en brouillon). */
-  unpublish(id: string) {
-    return this.setStatus(id, ContentStatus.DRAFT);
+  unpublish(actor: AuthenticatedUser, id: string) {
+    return this.setStatus(actor, id, ContentStatus.DRAFT, 'ARTICLE_UNPUBLISHED');
   }
 
   /** Dépublie en conservant l'article pour l'historique interne. */
-  archive(id: string) {
-    return this.setStatus(id, ContentStatus.ARCHIVED);
+  archive(actor: AuthenticatedUser, id: string) {
+    return this.setStatus(actor, id, ContentStatus.ARCHIVED, 'ARTICLE_ARCHIVED');
   }
 
-  private async setStatus(id: string, status: ContentStatus) {
-    await this.findById(id);
+  private async setStatus(
+    actor: AuthenticatedUser,
+    id: string,
+    status: ContentStatus,
+    action: string,
+  ) {
+    const current = await this.findById(id);
+    if (current.status === status) return current;
     const updated = await this.prisma.article.update({
       where: { id },
       data: { status },
       include: WITH_COVER,
     });
+    await this.record(actor, action, updated, current.status);
     await this.revalidate(updated.slug);
     return updated;
+  }
+
+  /**
+   * Suppression logique : l'article disparaît du site et du portail ; la
+   * ligne est conservée (historique, audit).
+   */
+  async remove(actor: AuthenticatedUser, id: string) {
+    const current = await this.findById(id);
+    await this.prisma.article.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+    await this.record(actor, 'ARTICLE_DELETED', current, current.status, { deleted: true });
+    await this.revalidate(current.slug);
+  }
+
+  /** Publication, dépublication, archivage et suppression sont toujours tracés (blueprint/09 §7). */
+  private record(
+    actor: AuthenticatedUser,
+    action: string,
+    article: { id: string; slug: string; status: ContentStatus },
+    before: ContentStatus,
+    after: Prisma.InputJsonValue = { status: article.status },
+  ) {
+    return this.audit.record({
+      actorId: actor.id,
+      action,
+      entityType: 'Article',
+      entityId: article.id,
+      before: { status: before, slug: article.slug },
+      after,
+    });
   }
 
   private async revalidate(slug: string) {

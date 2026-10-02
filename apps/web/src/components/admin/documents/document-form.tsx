@@ -1,10 +1,9 @@
 'use client';
 
-import { useId, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CircleAlert, FileText, Upload } from 'lucide-react';
 import { backendJson } from '@/lib/api/backend';
 import { applyApiErrors } from '@/lib/admin/form-errors';
 import {
@@ -12,7 +11,6 @@ import {
   DOCUMENT_CATEGORIES,
   documentSchema,
   fileProblem,
-  formatBytes,
   type DocumentFormValues,
   type ServiceOption,
 } from '@/lib/admin/public-documents';
@@ -26,6 +24,7 @@ import {
   Select,
   Textarea,
 } from '../ui';
+import { FilePicker } from '../content/file-picker';
 import { FormAlert, SlugCard, useAutoSlug } from '../content/form-parts';
 
 interface DocumentFormProps {
@@ -236,81 +235,5 @@ export function DocumentForm({
         </Button>
       </div>
     </form>
-  );
-}
-
-/** Sélecteur de fichier : zone cliquable, nom et taille du fichier choisi, erreur éventuelle. */
-export function FilePicker({
-  file,
-  error,
-  onChange,
-  disabled = false,
-}: {
-  file: File | null;
-  error: string | null;
-  onChange: (file: File | null) => void;
-  disabled?: boolean;
-}) {
-  const id = useId();
-  const input = useRef<HTMLInputElement>(null);
-  return (
-    <div className="space-y-2">
-      <input
-        ref={input}
-        id={id}
-        type="file"
-        accept="application/pdf,.pdf"
-        disabled={disabled}
-        aria-invalid={Boolean(error) || undefined}
-        aria-describedby={error ? `${id}-error` : undefined}
-        onChange={(event) => onChange(event.target.files?.[0] ?? null)}
-        className="sr-only"
-      />
-      <label
-        htmlFor={id}
-        className={`flex cursor-pointer items-center gap-3 rounded-xl border border-dashed px-4 py-4 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand ${
-          error
-            ? 'border-bad bg-bad-soft/40'
-            : 'border-line-strong hover:border-brand/50 hover:bg-sunken'
-        }`}
-      >
-        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
-          {file ? (
-            <FileText size={20} aria-hidden="true" />
-          ) : (
-            <Upload size={20} aria-hidden="true" />
-          )}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13.5px] font-medium text-ink">
-            {file ? file.name : 'Choisir un fichier PDF'}
-          </span>
-          <span className="block text-xs text-ink-subtle">
-            {file
-              ? formatBytes(file.size)
-              : 'Cliquez pour parcourir vos fichiers'}
-          </span>
-        </span>
-        {file && (
-          <span className="shrink-0 text-xs font-medium text-brand">
-            Changer
-          </span>
-        )}
-      </label>
-      {error && (
-        <p
-          id={`${id}-error`}
-          role="alert"
-          className="flex items-start gap-1.5 text-xs font-medium text-bad"
-        >
-          <CircleAlert
-            size={14}
-            aria-hidden="true"
-            className="mt-px shrink-0"
-          />
-          {error}
-        </p>
-      )}
-    </div>
   );
 }

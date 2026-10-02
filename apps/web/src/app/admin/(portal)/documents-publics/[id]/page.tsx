@@ -37,10 +37,8 @@ import {
   useConfirm,
   useToast,
 } from '@/components/admin/ui';
-import {
-  DocumentForm,
-  FilePicker,
-} from '@/components/admin/documents/document-form';
+import { DocumentForm } from '@/components/admin/documents/document-form';
+import { FilePicker } from '@/components/admin/content/file-picker';
 
 const detailKey = (id: string) => ['documents', 'detail', id];
 
