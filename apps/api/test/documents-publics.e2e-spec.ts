@@ -48,13 +48,17 @@ describe('Documents publics (e2e)', () => {
     file: Buffer = pdf(suffix),
     fields: Record<string, string> = {},
   ) => {
+    // Les surcharges remplacent les valeurs par défaut (jamais de champ en double).
+    const merged: Record<string, string> = {
+      slug: `${prefix}-${suffix}`,
+      titleFr: `Document ${suffix}`,
+      category: 'GUIDE',
+      ...fields,
+    };
     const req = request(app.getHttpServer())
       .post('/api/v1/admin/documents-publics')
-      .set(auth)
-      .field('slug', `${prefix}-${suffix}`)
-      .field('titleFr', `Document ${suffix}`)
-      .field('category', 'GUIDE');
-    for (const [key, value] of Object.entries(fields)) req.field(key, value);
+      .set(auth);
+    for (const [key, value] of Object.entries(merged)) req.field(key, value);
     return req.attach('file', file, `${suffix}.pdf`);
   };
 
@@ -167,11 +171,18 @@ describe('Documents publics (e2e)', () => {
     expect(noFile.status).toBe(400);
     expect(noFile.body.code).toBe('DOCUMENT_FILE_REQUIRED');
 
-    await create('badcat', pdf('badcat'), { category: 'AUTRE' }).expect(400);
-    await create('badyear', pdf('badyear'), { year: 'abc' }).expect(400);
-    await create('badstatus', pdf('badstatus'), { status: 'PUBLISHED' }).expect(
-      400,
-    );
+    for (const [suffix, fields] of [
+      ['badcat', { category: 'AUTRE' }],
+      ['badyear', { year: 'abc' }],
+      ['badstatus', { status: 'PUBLISHED' }],
+    ] as const) {
+      const res = await create(suffix, pdf(suffix), fields);
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('BAD_REQUEST');
+      expect(JSON.stringify(res.body.details)).toContain(
+        Object.keys(fields)[0],
+      );
+    }
 
     // Aucun refus n'a laissé de fichier sur le disque.
     const files = existsSync(documentsDir) ? await readdir(documentsDir) : [];
@@ -275,6 +286,27 @@ describe('Documents publics (e2e)', () => {
     expect(notPdf.status).toBe(415);
     // L'ancien fichier valide est conservé après un remplacement refusé.
     await download(newName).expect(200);
+  });
+
+  it('accepts the certificate category and filters the public list by it', async () => {
+    const created = await create('certificat', pdf('certificat'), {
+      category: 'CERTIFICATE',
+    }).expect(201);
+    expect(created.body.category).toBe('CERTIFICATE');
+    await post(
+      `/api/v1/admin/documents-publics/${created.body.id}/publish`,
+    ).expect(200);
+
+    const certificates = await request(app.getHttpServer())
+      .get('/api/v1/documents-publics?category=CERTIFICATE&limit=100')
+      .expect(200);
+    const slugs = certificates.body.data.map((d: { slug: string }) => d.slug);
+    expect(slugs).toContain(`${prefix}-certificat`);
+    expect(
+      certificates.body.data.every(
+        (d: { category: string }) => d.category === 'CERTIFICATE',
+      ),
+    ).toBe(true);
   });
 
   it('locks the slug after publication and rejects duplicates and unknown services', async () => {
