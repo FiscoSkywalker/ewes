@@ -5,7 +5,12 @@ import { useTranslations } from 'next-intl';
 import { ArrowDownToLine, ArrowRight } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 
-export type DocumentCategory = 'report' | 'guide' | 'datasheet' | 'brochure';
+export type DocumentCategory =
+  | 'report'
+  | 'guide'
+  | 'datasheet'
+  | 'brochure'
+  | 'certificate';
 export type DocumentPole = 'env' | 'eau' | 'ing';
 
 /**

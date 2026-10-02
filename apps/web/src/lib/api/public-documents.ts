@@ -20,6 +20,7 @@ const CATEGORY_BY_API: Record<string, DocumentCategory> = {
   GUIDE: 'guide',
   DATASHEET: 'datasheet',
   BROCHURE: 'brochure',
+  CERTIFICATE: 'certificate',
 };
 
 /** Slug du service (pôle) en base -> clé de pôle du site. */

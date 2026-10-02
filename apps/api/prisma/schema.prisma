@@ -38,6 +38,7 @@ enum DocumentCategory {
   GUIDE
   DATASHEET
   BROCHURE
+  CERTIFICATE
 }
 
 /// Précision de la date affichée d'un article (une enquête de 2025 s'affiche « 2025 »).
