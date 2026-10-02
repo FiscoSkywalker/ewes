@@ -24,6 +24,15 @@ import {
   useSession,
 } from '@/components/admin/session';
 import { TopoLines } from '@/components/admin/topo-lines';
+import {
+  Card,
+  EmptyState,
+  ErrorState,
+  LoadingRegion,
+  Skeleton,
+  SkeletonText,
+  StatusChip,
+} from '@/components/admin/ui';
 
 type Tone = 'brand' | 'env' | 'ing' | 'bad';
 
@@ -318,6 +327,7 @@ interface ContactRow {
   createdAt: string;
 }
 
+/** Carte du tableau de bord : `Card` du kit + lien « Tout voir ». */
 function Panel({
   title,
   href,
@@ -330,47 +340,45 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="animate-rise-in rounded-2xl border border-line bg-panel [animation-delay:200ms]">
-      <header className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-ink">{title}</h2>
-        {href && (
+    <Card
+      title={title}
+      padding="none"
+      className="animate-rise-in [animation-delay:200ms]"
+      actions={
+        href && (
           <Link
             href={href}
             className="text-xs font-medium text-brand hover:text-brand-strong"
           >
             {hrefLabel}
           </Link>
-        )}
-      </header>
+        )
+      }
+    >
       {children}
-    </section>
+    </Card>
   );
 }
 
 function ListSkeleton({ rows = 4 }: { rows?: number }) {
   return (
-    <ul aria-label="Chargement" className="divide-y divide-line">
-      {Array.from({ length: rows }, (_, i) => (
-        <li key={i} className="flex items-center gap-3 px-5 py-3.5">
-          <span className="portal-skeleton size-9 shrink-0 rounded-full" />
-          <span className="flex-1 space-y-2">
-            <span className="portal-skeleton block h-3 w-1/3 rounded" />
-            <span className="portal-skeleton block h-3 w-2/3 rounded" />
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function PanelMessage({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="px-5 py-10 text-center text-sm text-ink-muted">{children}</p>
+    <LoadingRegion>
+      <ul className="divide-y divide-line">
+        {Array.from({ length: rows }, (_, i) => (
+          <li key={i} className="flex items-center gap-3 px-5 py-3.5">
+            <Skeleton className="size-9 shrink-0 rounded-full" />
+            <span className="flex-1">
+              <SkeletonText lines={2} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </LoadingRegion>
   );
 }
 
 function LatestMessages() {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['dashboard', 'latest-contacts'],
     queryFn: () => backendJson<Paginated<ContactRow>>('admin/contacts?limit=5'),
     refetchInterval: 60_000,
@@ -384,13 +392,18 @@ function LatestMessages() {
     >
       {isLoading ? (
         <ListSkeleton />
-      ) : isError ? (
-        <PanelMessage>Messages momentanément indisponibles.</PanelMessage>
+      ) : error ? (
+        <ErrorState
+          error={error}
+          onRetry={() => refetch()}
+          retrying={isRefetching}
+        />
       ) : !data?.data.length ? (
-        <PanelMessage>
-          Aucun message reçu pour l’instant. Les demandes envoyées depuis la
-          page Contact du site apparaîtront ici.
-        </PanelMessage>
+        <EmptyState
+          icon={Inbox}
+          title="Aucun message reçu"
+          description="Les demandes envoyées depuis la page Contact du site apparaîtront ici."
+        />
       ) : (
         <ul className="divide-y divide-line">
           {data.data.map((message) => (
@@ -421,7 +434,7 @@ function LatestMessages() {
                   </span>
                 </span>
                 <span className="flex shrink-0 flex-col items-end gap-1">
-                  <StatusChip status={message.status} />
+                  <StatusChip kind="contact" value={message.status} />
                   <span className="text-[11px] text-ink-subtle">
                     {relativeTime(message.createdAt)}
                   </span>
@@ -432,20 +445,6 @@ function LatestMessages() {
         </ul>
       )}
     </Panel>
-  );
-}
-
-/** Statut toujours écrit en toutes lettres, jamais porté par la seule couleur. */
-function StatusChip({ status }: { status: ContactRow['status'] }) {
-  return status === 'NOUVEAU' ? (
-    <span className="inline-flex h-5 items-center gap-1 rounded-full bg-brand-soft px-2 text-[11px] font-medium text-brand">
-      <span aria-hidden="true" className="size-1.5 rounded-full bg-brand" />
-      Nouveau
-    </span>
-  ) : (
-    <span className="inline-flex h-5 items-center rounded-full bg-ok-soft px-2 text-[11px] font-medium text-ok">
-      Traité
-    </span>
   );
 }
 
@@ -482,7 +481,7 @@ function actionLabel(action: string): string {
 }
 
 function RecentActivity() {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['dashboard', 'audit'],
     queryFn: () => backendJson<Paginated<AuditRow>>('admin/audit-logs?limit=6'),
     refetchInterval: 60_000,
@@ -496,10 +495,18 @@ function RecentActivity() {
     >
       {isLoading ? (
         <ListSkeleton rows={5} />
-      ) : isError ? (
-        <PanelMessage>Journal momentanément indisponible.</PanelMessage>
+      ) : error ? (
+        <ErrorState
+          error={error}
+          onRetry={() => refetch()}
+          retrying={isRefetching}
+        />
       ) : !data?.data.length ? (
-        <PanelMessage>Aucune action enregistrée pour l’instant.</PanelMessage>
+        <EmptyState
+          icon={History}
+          title="Aucune action enregistrée"
+          description="Les actions sensibles (droits, documents, messages) seront tracées ici."
+        />
       ) : (
         <ol className="px-5 py-3">
           {data.data.map((entry, index) => {

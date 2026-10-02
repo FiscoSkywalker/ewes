@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/admin/page-header';
 import { useSession } from '@/components/admin/session';
 import { PortalNotFound } from '@/components/admin/states';
 import { TopoLines } from '@/components/admin/topo-lines';
+import { Badge } from '@/components/admin/ui';
 
 const TONE_TILE: Record<NavTone, string> = {
   brand: 'from-brand to-[#2f7f86] text-white dark:text-[#06161b]',
@@ -74,10 +75,9 @@ export default function ModulePlaceholderPage() {
           </div>
 
           <div>
-            <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-warn-soft px-2.5 text-xs font-medium text-warn">
-              <CircleDashed size={13} aria-hidden="true" />
+            <Badge tone="warn" icon={CircleDashed}>
               Écran en préparation
-            </span>
+            </Badge>
             <h2 className="mt-3 text-lg font-semibold text-ink">
               Cet écran arrive dans une prochaine version du portail
             </h2>
