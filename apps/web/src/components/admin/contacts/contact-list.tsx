@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { CheckCheck, Inbox } from 'lucide-react';
+import { CheckCheck, Inbox, SearchX } from 'lucide-react';
 import { backendJson, type Paginated } from '@/lib/api/backend';
 import {
   contactTopic,
@@ -13,12 +13,16 @@ import {
 import { relativeTime } from '@/lib/admin/format';
 import { PageHeader } from '../page-header';
 import {
+  Button,
   DataTable,
   EmptyState,
   Pagination,
+  SearchInput,
   SegmentedControl,
   StatusChip,
+  useDebouncedValue,
   type Column,
+  type SortState,
 } from '../ui';
 
 const PAGE_SIZE = 20;
@@ -56,19 +60,35 @@ function useContactCount(status: ContactStatus) {
   });
 }
 
+/** Colonne triable → champ de tri de l'API (`sort` de `GET /admin/contacts`). */
+const SORT_FIELDS: Record<string, string> = {
+  sender: 'name',
+  organization: 'organization',
+  receivedAt: 'createdAt',
+};
+
+const DEFAULT_SORT: SortState = { id: 'receivedAt', direction: 'desc' };
+
 const COLUMNS: Column<ContactMessage>[] = [
   {
     id: 'sender',
     header: 'Expéditeur',
+    sortable: true,
     className: 'min-w-44',
     cell: (m) => (
       <span className="block">
         <span className="block font-medium text-ink">{m.name}</span>
-        <span className="block text-xs text-ink-subtle">
-          {m.organization ?? m.email}
-        </span>
+        <span className="block text-xs text-ink-subtle">{m.email}</span>
       </span>
     ),
+  },
+  {
+    id: 'organization',
+    header: 'Organisation',
+    sortable: true,
+    hideBelow: 'lg',
+    className: 'max-w-48 truncate text-ink-muted',
+    cell: (m) => m.organization ?? '—',
   },
   {
     id: 'message',
@@ -92,6 +112,8 @@ const COLUMNS: Column<ContactMessage>[] = [
   {
     id: 'receivedAt',
     header: 'Reçu',
+    sortable: true,
+    firstDirection: 'desc',
     hideBelow: 'sm',
     className: 'whitespace-nowrap text-ink-muted',
     cell: (m) => (
@@ -119,14 +141,24 @@ const COLUMNS: Column<ContactMessage>[] = [
 export function ContactList({ status }: { status: ContactStatus }) {
   const router = useRouter();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
   const view = VIEWS[status];
+  const q = useDebouncedValue(search.trim());
 
   const list = useQuery({
-    queryKey: ['contacts', 'list', status, page],
-    queryFn: () =>
-      backendJson<Paginated<ContactMessage>>(
-        `admin/contacts?status=${status}&page=${page}&limit=${PAGE_SIZE}`,
-      ),
+    queryKey: ['contacts', 'list', status, page, q, sort],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        status,
+        page: String(page),
+        limit: String(PAGE_SIZE),
+        sort: SORT_FIELDS[sort.id],
+        order: sort.direction,
+      });
+      if (q) params.set('q', q);
+      return backendJson<Paginated<ContactMessage>>(`admin/contacts?${params}`);
+    },
     placeholderData: keepPreviousData,
     refetchInterval: 60_000,
   });
@@ -157,8 +189,24 @@ export function ContactList({ status }: { status: ContactStatus }) {
         }
       />
 
+      <SearchInput
+        label="Rechercher un message"
+        placeholder="Rechercher par nom, organisation, e-mail, téléphone ou texte…"
+        value={search}
+        onValueChange={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
+        className="max-w-xl"
+      />
+
       <DataTable
         caption={view.title}
+        sort={sort}
+        onSortChange={(next) => {
+          setSort(next);
+          setPage(1);
+        }}
         columns={COLUMNS}
         rows={list.data?.data}
         getRowId={(m) => m.id}
@@ -167,7 +215,22 @@ export function ContactList({ status }: { status: ContactStatus }) {
         error={list.error}
         onRetry={() => list.refetch()}
         empty={
-          status === 'NOUVEAU' ? (
+          q ? (
+            <EmptyState
+              icon={SearchX}
+              title="Aucun résultat"
+              description={`Aucun message ne correspond à « ${q} ».`}
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setSearch('')}
+                >
+                  Effacer la recherche
+                </Button>
+              }
+            />
+          ) : status === 'NOUVEAU' ? (
             <EmptyState
               icon={CheckCheck}
               title="Aucun message à traiter"

@@ -427,4 +427,54 @@ describe('Contact (e2e)', () => {
       .set(auth)
       .expect(404);
   });
+  it('searches without regard to case or wildcards, sorts with a stable order, and rejects bad parameters', async () => {
+    const needle = `srch${stamp}`;
+    const row = (name: string, organization: string | null, minutesAgo: number, message = 'Message de test pour la recherche.') =>
+      prisma.contactMessage.create({
+        data: {
+          name: `${name} ${needle}`,
+          organization,
+          email: sender(),
+          sector: 'AUTRE',
+          message,
+          createdAt: new Date(Date.now() - minutesAgo * 60_000),
+        },
+      });
+    await row('Zoé', 'Alpha', 30);
+    await row('Alice', null, 20);
+    await row('Bob', 'Zeta', 10, 'Remise de 100%_exacte demandée.');
+    const get = (query: string) =>
+      request(app.getHttpServer()).get(`/api/v1/admin/contacts?${query}`).set('Authorization', `Bearer ${tAdmin}`);
+    const names = (res: request.Response) => (res.body.data as { name: string }[]).map((m) => m.name.split(' ')[0]);
+
+    // Insensible à la casse ; le total reflète la recherche, pas la table entière.
+    const found = await get(`q=${needle.toUpperCase()}`).expect(200);
+    expect(found.body.meta.total).toBe(3);
+    // Par défaut : plus récent d'abord.
+    expect(names(found)).toEqual(['Bob', 'Alice', 'Zoé']);
+
+    // `%` et `_` sont cherchés littéralement, jamais comme jokers.
+    const literal = await get('q=%25').expect(200);
+    expect((literal.body.data as { message: string }[]).every((m) => m.message.includes('%'))).toBe(true);
+    expect(names(literal)).toContain('Bob');
+    expect((await get('q=100%25_exacte').expect(200)).body.meta.total).toBe(1);
+    expect((await get('q=100%25Xexacte').expect(200)).body.meta.total).toBe(0);
+
+    // Tri : par nom, par organisation (sans organisation toujours en dernier), dans les deux sens.
+    expect(names(await get(`q=${needle}&sort=name&order=asc`).expect(200))).toEqual(['Alice', 'Bob', 'Zoé']);
+    expect(names(await get(`q=${needle}&sort=name&order=desc`).expect(200))).toEqual(['Zoé', 'Bob', 'Alice']);
+    expect(names(await get(`q=${needle}&sort=organization&order=asc`).expect(200))).toEqual(['Zoé', 'Bob', 'Alice']);
+    expect(names(await get(`q=${needle}&sort=organization&order=desc`).expect(200))).toEqual(['Bob', 'Zoé', 'Alice']);
+    expect(names(await get(`q=${needle}&sort=createdAt&order=asc`).expect(200))).toEqual(['Zoé', 'Alice', 'Bob']);
+
+    // Tri + pagination : chaque ligne apparaît une fois.
+    const page = (n: number) => get(`q=${needle}&sort=name&order=asc&limit=1&page=${n}`).expect(200);
+    expect([names(await page(1)), names(await page(2)), names(await page(3))]).toEqual([['Alice'], ['Bob'], ['Zoé']]);
+
+    // Paramètres refusés avec le champ fautif ; aucune injection par le champ de tri.
+    for (const bad of ['sort=email', 'sort=name;drop', 'order=sideways', `q=${'x'.repeat(101)}`]) {
+      const res = await get(bad).expect(400);
+      expect(res.body.details[0].field).toBe(bad.split('=')[0]);
+    }
+  });
 });
