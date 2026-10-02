@@ -13,6 +13,7 @@ export function invalidatePortalData(queryClient: QueryClient) {
       'documents',
       'realisations',
       'articles',
+      'media',
       'signals',
       'dashboard',
     ].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),

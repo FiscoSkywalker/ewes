@@ -5,10 +5,15 @@ import {
   UnsupportedMediaTypeException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { escapeLike } from '../../common/utils/like.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { AuditService } from '../audit/audit.service.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
+import type { ListMediaDto } from './dto/list-media.dto.js';
 import { detectImage } from './image-signature.js';
 
 /** Fichier reçu de multer (stockage mémoire) — seuls les champs utilisés. */
@@ -30,11 +35,42 @@ const MEDIA_NOT_FOUND = {
 /** URL publique relative (même origine que le site, réécrite vers l'API). */
 export const mediaUrl = (storedName: string) => `/uploads/${storedName}`;
 
+const NAME_COLLATOR = new Intl.Collator('fr', {
+  sensitivity: 'base',
+  numeric: true,
+});
+
+const URL_PREFIX = '/uploads/';
+const storedNameOf = (url: string) =>
+  url.startsWith(URL_PREFIX) ? url.slice(URL_PREFIX.length) : url;
+
+/** Contenu qui affiche une image : un article ou une réalisation non supprimé. */
+export interface MediaUsage {
+  type: 'ARTICLE' | 'REALISATION';
+  id: string;
+  title: string;
+}
+
+type MediaRow = Prisma.MediaGetPayload<{
+  include: { uploadedBy: { select: { fullName: true } } };
+}>;
+
+const WITH_UPLOADER = {
+  uploadedBy: { select: { fullName: true } },
+} satisfies Prisma.MediaInclude;
+
+/** Résultat d'une suppression groupée : rien n'est tout-ou-rien, chaque média est jugé seul. */
+export interface RemoveManyResult {
+  deleted: string[];
+  blocked: { id: string; reason: 'IN_USE' | 'NOT_FOUND' }[];
+}
+
 @Injectable()
 export class MediaService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly audit: AuditService,
   ) {}
 
   private get directory() {
@@ -75,24 +111,171 @@ export class MediaService {
           originalName: file.originalname.slice(0, 255),
           uploadedById,
         },
+        include: WITH_UPLOADER,
       });
-      return this.toView(media);
+      return this.toView(media, []);
     } catch (error) {
       await this.removeFile(storedName);
       throw error;
     }
   }
 
-  async list(page: number, limit: number) {
-    const [data, total] = await Promise.all([
+  /**
+   * Images servant à des contenus non supprimés, par nom stocké. Une image
+   * dont le seul contenu a été supprimé est de nouveau libre.
+   */
+  private async usageByStoredName(
+    storedNames?: string[],
+  ): Promise<Map<string, MediaUsage[]>> {
+    const urls = storedNames && { in: storedNames.map(mediaUrl) };
+    const [articles, realisations] = await Promise.all([
+      this.prisma.articleImage.findMany({
+        where: { ...(urls && { url: urls }), article: { deletedAt: null } },
+        select: { url: true, article: { select: { id: true, titleFr: true } } },
+      }),
+      this.prisma.realisationImage.findMany({
+        where: {
+          ...(urls && { url: urls }),
+          realisation: { deletedAt: null },
+        },
+        select: {
+          url: true,
+          realisation: { select: { id: true, titleFr: true } },
+        },
+      }),
+    ]);
+
+    const usage = new Map<string, MediaUsage[]>();
+    const add = (url: string, entry: MediaUsage) => {
+      const key = storedNameOf(url);
+      const list = usage.get(key) ?? [];
+      // Une même image peut figurer deux fois dans un contenu : une seule ligne.
+      if (!list.some((u) => u.type === entry.type && u.id === entry.id)) {
+        list.push(entry);
+      }
+      usage.set(key, list);
+    };
+    for (const row of articles) {
+      add(row.url, {
+        type: 'ARTICLE',
+        id: row.article.id,
+        title: row.article.titleFr,
+      });
+    }
+    for (const row of realisations) {
+      add(row.url, {
+        type: 'REALISATION',
+        id: row.realisation.id,
+        title: row.realisation.titleFr,
+      });
+    }
+    return usage;
+  }
+
+  /**
+   * Médiathèque : recherche, tri, filtre « utilisées / non utilisées » et, pour
+   * chaque image, les contenus où elle apparaît. `meta.usage` donne les effectifs
+   * (hors filtre d'usage, recherche comprise) pour les onglets de l'écran.
+   */
+  async list(query: ListMediaDto) {
+    const { page, limit, q, usage, sort, order } = query;
+
+    const usedNames = [...(await this.usageByStoredName()).keys()];
+    const search: Prisma.MediaWhereInput = q
+      ? { originalName: { contains: escapeLike(q), mode: 'insensitive' } }
+      : {};
+    const where: Prisma.MediaWhereInput = {
+      ...search,
+      ...(usage === 'used' && { storedName: { in: usedNames } }),
+      ...(usage === 'unused' && { storedName: { notIn: usedNames } }),
+    };
+
+    const [{ rows, total }, all, used] = await Promise.all([
+      sort === 'originalName'
+        ? this.pageByName(where, order, page, limit)
+        : this.pageByColumn(where, sort, order, page, limit),
+      this.prisma.media.count({ where: search }),
+      this.prisma.media.count({
+        where: { ...search, storedName: { in: usedNames } },
+      }),
+    ]);
+
+    const usages = await this.usageByStoredName(rows.map((m) => m.storedName));
+    return {
+      data: rows.map((m) => this.toView(m, usages.get(m.storedName) ?? [])),
+      meta: {
+        page,
+        limit,
+        total,
+        usage: { all, used, unused: all - used },
+      },
+    };
+  }
+
+  /** Tri par date ou par poids : délégué à PostgreSQL. */
+  private async pageByColumn(
+    where: Prisma.MediaWhereInput,
+    sort: 'createdAt' | 'sizeBytes',
+    order: 'asc' | 'desc',
+    page: number,
+    limit: number,
+  ) {
+    const [rows, total] = await Promise.all([
       this.prisma.media.findMany({
-        orderBy: { createdAt: 'desc' },
+        where,
+        // Départage stable : une pagination ne répète ni n'oublie aucune ligne.
+        orderBy: [{ [sort]: order }, { createdAt: 'desc' }, { id: 'asc' }],
+        include: WITH_UPLOADER,
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.media.count(),
+      this.prisma.media.count({ where }),
     ]);
-    return { data: data.map((m) => this.toView(m)), meta: { page, limit, total } };
+    return { rows, total };
+  }
+
+  /**
+   * Tri par nom : fait ici plutôt que par PostgreSQL, dont l'ordre des majuscules
+   * et des accents dépend de la collation du serveur. Comparaison française
+   * insensible à la casse et aux accents, chiffres en ordre naturel (« 2 » avant
+   * « 10 »), noms absents toujours en dernier. Une médiathèque V1 se compte en
+   * centaines d'images : seuls id et nom sont chargés avant de trancher la page.
+   */
+  private async pageByName(
+    where: Prisma.MediaWhereInput,
+    order: 'asc' | 'desc',
+    page: number,
+    limit: number,
+  ) {
+    const names = await this.prisma.media.findMany({
+      where,
+      select: { id: true, originalName: true, createdAt: true },
+    });
+    const sign = order === 'asc' ? 1 : -1;
+    names.sort((a, b) => {
+      if (a.originalName === null || b.originalName === null) {
+        if (a.originalName !== b.originalName) {
+          return a.originalName === null ? 1 : -1;
+        }
+      } else {
+        const byName = NAME_COLLATOR.compare(a.originalName, b.originalName);
+        if (byName !== 0) return sign * byName;
+      }
+      return (
+        b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? -1 : 1)
+      );
+    });
+
+    const ids = names.slice((page - 1) * limit, page * limit).map((m) => m.id);
+    const found = await this.prisma.media.findMany({
+      where: { id: { in: ids } },
+      include: WITH_UPLOADER,
+    });
+    const byId = new Map(found.map((m) => [m.id, m]));
+    return {
+      rows: ids.flatMap((id) => byId.get(id) ?? []),
+      total: names.length,
+    };
   }
 
   /** Média enregistré, par nom stocké (seuls les fichiers connus sont servis). */
@@ -112,21 +295,74 @@ export class MediaService {
   }
 
   /** Supprime un média, sauf s'il illustre encore un contenu. */
-  async remove(id: string) {
+  async remove(id: string, actor: AuthenticatedUser) {
     const media = await this.findById(id);
-    const url = mediaUrl(media.storedName);
-    const [articles, realisations] = await Promise.all([
-      this.prisma.articleImage.count({ where: { url } }),
-      this.prisma.realisationImage.count({ where: { url } }),
-    ]);
-    if (articles + realisations > 0) {
+    const usages = (await this.usageByStoredName([media.storedName])).get(
+      media.storedName,
+    );
+    if (usages?.length) {
       throw new ConflictException({
         code: 'MEDIA_IN_USE',
         message: 'Ce média illustre encore un contenu : retirez-le d’abord.',
         details: [],
       });
     }
-    await this.prisma.media.delete({ where: { id } });
+    await this.delete(media, actor);
+  }
+
+  /**
+   * Suppression de plusieurs médias : chacun est jugé séparément (un média
+   * utilisé ou déjà supprimé n'empêche pas les autres) et le résultat dit
+   * lequel est passé ou non.
+   */
+  async removeMany(
+    ids: string[],
+    actor: AuthenticatedUser,
+  ): Promise<RemoveManyResult> {
+    const found = await this.prisma.media.findMany({
+      where: { id: { in: ids } },
+    });
+    const byId = new Map(found.map((m) => [m.id, m]));
+    const usage = await this.usageByStoredName(found.map((m) => m.storedName));
+
+    const result: RemoveManyResult = { deleted: [], blocked: [] };
+    for (const id of ids) {
+      const media = byId.get(id);
+      if (!media) {
+        result.blocked.push({ id, reason: 'NOT_FOUND' });
+      } else if (usage.get(media.storedName)?.length) {
+        result.blocked.push({ id, reason: 'IN_USE' });
+      } else {
+        await this.delete(media, actor);
+        result.deleted.push(id);
+      }
+    }
+    return result;
+  }
+
+  /** Suppression auditée : l'entrée est écrite avant que le fichier ne disparaisse. */
+  private async delete(
+    media: {
+      id: string;
+      storedName: string;
+      mimeType: string;
+      sizeBytes: number;
+      originalName: string | null;
+    },
+    actor: AuthenticatedUser,
+  ) {
+    await this.audit.record({
+      actorId: actor.id,
+      action: 'MEDIA_DELETED',
+      entityType: 'Media',
+      entityId: media.id,
+      before: {
+        originalName: media.originalName,
+        mimeType: media.mimeType,
+        sizeBytes: media.sizeBytes,
+      },
+    });
+    await this.prisma.media.delete({ where: { id: media.id } });
     await this.removeFile(media.storedName);
   }
 
@@ -138,14 +374,7 @@ export class MediaService {
     }
   }
 
-  private toView(media: {
-    id: string;
-    storedName: string;
-    mimeType: string;
-    sizeBytes: number;
-    originalName: string | null;
-    createdAt: Date;
-  }) {
+  private toView(media: MediaRow, usages: MediaUsage[]) {
     return {
       id: media.id,
       url: mediaUrl(media.storedName),
@@ -153,6 +382,9 @@ export class MediaService {
       sizeBytes: media.sizeBytes,
       originalName: media.originalName,
       createdAt: media.createdAt,
+      // Nom seul : de quoi afficher « par … » sans exposer l'e-mail.
+      uploadedByName: media.uploadedBy?.fullName ?? null,
+      usages,
     };
   }
 }

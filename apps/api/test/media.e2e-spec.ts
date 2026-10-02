@@ -126,7 +126,10 @@ describe('Media (e2e)', () => {
   });
 
   it('judges a file by its real content, not its name or declared type', async () => {
-    const fake = await upload(Buffer.from('<?php echo "pwned"; ?>'), 'shell.png');
+    const fake = await upload(
+      Buffer.from('<?php echo "pwned"; ?>'),
+      'shell.png',
+    );
     expect(fake.status).toBe(415);
     expect(fake.body.code).toBe('MEDIA_TYPE_NOT_ALLOWED');
 
@@ -181,9 +184,7 @@ describe('Media (e2e)', () => {
       .get('/api/v1/media/..%2F..%2Fpackage.json')
       .expect(404);
     await request(app.getHttpServer())
-      .get(
-        '/api/v1/media/00000000-0000-4000-8000-000000000000.png',
-      )
+      .get('/api/v1/media/00000000-0000-4000-8000-000000000000.png')
       .expect(404);
 
     await request(app.getHttpServer())
@@ -257,5 +258,214 @@ describe('Media (e2e)', () => {
       .delete(`/api/v1/admin/media/${mediaId}`)
       .set(auth)
       .expect(204);
+  });
+
+  describe('library listing and bulk removal', () => {
+    const tag = `e2e-lib-${stamp}`;
+    const list = (query: string) =>
+      request(app.getHttpServer())
+        .get(`/api/v1/admin/media?q=${tag}${query}`)
+        .set(auth);
+    const ids: Record<string, string> = {};
+    const libraryArticleSlug = `${articleSlug}-lib`;
+    let articleId: string;
+
+    beforeAll(async () => {
+      // Tailles distinctes pour pouvoir tester le tri par poids.
+      const sizes: Record<string, number> = { alpha: 0, Beta: 300, gamma: 100 };
+      for (const [name, extra] of Object.entries(sizes)) {
+        const res = await upload(
+          Buffer.concat([PNG_1X1, Buffer.alloc(extra)]),
+          `${tag}-${name}.png`,
+        ).expect(201);
+        ids[name] = res.body.id as string;
+      }
+      const article = await request(app.getHttpServer())
+        .post('/api/v1/admin/articles')
+        .set(auth)
+        .send({
+          slug: libraryArticleSlug,
+          type: 'ACTUALITE',
+          titleFr: 'Article de la médiathèque',
+          excerptFr: 'Résumé',
+        })
+        .expect(201);
+      articleId = article.body.id as string;
+      await request(app.getHttpServer())
+        .put(`/api/v1/admin/articles/${articleId}/cover`)
+        .set(auth)
+        .send({ mediaId: ids.alpha })
+        .expect(200);
+    });
+
+    afterAll(async () => {
+      await prisma.article.deleteMany({
+        where: { slug: libraryArticleSlug },
+      });
+    });
+
+    it('searches by file name without case, treating % and _ literally', async () => {
+      const byName = await list('').expect(200);
+      expect(byName.body.data).toHaveLength(3);
+
+      const upper = await request(app.getHttpServer())
+        .get(`/api/v1/admin/media?q=${tag.toUpperCase()}-BETA`)
+        .set(auth)
+        .expect(200);
+      expect(upper.body.data.map((m: { id: string }) => m.id)).toEqual([
+        ids.Beta,
+      ]);
+
+      for (const wildcard of ['%', '_']) {
+        const none = await request(app.getHttpServer())
+          .get(`/api/v1/admin/media?q=${encodeURIComponent(wildcard)}`)
+          .set(auth)
+          .expect(200);
+        expect(none.body.data).toHaveLength(0);
+      }
+    });
+
+    it('says where each image is used and counts used / unused', async () => {
+      const all = await list('').expect(200);
+      expect(all.body.meta.usage).toEqual({ all: 3, used: 1, unused: 2 });
+
+      const alpha = all.body.data.find(
+        (m: { id: string }) => m.id === ids.alpha,
+      );
+      expect(alpha.usages).toEqual([
+        { type: 'ARTICLE', id: articleId, title: 'Article de la médiathèque' },
+      ]);
+      expect(alpha.uploadedByName).toBe('E2E Media Gestionnaire');
+      const beta = all.body.data.find((m: { id: string }) => m.id === ids.Beta);
+      expect(beta.usages).toEqual([]);
+
+      const used = await list('&usage=used').expect(200);
+      expect(used.body.data.map((m: { id: string }) => m.id)).toEqual([
+        ids.alpha,
+      ]);
+      expect(used.body.meta.total).toBe(1);
+      // Les effectifs ignorent le filtre d'usage : les onglets restent justes.
+      expect(used.body.meta.usage).toEqual({ all: 3, used: 1, unused: 2 });
+
+      const unused = await list('&usage=unused').expect(200);
+      expect(unused.body.data).toHaveLength(2);
+      expect(
+        unused.body.data.some((m: { id: string }) => m.id === ids.alpha),
+      ).toBe(false);
+    });
+
+    it('sorts by name and size in both directions, with a stable pagination', async () => {
+      const names = async (query: string) =>
+        (await list(query).expect(200)).body.data.map(
+          (m: { id: string }) => m.id,
+        );
+
+      expect(await names('&sort=originalName&order=asc')).toEqual([
+        ids.alpha,
+        ids.Beta,
+        ids.gamma,
+      ]);
+      expect(await names('&sort=originalName&order=desc')).toEqual([
+        ids.gamma,
+        ids.Beta,
+        ids.alpha,
+      ]);
+      expect(await names('&sort=sizeBytes&order=desc')).toEqual([
+        ids.Beta,
+        ids.gamma,
+        ids.alpha,
+      ]);
+      expect(await names('&sort=sizeBytes&order=asc')).toEqual([
+        ids.alpha,
+        ids.gamma,
+        ids.Beta,
+      ]);
+
+      const first = await names('&sort=sizeBytes&order=asc&limit=2&page=1');
+      const second = await names('&sort=sizeBytes&order=asc&limit=2&page=2');
+      expect([...first, ...second]).toEqual([ids.alpha, ids.gamma, ids.Beta]);
+    });
+
+    it('refuses invalid list parameters', async () => {
+      for (const query of [
+        '&sort=password',
+        '&usage=maybe',
+        '&order=sideways',
+        '&limit=101',
+        `&q=${'x'.repeat(101)}`,
+      ]) {
+        await list(query).expect(400);
+      }
+    });
+
+    it('removes several images at once, judging each one and auditing it', async () => {
+      const unknown = '00000000-0000-4000-8000-000000000000';
+
+      const bad = (body: unknown) =>
+        request(app.getHttpServer())
+          .post('/api/v1/admin/media/delete')
+          .set(auth)
+          .send(body as object);
+      await bad({ ids: [] }).expect(400);
+      await bad({ ids: ['pas-un-uuid'] }).expect(400);
+      await bad({
+        ids: Array.from(
+          { length: 51 },
+          (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+        ),
+      }).expect(400);
+      await bad({ ids: [ids.Beta, ids.Beta] }).expect(400);
+
+      const userToken = await login(userEmail);
+      await request(app.getHttpServer())
+        .post('/api/v1/admin/media/delete')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ ids: [ids.Beta] })
+        .expect(403);
+
+      const res = await bad({ ids: [ids.Beta, ids.alpha, unknown] }).expect(
+        200,
+      );
+      expect(res.body.deleted).toEqual([ids.Beta]);
+      expect(res.body.blocked).toEqual([
+        { id: ids.alpha, reason: 'IN_USE' },
+        { id: unknown, reason: 'NOT_FOUND' },
+      ]);
+      expect(
+        await prisma.media.findUnique({ where: { id: ids.Beta } }),
+      ).toBeNull();
+      expect(
+        await prisma.media.findUnique({ where: { id: ids.alpha } }),
+      ).not.toBeNull();
+
+      const trail = await prisma.auditLog.findMany({
+        where: { entityType: 'Media', entityId: { in: [ids.Beta, ids.alpha] } },
+      });
+      expect(trail).toHaveLength(1);
+      expect(trail[0]).toMatchObject({
+        action: 'MEDIA_DELETED',
+        entityId: ids.Beta,
+        beforeData: { originalName: `${tag}-Beta.png`, mimeType: 'image/png' },
+      });
+      expect(trail[0].actorId).not.toBeNull();
+    });
+
+    it('frees an image once the only content using it is deleted', async () => {
+      await request(app.getHttpServer())
+        .delete(`/api/v1/admin/articles/${articleId}`)
+        .set(auth)
+        .expect(204);
+
+      const after = await list('&usage=used').expect(200);
+      expect(after.body.data).toEqual([]);
+
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/admin/media/delete')
+        .set(auth)
+        .send({ ids: [ids.alpha, ids.gamma] })
+        .expect(200);
+      expect(res.body.deleted.sort()).toEqual([ids.alpha, ids.gamma].sort());
+      expect((await list('').expect(200)).body.data).toEqual([]);
+    });
   });
 });

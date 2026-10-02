@@ -164,17 +164,3 @@ export function publicationDate(
 /** Image de couverture : la première, s'il y en a une. */
 export const coverOf = (article: Pick<Article, 'images'>) =>
   article.images[0] ?? null;
-
-/** Types d'images acceptés par la médiathèque, et plafond (`MAX_IMAGE_BYTES`, 5 Mo). */
-export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-
-/** Contrôle de l'image choisie, avant tout envoi ; `null` si acceptable. */
-export function imageProblem(file: File): string | null {
-  if (file.size === 0) return 'Ce fichier est vide.';
-  if (file.size > MAX_IMAGE_BYTES)
-    return 'Image trop volumineuse : 5 Mo au plus.';
-  return IMAGE_TYPES.includes(file.type)
-    ? null
-    : 'Formats acceptés : JPEG, PNG ou WebP.';
-}

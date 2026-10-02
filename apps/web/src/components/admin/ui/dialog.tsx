@@ -16,7 +16,12 @@ import { cx } from '@/lib/admin/cx';
 import { Button } from './button';
 import { Field, Input } from './field';
 
-const SIZES = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-2xl' } as const;
+const SIZES = {
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-2xl',
+  xl: 'max-w-5xl',
+} as const;
 
 export interface DialogProps {
   open: boolean;

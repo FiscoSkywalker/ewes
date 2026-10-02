@@ -5,7 +5,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { ApiError, backendJson } from '@/lib/api/backend';
 import { invalidatePortalData } from '@/lib/admin/invalidate';
-import { coverOf, imageProblem, type Article } from '@/lib/admin/articles';
+import { coverOf, type Article } from '@/lib/admin/articles';
+import { imageProblem } from '@/lib/admin/media';
 import { Button, Card, Field, Input, useConfirm, useToast } from '../ui';
 import { FilePicker } from '../content/file-picker';
 
