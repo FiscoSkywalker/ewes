@@ -176,4 +176,81 @@ describe('Pages (e2e)', () => {
     expect(locked.status).toBe(409);
     expect(locked.body.code).toBe('PAGE_SLUG_LOCKED');
   });
+
+  it('stores the search-engine description, exposes it publicly and traces publication', async () => {
+    const auth = { Authorization: `Bearer ${await login(adminEmail)}` };
+    const metaSlug = `${slug}-meta`;
+
+    const created = await request(app.getHttpServer())
+      .post('/api/v1/admin/pages')
+      .set(auth)
+      .send({
+        slug: metaSlug,
+        titleFr: 'Titre',
+        contentFr: 'Introduction',
+        metaDescriptionFr: 'Description FR',
+      })
+      .expect(201);
+    const id = created.body.id as string;
+    expect(created.body.metaDescriptionEn).toBeNull();
+
+    const tooLong = await request(app.getHttpServer())
+      .patch(`/api/v1/admin/pages/${id}`)
+      .set(auth)
+      .send({ metaDescriptionFr: 'x'.repeat(301) });
+    expect(tooLong.status).toBe(400);
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/pages/${id}`)
+      .set(auth)
+      .send({ metaDescriptionEn: 'English description' })
+      .expect(200);
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/pages/${id}/publish`)
+      .set(auth)
+      .expect(200);
+    // Publier deux fois n'écrit qu'une ligne d'audit.
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/pages/${id}/publish`)
+      .set(auth)
+      .expect(200);
+
+    const visible = await request(app.getHttpServer())
+      .get(`/api/v1/pages/${metaSlug}`)
+      .expect(200);
+    expect(visible.body).toMatchObject({
+      metaDescriptionFr: 'Description FR',
+      metaDescriptionEn: 'English description',
+    });
+
+    // Effacer la description (`null`) : le site reprendra l'introduction.
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/pages/${id}`)
+      .set(auth)
+      .send({ metaDescriptionFr: null })
+      .expect(200);
+    const cleared = await request(app.getHttpServer())
+      .get(`/api/v1/pages/${metaSlug}`)
+      .expect(200);
+    expect(cleared.body.metaDescriptionFr).toBeNull();
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/pages/${id}/unpublish`)
+      .set(auth)
+      .expect(200);
+
+    const trail = await prisma.auditLog.findMany({
+      where: { entityType: 'Page', entityId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(trail.map((e) => e.action)).toEqual([
+      'PAGE_PUBLISHED',
+      'PAGE_UNPUBLISHED',
+    ]);
+    expect(trail.every((e) => e.actorId !== null)).toBe(true);
+    expect(trail[0]).toMatchObject({
+      beforeData: { status: 'DRAFT', slug: metaSlug },
+      afterData: { status: 'PUBLISHED' },
+    });
+  });
 });

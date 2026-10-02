@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -6,6 +7,9 @@ import {
 import { ContentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
+import { AuditService } from '../audit/audit.service.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
+import { MediaService } from '../media/media.service.js';
 import type { CreateServiceDto } from './dto/create-service.dto.js';
 import type { UpdateServiceDto } from './dto/update-service.dto.js';
 import type {
@@ -43,6 +47,8 @@ export class ServicesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly revalidator: FrontendRevalidator,
+    private readonly audit: AuditService,
+    private readonly media: MediaService,
   ) {}
 
   listPublished() {
@@ -80,9 +86,27 @@ export class ServicesService {
   }
 
   async create(dto: CreateServiceDto) {
+    if (dto.imageUrl) await this.media.findByUrl(dto.imageUrl);
+    const sortOrder =
+      dto.sortOrder ??
+      (await this.nextPosition(
+        this.prisma.service.aggregate({ _max: { sortOrder: true } }),
+      ));
     try {
       return await this.prisma.service.create({
-        data: dto,
+        data: {
+          slug: dto.slug,
+          nameFr: dto.nameFr,
+          nameEn: dto.nameEn,
+          taglineFr: dto.taglineFr,
+          taglineEn: dto.taglineEn,
+          descriptionFr: dto.descriptionFr,
+          descriptionEn: dto.descriptionEn,
+          imageUrl: dto.imageUrl,
+          imageAltFr: dto.imageAltFr,
+          imageAltEn: dto.imageAltEn,
+          sortOrder,
+        },
         include: WITH_OFFERINGS,
       });
     } catch (error) {
@@ -92,6 +116,8 @@ export class ServicesService {
 
   async update(id: string, dto: UpdateServiceDto) {
     const current = await this.findById(id);
+    // Le visuel doit être une image de la médiathèque (jamais une adresse quelconque).
+    if (dto.imageUrl) await this.media.findByUrl(dto.imageUrl);
 
     // Un contenu publié conserve son slug (liens partagés/indexés).
     if (
@@ -120,7 +146,7 @@ export class ServicesService {
     return updated;
   }
 
-  async publish(id: string) {
+  async publish(actor: AuthenticatedUser, id: string) {
     const current = await this.findById(id);
     if (current.status === ContentStatus.PUBLISHED) return current;
     const published = await this.prisma.service.update({
@@ -131,24 +157,40 @@ export class ServicesService {
       },
       include: WITH_OFFERINGS,
     });
+    await this.record(actor, 'SERVICE_PUBLISHED', published, current.status);
     await this.revalidate(published.slug);
     return published;
   }
 
   /** Retire immédiatement le service du site public (retour en brouillon). */
-  async unpublish(id: string) {
-    await this.findById(id);
+  async unpublish(actor: AuthenticatedUser, id: string) {
+    const current = await this.findById(id);
+    if (current.status === ContentStatus.DRAFT) return current;
     const unpublished = await this.prisma.service.update({
       where: { id },
       data: { status: ContentStatus.DRAFT },
       include: WITH_OFFERINGS,
     });
+    await this.record(
+      actor,
+      'SERVICE_UNPUBLISHED',
+      unpublished,
+      current.status,
+    );
     await this.revalidate(unpublished.slug);
     return unpublished;
   }
 
   async addOffering(serviceId: string, dto: CreateServiceOfferingDto) {
     const service = await this.findById(serviceId);
+    const sortOrder =
+      dto.sortOrder ??
+      (await this.nextPosition(
+        this.prisma.serviceOffering.aggregate({
+          where: { serviceId },
+          _max: { sortOrder: true },
+        }),
+      ));
     const offering = await this.prisma.serviceOffering.create({
       data: {
         serviceId,
@@ -156,7 +198,8 @@ export class ServicesService {
         titleEn: dto.titleEn,
         descriptionFr: dto.descriptionFr,
         descriptionEn: dto.descriptionEn,
-        sortOrder: dto.sortOrder,
+        icon: dto.icon,
+        sortOrder,
       },
     });
     await this.revalidateIfPublished(service);
@@ -178,11 +221,43 @@ export class ServicesService {
     return offering;
   }
 
-  async removeOffering(serviceId: string, offeringId: string) {
+  async removeOffering(
+    actor: AuthenticatedUser,
+    serviceId: string,
+    offeringId: string,
+  ) {
     const service = await this.findById(serviceId);
-    await this.findOffering(serviceId, offeringId);
+    const offering = await this.findOffering(serviceId, offeringId);
     await this.prisma.serviceOffering.delete({ where: { id: offeringId } });
+    // Suppression de contenu : toujours tracée, avec de quoi retrouver ce qui a disparu.
+    await this.audit.record({
+      actorId: actor.id,
+      action: 'SERVICE_OFFERING_REMOVED',
+      entityType: 'ServiceOffering',
+      entityId: offeringId,
+      before: { service: service.slug, titleFr: offering.titleFr },
+    });
     await this.revalidateIfPublished(service);
+  }
+
+  /** Ordre des prestations d'un service : la liste complète, appliquée d'un bloc. */
+  async reorderOfferings(serviceId: string, ids: string[]) {
+    const service = await this.findById(serviceId);
+    this.assertSameSet(ids, service.offerings, {
+      code: 'SERVICE_OFFERING_ORDER_MISMATCH',
+      message:
+        'L’ordre doit lister toutes les prestations du service, une fois chacune.',
+    });
+    await this.prisma.$transaction(
+      ids.map((id, position) =>
+        this.prisma.serviceOffering.update({
+          where: { id },
+          data: { sortOrder: position },
+        }),
+      ),
+    );
+    await this.revalidateIfPublished(service);
+    return this.findById(serviceId);
   }
 
   /** Une prestation n'est joignable que par son propre service (pas d'IDOR croisé). */
@@ -192,6 +267,47 @@ export class ServicesService {
     });
     if (!offering) throw new NotFoundException(OFFERING_NOT_FOUND);
     return offering;
+  }
+
+  /** Un nouvel élément se range après les autres (sans trou à combler à la main). */
+  private async nextPosition(
+    aggregate: Promise<{ _max: { sortOrder: number | null } }>,
+  ) {
+    const { _max } = await aggregate;
+    return (_max.sortOrder ?? -1) + 1;
+  }
+
+  /** Le nouvel ordre doit contenir exactement les éléments existants, sans doublon. */
+  private assertSameSet(
+    ids: string[],
+    existing: { id: string }[],
+    error: { code: string; message: string },
+  ) {
+    const known = new Set(existing.map((item) => item.id));
+    if (
+      ids.length !== known.size ||
+      new Set(ids).size !== ids.length ||
+      !ids.every((id) => known.has(id))
+    ) {
+      throw new BadRequestException({ ...error, details: ['ids'] });
+    }
+  }
+
+  /** Publication et dépublication sont toujours tracées (blueprint/09 §7). */
+  private record(
+    actor: AuthenticatedUser,
+    action: string,
+    service: { id: string; slug: string; status: ContentStatus },
+    before: ContentStatus,
+  ) {
+    return this.audit.record({
+      actorId: actor.id,
+      action,
+      entityType: 'Service',
+      entityId: service.id,
+      before: { status: before, slug: service.slug },
+      after: { status: service.status },
+    });
   }
 
   private async revalidateIfPublished(service: {

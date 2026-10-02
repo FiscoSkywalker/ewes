@@ -43,4 +43,19 @@ export class CreatePageDto {
   @IsOptional()
   @IsString()
   contentEn?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Description affichée par les moteurs de recherche (≈ 160 caractères) ; absente, le site reprend l’introduction.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  metaDescriptionFr?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  metaDescriptionEn?: string;
 }

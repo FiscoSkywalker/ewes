@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -16,6 +17,9 @@ import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
+import { ReorderDto } from './dto/reorder.dto.js';
 import { ServicesService } from './services.service.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
@@ -66,6 +70,17 @@ export class AdminServicesController {
     return this.servicesService.addOffering(id, dto);
   }
 
+  @Put(':id/offerings/order')
+  @ApiOperation({
+    summary: 'Ordre des prestations d’un service (liste complète)',
+  })
+  reorderOfferings(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ReorderDto,
+  ) {
+    return this.servicesService.reorderOfferings(id, dto.ids);
+  }
+
   @Patch(':id/offerings/:offeringId')
   updateOffering(
     @Param('id', ParseUUIDPipe) id: string,
@@ -78,23 +93,30 @@ export class AdminServicesController {
   @Delete(':id/offerings/:offeringId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeOffering(
+    @CurrentUser() actor: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Param('offeringId', ParseUUIDPipe) offeringId: string,
   ) {
-    await this.servicesService.removeOffering(id, offeringId);
+    await this.servicesService.removeOffering(actor, id, offeringId);
   }
 
   @Post(':id/publish')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Publier explicitement un service' })
-  publish(@Param('id', ParseUUIDPipe) id: string) {
-    return this.servicesService.publish(id);
+  publish(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.servicesService.publish(actor, id);
   }
 
   @Post(':id/unpublish')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Dépublier un service (retour en brouillon)' })
-  unpublish(@Param('id', ParseUUIDPipe) id: string) {
-    return this.servicesService.unpublish(id);
+  unpublish(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.servicesService.unpublish(actor, id);
   }
 }
