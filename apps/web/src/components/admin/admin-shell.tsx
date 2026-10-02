@@ -215,6 +215,8 @@ function PortalFrame({
                 <ThemeToggle />
                 <NotificationsMenu
                   signals={signals.signals}
+                  hiddenCount={signals.hiddenCount}
+                  isAdmin={session.role === 'ADMINISTRATEUR'}
                   seenAt={seenAt}
                   onMarkAllSeen={markAllSeen}
                   isLoading={signals.isLoading}

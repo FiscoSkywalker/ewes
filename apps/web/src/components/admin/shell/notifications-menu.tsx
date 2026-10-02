@@ -35,6 +35,10 @@ type Tab = 'all' | 'unread';
 
 interface NotificationsMenuProps {
   signals: PortalSignal[];
+  /** Éléments au-delà de ceux listés (le panneau n'en charge qu'une partie). */
+  hiddenCount: number;
+  /** Seul l'Administrateur suit les envois d'e-mails. */
+  isAdmin: boolean;
   seenAt: string;
   onMarkAllSeen: () => void;
   isLoading: boolean;
@@ -46,6 +50,8 @@ interface NotificationsMenuProps {
 
 export function NotificationsMenu({
   signals,
+  hiddenCount,
+  isAdmin,
   seenAt,
   onMarkAllSeen,
   isLoading,
@@ -218,17 +224,31 @@ export function NotificationsMenu({
                 </section>
               ))
             )}
+            {!isLoading && !isError && hiddenCount > 0 && (
+              <p className="px-3 py-3 text-center text-xs text-ink-subtle">
+                + {hiddenCount} autre{hiddenCount > 1 ? 's' : ''} élément
+                {hiddenCount > 1 ? 's' : ''} dans les écrans concernés
+              </p>
+            )}
           </div>
 
           {hasSources && (
-            <footer className="border-t border-line p-2">
-              <Link
-                href="/admin/contacts"
-                onClick={() => close(false)}
-                className="flex h-9 items-center justify-center rounded-lg text-[13px] font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
-              >
-                Voir tous les messages
-              </Link>
+            <footer className="flex gap-1 border-t border-line p-2">
+              {[
+                { href: '/admin/contacts', label: 'Voir les messages' },
+                ...(isAdmin
+                  ? [{ href: '/admin/emails', label: 'Suivi des e-mails' }]
+                  : []),
+              ].map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => close(false)}
+                  className="flex h-9 flex-1 items-center justify-center rounded-lg text-[13px] font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+                >
+                  {label}
+                </Link>
+              ))}
             </footer>
           )}
         </div>

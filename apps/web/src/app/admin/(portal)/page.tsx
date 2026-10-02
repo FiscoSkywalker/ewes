@@ -454,6 +454,8 @@ interface AuditRow {
   id: string;
   action: string;
   entityType: string;
+  /** `null` : action du système, ou compte supprimé depuis (acteur anonymisé). */
+  actor: { id: string; fullName: string } | null;
   createdAt: string;
 }
 
@@ -531,6 +533,7 @@ function RecentActivity() {
                     {actionLabel(entry.action)}
                   </span>
                   <span className="block text-[11px] text-ink-subtle">
+                    {entry.actor?.fullName ?? 'Système'} ·{' '}
                     {relativeTime(entry.createdAt)}
                   </span>
                 </span>

@@ -60,6 +60,8 @@ export class AuditService {
     const [data, total] = await Promise.all([
       this.prisma.auditLog.findMany({
         where,
+        // Nom seul : de quoi afficher « par … » sans exposer l'e-mail de l'acteur.
+        include: { actor: { select: { id: true, fullName: true } } },
         orderBy: { createdAt: 'desc' },
         skip: (query.page - 1) * query.limit,
         take: query.limit,
