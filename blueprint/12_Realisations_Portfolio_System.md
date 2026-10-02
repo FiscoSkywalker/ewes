@@ -16,6 +16,8 @@ Titre, catégorie/domaine (Environnement, Eau, Travaux d'ingénierie), client (u
 
 `DRAFT` → `PUBLISHED` → `ARCHIVED` (dépublié mais conservé en base pour historique interne). Une fiche `DRAFT` ou `ARCHIVED` n'est jamais accessible par URL publique directe. La publication exige au minimum : titre FR, catégorie, période, une image de couverture.
 
+> **Note du 2026-10-02 (écart assumé, à valider avec EWES)** : l'implémentation exige à la publication le titre FR, l'année et le type de mission ; la catégorie/domaine (`serviceId`), la localisation et l'image de couverture sont **facultatives** pour l'instant, car les 34 références du profil EWES n'ont ni localisation ni image, et les catégories de mission ne se rattachent pas proprement aux trois pôles. Rétablir ces exigences quand les fiches détaillées et le module `media` existeront. Le client n'est exposé publiquement que si `isClientPublic` est vrai.
+
 # 4. Classement et filtrage public
 
 Le portfolio public se filtre par domaine, année, localisation et type de projet. Ces quatre champs sont donc obligatoires à la publication pour garantir un filtrage cohérent — une fiche qui ne les porte pas reste bloquée en `DRAFT`.

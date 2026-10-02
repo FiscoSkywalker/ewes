@@ -124,6 +124,54 @@ async function seedServices(prisma: PrismaClient) {
   }
 }
 
+interface ProjectMessage {
+  id: string;
+  category: string;
+  year: number;
+  yearEnd: number | null;
+  client: string;
+  mission: string;
+}
+
+/**
+ * Importe les 34 références du profil EWES (`Projects.items`), publiées.
+ * Idempotent par slug. Les clients sont cités publiquement dans le profil :
+ * `isClientPublic` est donc vrai. Pas de localisation ni d'image source.
+ */
+async function seedRealisations(prisma: PrismaClient) {
+  const fr = readMessages('fr').Projects.items as ProjectMessage[];
+  const en = readMessages('en').Projects.items as ProjectMessage[];
+  const enById = new Map(en.map((item) => [item.id, item]));
+
+  let created = 0;
+  for (const item of fr) {
+    if (await prisma.realisation.findUnique({ where: { slug: item.id } })) {
+      continue;
+    }
+    const english = enById.get(item.id);
+    await prisma.realisation.create({
+      data: {
+        slug: item.id,
+        titleFr: item.mission,
+        titleEn: english?.mission,
+        clientName: item.client,
+        isClientPublic: true,
+        year: item.year,
+        yearEnd: item.yearEnd,
+        projectType: item.category,
+        status: ContentStatus.PUBLISHED,
+        publishedAt: new Date(),
+      },
+    });
+    created += 1;
+  }
+  console.log(
+    created > 0
+      ? `Réalisations : ${created} créées (${fr.length - created} déjà présentes).`
+      : 'Réalisations déjà présentes — rien à faire.',
+  );
+}
+
 async function main() {
   const email = (
     process.env.SEED_ADMIN_EMAIL ?? 'admin@ewes.example'
@@ -140,6 +188,7 @@ async function main() {
     await seedAdmin(prisma, email, password);
     await seedAboutPage(prisma);
     await seedServices(prisma);
+    await seedRealisations(prisma);
   } finally {
     await prisma.$disconnect();
   }
