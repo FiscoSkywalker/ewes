@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import {
   useMutation,
@@ -9,15 +9,7 @@ import {
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query';
-import {
-  Archive,
-  ArrowLeft,
-  CloudUpload,
-  EyeOff,
-  FileText,
-  Send,
-  Trash2,
-} from 'lucide-react';
+import { ArrowLeft, CloudUpload, FileText } from 'lucide-react';
 import { ApiError, backendJson } from '@/lib/api/backend';
 import { invalidatePortalData } from '@/lib/admin/invalidate';
 import { homePathFor } from '@/lib/admin/roles';
@@ -32,6 +24,7 @@ import {
 import { PageHeader } from '@/components/admin/page-header';
 import { useSession } from '@/components/admin/session';
 import { PortalNotFound } from '@/components/admin/states';
+import { PublicationPanel } from '@/components/admin/content/publication-panel';
 import {
   Badge,
   Button,
@@ -48,11 +41,6 @@ import {
   DocumentForm,
   FilePicker,
 } from '@/components/admin/documents/document-form';
-
-const dateTime = new Intl.DateTimeFormat('fr', {
-  dateStyle: 'long',
-  timeStyle: 'short',
-});
 
 const detailKey = (id: string) => ['documents', 'detail', id];
 
@@ -156,147 +144,21 @@ function Detail({ document }: { document: PublicDocument }) {
         />
 
         <div className="space-y-6">
-          <StatusPanel document={document} />
+          <PublicationPanel<PublicDocument>
+            endpoint={`admin/documents-publics/${document.id}`}
+            status={document.status}
+            publishedAt={document.publishedAt}
+            updatedAt={document.updatedAt}
+            slug={document.slug}
+            noun={{ label: 'document', feminine: false }}
+            unpublishImpact="Il disparaît immédiatement du site public (et son fichier n’y est plus téléchargeable). Il reste en brouillon dans le portail."
+            afterDeleteHref="/admin/documents-publics"
+            onPublished={(saved) => applySaved(queryClient, saved)}
+          />
           <FilePanel document={document} />
         </div>
       </div>
     </>
-  );
-}
-
-function StatusPanel({ document }: { document: PublicDocument }) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const toast = useToast();
-  const confirm = useConfirm();
-  const base = `admin/documents-publics/${document.id}`;
-  const post = (action: string) =>
-    backendJson<PublicDocument>(`${base}/${action}`, { method: 'POST' });
-
-  const publish = useMutation({
-    mutationFn: () => post('publish'),
-    onSuccess: async (saved) => {
-      await applySaved(queryClient, saved);
-      toast.success('Document publié', {
-        description: 'Il est visible sur le site public.',
-      });
-    },
-    onError: (error) => toast.error(error),
-  });
-
-  async function change(
-    action: 'unpublish' | 'archive',
-    options: { title: string; description: string; confirmLabel: string },
-    done: string,
-  ) {
-    const ok = await confirm({
-      ...options,
-      onConfirm: () => post(action),
-    });
-    if (!ok) return;
-    await invalidatePortalData(queryClient);
-    toast.success(done);
-  }
-
-  async function remove() {
-    const ok = await confirm({
-      title: 'Supprimer ce document ?',
-      description:
-        'Il disparaît du site et du portail. Le fichier est conservé sur le serveur, inaccessible. Cette action est tracée dans le journal d’audit.',
-      tone: 'danger',
-      confirmLabel: 'Supprimer le document',
-      confirmationText: document.slug,
-      onConfirm: () => backendJson<void>(`${base}`, { method: 'DELETE' }),
-    });
-    if (!ok) return;
-    await invalidatePortalData(queryClient);
-    toast.success('Document supprimé');
-    router.replace('/admin/documents-publics');
-  }
-
-  const published = document.status === 'PUBLISHED';
-  return (
-    <Card title="Publication">
-      <dl className="space-y-1 text-sm">
-        <div className="flex items-center justify-between gap-3">
-          <dt className="text-ink-muted">Statut</dt>
-          <dd>
-            <StatusChip kind="content" value={document.status} />
-          </dd>
-        </div>
-        {document.publishedAt && (
-          <div className="flex items-center justify-between gap-3">
-            <dt className="text-ink-muted">Première publication</dt>
-            <dd className="text-right text-ink">
-              {dateTime.format(new Date(document.publishedAt))}
-            </dd>
-          </div>
-        )}
-        <div className="flex items-center justify-between gap-3">
-          <dt className="text-ink-muted">Dernière modification</dt>
-          <dd className="text-right text-ink">
-            {dateTime.format(new Date(document.updatedAt))}
-          </dd>
-        </div>
-      </dl>
-
-      <div className="mt-5 flex flex-col gap-2">
-        {!published && (
-          <Button
-            icon={Send}
-            loading={publish.isPending}
-            onClick={() => publish.mutate()}
-          >
-            {document.status === 'ARCHIVED'
-              ? 'Republier'
-              : 'Publier sur le site'}
-          </Button>
-        )}
-        {published && (
-          <Button
-            variant="secondary"
-            icon={EyeOff}
-            onClick={() =>
-              change(
-                'unpublish',
-                {
-                  title: 'Dépublier ce document ?',
-                  description:
-                    'Il disparaît immédiatement du site public (et son fichier n’y est plus téléchargeable). Il reste en brouillon dans le portail.',
-                  confirmLabel: 'Dépublier',
-                },
-                'Document dépublié',
-              )
-            }
-          >
-            Dépublier
-          </Button>
-        )}
-        {document.status !== 'ARCHIVED' && (
-          <Button
-            variant="secondary"
-            icon={Archive}
-            onClick={() =>
-              change(
-                'archive',
-                {
-                  title: 'Archiver ce document ?',
-                  description:
-                    'Il est retiré du site public et conservé pour l’historique. Vous pourrez le republier plus tard.',
-                  confirmLabel: 'Archiver',
-                },
-                'Document archivé',
-              )
-            }
-          >
-            Archiver
-          </Button>
-        )}
-        <Button variant="ghost" icon={Trash2} onClick={remove}>
-          <span className="text-bad">Supprimer</span>
-        </Button>
-      </div>
-    </Card>
   );
 }
 

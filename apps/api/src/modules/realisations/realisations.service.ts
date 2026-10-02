@@ -8,6 +8,9 @@ import {
 import { ContentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
+import { escapeLike } from '../../common/utils/like.js';
+import { AuditService } from '../audit/audit.service.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import type { CreateRealisationDto } from './dto/create-realisation.dto.js';
 import type { UpdateRealisationDto } from './dto/update-realisation.dto.js';
 import type {
@@ -46,6 +49,7 @@ export class RealisationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly revalidator: FrontendRevalidator,
+    private readonly audit: AuditService,
   ) {}
 
   /** Lecture publique : PUBLISHED, non supprimée, date de publication atteinte. */
@@ -92,23 +96,58 @@ export class RealisationsService {
     return realisation;
   }
 
+  /**
+   * Liste d'administration : filtres, recherche et tri au choix. `meta.statuses`
+   * compte les fiches de chaque statut, sans tenir compte du filtre de statut
+   * lui-même (il alimente les effectifs des onglets) mais en tenant compte de
+   * la recherche et des autres filtres.
+   */
   async listAdmin(query: ListAdminRealisationsDto) {
-    const where: Prisma.RealisationWhereInput = {
+    const search = query.q ? escapeLike(query.q) : undefined;
+    const base: Prisma.RealisationWhereInput = {
       deletedAt: null,
-      ...(query.status && { status: query.status }),
       ...this.filters(query),
+      ...(search && {
+        OR: (['titleFr', 'titleEn', 'clientName', 'location', 'slug'] as const).map(
+          (field) => ({
+            [field]: { contains: search, mode: 'insensitive' as const },
+          }),
+        ),
+      }),
     };
-    const [data, total] = await Promise.all([
+    const where: Prisma.RealisationWhereInput = {
+      ...base,
+      ...(query.status && { status: query.status }),
+    };
+    // Année et type facultatifs en brouillon : les fiches sans valeur passent toujours en dernier.
+    const nullable = (field: 'year' | 'projectType') => ({
+      [field]: { sort: query.order, nulls: 'last' as const },
+    });
+    const primary: Prisma.RealisationOrderByWithRelationInput | undefined =
+      query.sort === 'year' || query.sort === 'projectType'
+        ? nullable(query.sort)
+        : query.sort
+          ? { [query.sort]: query.order }
+          : undefined;
+    const [data, total, groups] = await Promise.all([
       this.prisma.realisation.findMany({
         where,
         include: WITH_SERVICE,
-        orderBy: PUBLIC_ORDER,
+        // `id` départage les ex æquo : une page ne doit ni répéter ni sauter de ligne.
+        orderBy: primary ? [primary, { updatedAt: 'desc' }, { id: 'asc' }] : PUBLIC_ORDER,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
       this.prisma.realisation.count({ where }),
+      this.prisma.realisation.groupBy({
+        by: ['status'],
+        where: base,
+        _count: { _all: true },
+      }),
     ]);
-    return { data, meta: { page: query.page, limit: query.limit, total } };
+    const statuses: Partial<Record<ContentStatus, number>> = {};
+    for (const group of groups) statuses[group.status] = group._count._all;
+    return { data, meta: { page: query.page, limit: query.limit, total, statuses } };
   }
 
   async findById(id: string) {
@@ -171,7 +210,7 @@ export class RealisationsService {
   }
 
   /** Publication explicite ; exige les champs nécessaires au filtrage public. */
-  async publish(id: string) {
+  async publish(actor: AuthenticatedUser, id: string) {
     const current = await this.findById(id);
     if (current.status === ContentStatus.PUBLISHED) return current;
 
@@ -196,29 +235,69 @@ export class RealisationsService {
       },
       include: WITH_SERVICE,
     });
+    await this.record(actor, 'REALISATION_PUBLISHED', published, current.status);
     await this.revalidate(published.slug);
     return published;
   }
 
   /** Retire immédiatement la fiche du site public (retour en brouillon). */
-  unpublish(id: string) {
-    return this.setStatus(id, ContentStatus.DRAFT);
+  unpublish(actor: AuthenticatedUser, id: string) {
+    return this.setStatus(actor, id, ContentStatus.DRAFT, 'REALISATION_UNPUBLISHED');
   }
 
   /** Dépublie en conservant la fiche pour l'historique interne. */
-  archive(id: string) {
-    return this.setStatus(id, ContentStatus.ARCHIVED);
+  archive(actor: AuthenticatedUser, id: string) {
+    return this.setStatus(actor, id, ContentStatus.ARCHIVED, 'REALISATION_ARCHIVED');
   }
 
-  private async setStatus(id: string, status: ContentStatus) {
-    await this.findById(id);
+  private async setStatus(
+    actor: AuthenticatedUser,
+    id: string,
+    status: ContentStatus,
+    action: string,
+  ) {
+    const current = await this.findById(id);
+    if (current.status === status) return current;
     const updated = await this.prisma.realisation.update({
       where: { id },
       data: { status },
       include: WITH_SERVICE,
     });
+    await this.record(actor, action, updated, current.status);
     await this.revalidate(updated.slug);
     return updated;
+  }
+
+  /**
+   * Suppression logique : la fiche disparaît du site et du portail ; la ligne
+   * est conservée (historique, audit).
+   */
+  async remove(actor: AuthenticatedUser, id: string) {
+    const current = await this.findById(id);
+    await this.prisma.realisation.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+    await this.record(actor, 'REALISATION_DELETED', current, current.status, { deleted: true });
+    await this.revalidate(current.slug);
+  }
+
+  /** Publication, dépublication, archivage et suppression sont toujours tracés (blueprint/09 §7). */
+  private record(
+    actor: AuthenticatedUser,
+    action: string,
+    realisation: { id: string; slug: string; status: ContentStatus },
+    before: ContentStatus,
+    after: Prisma.InputJsonValue = { status: realisation.status },
+  ) {
+    return this.audit.record({
+      actorId: actor.id,
+      action,
+      entityType: 'Realisation',
+      entityId: realisation.id,
+      before: { status: before, slug: realisation.slug },
+      after,
+    });
   }
 
   /**
