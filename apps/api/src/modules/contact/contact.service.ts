@@ -7,6 +7,7 @@ import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { acknowledgement, teamNotification } from './contact-emails.js';
+import type { ListContactsDto } from './dto/list-contacts.dto.js';
 import type { SubmitContactDto } from './dto/submit-contact.dto.js';
 
 /** Fenêtre de détection d'un double envoi du même message (sans clé d'idempotence). */
@@ -135,14 +136,27 @@ export class ContactService {
     });
   }
 
-  async list(query: { page: number; limit: number; status?: ContactMessageStatus }) {
+  async list(query: ListContactsDto) {
+    // Prisma n'échappe pas les jokers de `contains` : `%` et `_` saisis doivent se chercher tels quels.
+    const search = query.q?.trim().replace(/[\\%_]/g, '\\$&');
     const where: Prisma.ContactMessageWhereInput = {
       ...(query.status && { status: query.status }),
+      ...(search && {
+        OR: (['name', 'organization', 'email', 'phone', 'message'] as const).map((field) => ({
+          [field]: { contains: search, mode: 'insensitive' as const },
+        })),
+      }),
     };
+    // Organisation facultative : les messages sans organisation passent toujours en dernier.
+    const primary: Prisma.ContactMessageOrderByWithRelationInput =
+      query.sort === 'organization'
+        ? { organization: { sort: query.order, nulls: 'last' } }
+        : { [query.sort]: query.order };
     const [data, total] = await Promise.all([
       this.prisma.contactMessage.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        // `id` départage les ex æquo : une page ne doit ni répéter ni sauter de ligne.
+        orderBy: [primary, { createdAt: 'desc' }, { id: 'asc' }],
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),

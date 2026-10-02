@@ -12,40 +12,17 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiProperty,
-  ApiPropertyOptional,
   ApiTags,
 } from '@nestjs/swagger';
 import { ContactMessageStatus, Role } from '@prisma/client';
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum } from 'class-validator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { ContactService } from './contact.service.js';
-
-class ListContactsDto {
-  @ApiPropertyOptional({ default: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page: number = 1;
-
-  @ApiPropertyOptional({ default: 50, maximum: 100 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit: number = 50;
-
-  @ApiPropertyOptional({ enum: ContactMessageStatus })
-  @IsOptional()
-  @IsEnum(ContactMessageStatus)
-  status?: ContactMessageStatus;
-}
+import { ListContactsDto } from './dto/list-contacts.dto.js';
 
 class SetContactStatusDto {
   @ApiProperty({ enum: ContactMessageStatus })
@@ -63,7 +40,7 @@ export class AdminContactsController {
   constructor(private readonly contact: ContactService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Messages de contact reçus (plus récents d’abord)' })
+  @ApiOperation({ summary: 'Messages de contact reçus (recherche `q`, tri `sort`/`order` ; plus récents d’abord par défaut)' })
   list(@Query() query: ListContactsDto) {
     return this.contact.list(query);
   }
