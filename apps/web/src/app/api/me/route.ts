@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { clientContextHeaders } from '@/lib/api/client-context';
 import { ACCESS_TOKEN_COOKIE } from '@/lib/auth/cookies';
 
 const API_URL =
@@ -22,7 +23,10 @@ export async function GET() {
   }
 
   const apiRes = await fetch(`${API_URL}/me`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      ...(await clientContextHeaders()),
+    },
   });
   const data = await apiRes.json().catch(() => null);
 

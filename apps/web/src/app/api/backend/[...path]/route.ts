@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
+import { clientContextHeaders } from '@/lib/api/client-context';
 import { ACCESS_TOKEN_COOKIE } from '@/lib/auth/cookies';
 
 const API_URL =
@@ -63,7 +64,10 @@ async function forward(
     return error(401, 'UNAUTHORIZED', 'Non authentifié.');
   }
 
-  const headers = new Headers({ Authorization: `Bearer ${accessToken}` });
+  const headers = new Headers({
+    ...(await clientContextHeaders()),
+    Authorization: `Bearer ${accessToken}`,
+  });
   for (const name of FORWARDED_REQUEST_HEADERS) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
