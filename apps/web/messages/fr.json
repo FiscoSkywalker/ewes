@@ -828,7 +828,9 @@
       "survey": "Enquête",
       "training": "Formation",
       "event": "Événement",
-      "publication": "Publication"
+      "publication": "Publication",
+      "news": "Actualité",
+      "communique": "Communiqué"
     },
     "pagination": {
       "label": "Pagination des actualités",

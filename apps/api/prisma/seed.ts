@@ -1,6 +1,12 @@
 import 'dotenv/config';
 import { readFileSync } from 'node:fs';
-import { ContentStatus, PrismaClient, Role } from '@prisma/client';
+import {
+  ArticleType,
+  ContentStatus,
+  DatePrecision,
+  PrismaClient,
+  Role,
+} from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as argon2 from 'argon2';
 
@@ -172,6 +178,87 @@ async function seedRealisations(prisma: PrismaClient) {
   );
 }
 
+interface NewsMessage {
+  id: string;
+  category: 'survey' | 'training' | 'event' | 'publication';
+  date: string;
+  context: string;
+  title: string;
+  excerpt: string;
+  imageAlt: string;
+  body?: string[];
+}
+
+const NEWS_TYPES: Record<NewsMessage['category'], ArticleType> = {
+  survey: ArticleType.ENQUETE,
+  training: ArticleType.FORMATION,
+  event: ArticleType.EVENEMENT,
+  publication: ArticleType.PUBLICATION,
+};
+
+/** Visuels actuels du site (apps/web/public), en attendant le module `media`. */
+const NEWS_IMAGES: Record<string, string> = {
+  'barometre-rse-2025': '/assets/images/ewes-news-rse-survey.jpg',
+  'metalkol-carbone-2024': '/assets/images/ewes-laboratory-cinematic.png',
+  'inspecteurs-2023': '/assets/images/ewes-environment-field.png',
+};
+
+/** « 2025 », « 2025-03 » ou « 2025-03-12 » -> date + précision d'affichage. */
+function parseNewsDate(value: string) {
+  const [year, month, day] = value.split('-').map(Number);
+  return {
+    publishedAt: new Date(Date.UTC(year, (month || 1) - 1, day || 1)),
+    datePrecision: day
+      ? DatePrecision.DAY
+      : month
+        ? DatePrecision.MONTH
+        : DatePrecision.YEAR,
+  };
+}
+
+/** Importe les actualités du site (`News.items`), publiées. Idempotent par slug. */
+async function seedArticles(prisma: PrismaClient) {
+  const fr = readMessages('fr').News.items as NewsMessage[];
+  const en = readMessages('en').News.items as NewsMessage[];
+  const enById = new Map(en.map((item) => [item.id, item]));
+
+  let created = 0;
+  for (const item of fr) {
+    if (await prisma.article.findUnique({ where: { slug: item.id } })) continue;
+    const english = enById.get(item.id);
+    const image = NEWS_IMAGES[item.id];
+    await prisma.article.create({
+      data: {
+        slug: item.id,
+        type: NEWS_TYPES[item.category],
+        titleFr: item.title,
+        titleEn: english?.title,
+        excerptFr: item.excerpt,
+        excerptEn: english?.excerpt,
+        contextFr: item.context,
+        contextEn: english?.context,
+        contentFr: item.body?.join('\n\n') ?? '',
+        contentEn: english?.body?.join('\n\n'),
+        status: ContentStatus.PUBLISHED,
+        ...parseNewsDate(item.date),
+        images: image
+          ? {
+              create: [
+                { url: image, altFr: item.imageAlt, altEn: english?.imageAlt },
+              ],
+            }
+          : undefined,
+      },
+    });
+    created += 1;
+  }
+  console.log(
+    created > 0
+      ? `Actualités : ${created} créées (${fr.length - created} déjà présentes).`
+      : 'Actualités déjà présentes — rien à faire.',
+  );
+}
+
 async function main() {
   const email = (
     process.env.SEED_ADMIN_EMAIL ?? 'admin@ewes.example'
@@ -189,6 +276,7 @@ async function main() {
     await seedAboutPage(prisma);
     await seedServices(prisma);
     await seedRealisations(prisma);
+    await seedArticles(prisma);
   } finally {
     await prisma.$disconnect();
   }
