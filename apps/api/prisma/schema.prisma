@@ -29,6 +29,15 @@ enum ArticleType {
   EVENEMENT
   FORMATION
   COMMUNIQUE
+  ENQUETE
+  PUBLICATION
+}
+
+/// Précision de la date affichée d'un article (une enquête de 2025 s'affiche « 2025 »).
+enum DatePrecision {
+  YEAR
+  MONTH
+  DAY
 }
 
 enum ConfidentialityLevel {
@@ -247,20 +256,23 @@ model RealisationPartner {
 // --- Actualités & publications ---
 
 model Article {
-  id          String        @id @default(uuid())
-  slug        String        @unique
-  type        ArticleType
-  titleFr     String
-  titleEn     String?
-  excerptFr   String?
-  excerptEn   String?
-  contentFr   String
-  contentEn   String?
-  status      ContentStatus @default(DRAFT)
-  publishedAt DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  deletedAt   DateTime?
+  id            String        @id @default(uuid())
+  slug          String        @unique
+  type          ArticleType
+  titleFr       String
+  titleEn       String?
+  excerptFr     String?
+  excerptEn     String?
+  contextFr     String?
+  contextEn     String?
+  contentFr     String
+  contentEn     String?
+  status        ContentStatus @default(DRAFT)
+  publishedAt   DateTime?
+  datePrecision DatePrecision @default(DAY)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
 
   images    ArticleImage[]
   documents ArticleDocument[]

@@ -828,7 +828,9 @@
       "survey": "Survey",
       "training": "Training",
       "event": "Event",
-      "publication": "Publication"
+      "publication": "Publication",
+      "news": "News",
+      "communique": "Press release"
     },
     "pagination": {
       "label": "News pagination",

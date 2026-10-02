@@ -1,4 +1,5 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { getPublishedNews } from '@/lib/api/public-articles';
 import {
   NEWS_CATEGORIES,
   NEWS_FALLBACK_IMAGE,
@@ -11,21 +12,28 @@ import {
 export const NEWS_PAGE_SIZE = 6;
 
 /**
- * Point d'accès unique aux actualités du site public. Lit aujourd'hui les
- * messages ; à remplacer par l'appel au module NestJS `actualites`
- * (`GET /actualites?locale=&categorie=&page=`) sans toucher aux pages.
+ * Point d'accès unique aux actualités du site public : l'API (module
+ * `actualites`, `GET /articles`), avec repli sur les messages `News.items`
+ * si elle est injoignable ou ne renvoie aucun article publié.
  */
 export async function getAllNews(locale?: string): Promise<NewsItem[]> {
   // Locale explicite hors requête (generateStaticParams).
-  const t = locale
-    ? await getTranslations({ locale, namespace: 'News' })
-    : await getTranslations('News');
-  return (t.raw('items') as NewsItem[])
-    .map((item) => ({
-      ...item,
-      image: item.image ?? NEWS_IMAGES[item.id] ?? NEWS_FALLBACK_IMAGE,
-    }))
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const currentLocale = locale ?? (await getLocale());
+  const fromApi = await getPublishedNews(currentLocale);
+
+  // Repli : API indisponible ou sans article publié.
+  const items =
+    fromApi ??
+    (
+      (
+        await getTranslations({ locale: currentLocale, namespace: 'News' })
+      ).raw('items') as NewsItem[]
+    ).sort((a, b) => b.date.localeCompare(a.date));
+
+  return items.map((item) => ({
+    ...item,
+    image: item.image ?? NEWS_IMAGES[item.id] ?? NEWS_FALLBACK_IMAGE,
+  }));
 }
 
 export async function getNewsItem(id: string) {
