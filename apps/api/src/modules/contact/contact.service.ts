@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ContactMessage, ContactMessageStatus, Prisma } from '@prisma/client';
 import { createHash } from 'node:crypto';
+import { escapeLike } from '../../common/utils/like.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
@@ -137,8 +138,7 @@ export class ContactService {
   }
 
   async list(query: ListContactsDto) {
-    // Prisma n'échappe pas les jokers de `contains` : `%` et `_` saisis doivent se chercher tels quels.
-    const search = query.q?.trim().replace(/[\\%_]/g, '\\$&');
+    const search = query.q?.trim() ? escapeLike(query.q.trim()) : undefined;
     const where: Prisma.ContactMessageWhereInput = {
       ...(query.status && { status: query.status }),
       ...(search && {
