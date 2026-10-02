@@ -199,6 +199,45 @@ describe('Articles (e2e)', () => {
       .expect(400);
   });
 
+  it('excludes a featured article from the page and its total, and counts published articles per type regardless of filters', async () => {
+    // COMMUNIQUE : rubrique qu'aucune autre suite e2e ne publie en parallèle.
+    const listCommuniques = (query = '') =>
+      request(app.getHttpServer())
+        .get(`/api/v1/articles?type=COMMUNIQUE&limit=100${query}`)
+        .expect(200);
+    const before = await listCommuniques();
+    const countBefore: number = before.body.meta.types.COMMUNIQUE ?? 0;
+    expect(before.body.meta.total).toBe(countBefore);
+
+    const first = await create('com-a', { excerptFr: 'A', type: 'COMMUNIQUE' });
+    const second = await create('com-b', { excerptFr: 'B', type: 'COMMUNIQUE' });
+    // Brouillon : ne doit compter ni dans le total ni dans la rubrique.
+    await create('com-draft', { excerptFr: 'C', type: 'COMMUNIQUE' });
+    await publish(first, { publishedAt: '1980-01-01T00:00:00.000Z' }).expect(200);
+    await publish(second, { publishedAt: '1980-02-01T00:00:00.000Z' }).expect(200);
+
+    const all = await listCommuniques();
+    expect(all.body.meta.types.COMMUNIQUE).toBe(countBefore + 2);
+    expect(all.body.meta.total).toBe(countBefore + 2);
+
+    const excluded = await listCommuniques(`&exclude=${prefix}-com-b`);
+    const slugs = excluded.body.data.map((a: { slug: string }) => a.slug);
+    expect(slugs).toContain(`${prefix}-com-a`);
+    expect(slugs).not.toContain(`${prefix}-com-b`);
+    expect(excluded.body.meta.total).toBe(countBefore + 1);
+    // Les compteurs par rubrique ignorent l'exclusion et le filtre de rubrique.
+    expect(excluded.body.meta.types).toEqual(all.body.meta.types);
+    const unfiltered = await request(app.getHttpServer())
+      .get('/api/v1/articles?limit=1')
+      .expect(200);
+    expect(unfiltered.body.meta.types.COMMUNIQUE).toBe(countBefore + 2);
+    expect(unfiltered.body.data).toHaveLength(1);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/articles?exclude=../secret')
+      .expect(400);
+  });
+
   it('locks the slug after publication and rejects duplicates', async () => {
     const id = await create('lock', { excerptFr: 'x' });
     const duplicate = await request(app.getHttpServer())

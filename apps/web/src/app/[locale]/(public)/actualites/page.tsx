@@ -4,14 +4,9 @@ import { getTranslations } from 'next-intl/server';
 import { ArrowRight, BookOpen } from 'lucide-react';
 import { NewsCard, NewsMeta } from '@/components/public/news-card';
 import { SectionHeading } from '@/components/public/section-heading';
-import { NEWS_CATEGORIES, type NewsCategory } from '@/data/news';
+import type { NewsCategory } from '@/data/news';
 import { Link } from '@/i18n/navigation';
-import {
-  NEWS_PAGE_SIZE,
-  getAllNews,
-  parseCategory,
-  parsePage,
-} from '@/lib/news';
+import { getNewsListPage, parseCategory, parsePage } from '@/lib/news';
 import {
   ButtonLink,
   EmptyState,
@@ -23,8 +18,9 @@ import {
  * Page Actualités & publications (blueprint/15_Public_Site_Pages.md) —
  * Server Component, sans îlot client. Rubriques et pagination passent par
  * l'URL (`?categorie=&page=`) : liens explorables par les moteurs, état
- * partageable, et correspondance directe avec la future pagination de l'API
- * (`src/lib/news.ts`). Chaque actualité a sa page `/actualites/{id}`.
+ * partageable, et transmis tels quels à l'API qui pagine et filtre : seule la
+ * page affichée est chargée (`getNewsListPage`, `src/lib/news.ts`). Chaque
+ * actualité a sa page `/actualites/{id}`.
  */
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -56,24 +52,8 @@ export default async function NewsPage({
   const t = await getTranslations('NewsPage');
   const params = await searchParams;
   const category = parseCategory(params.categorie);
-  const all = await getAllNews();
-
-  const counts = new Map<NewsCategory, number>();
-  for (const item of all)
-    counts.set(item.category, (counts.get(item.category) ?? 0) + 1);
-  const categories = NEWS_CATEGORIES.filter((key) => counts.has(key));
-
-  // À la une : la plus récente, uniquement sur la première page non filtrée.
-  const filtered = category
-    ? all.filter((item) => item.category === category)
-    : all;
-  const requestedPage = parsePage(params.page);
-  const showFeatured = !category && requestedPage === 1;
-  const featured = showFeatured ? filtered[0] : undefined;
-  const pool = category ? filtered : filtered.slice(1);
-  const pageCount = Math.max(1, Math.ceil(pool.length / NEWS_PAGE_SIZE));
-  const page = Math.min(requestedPage, pageCount);
-  const items = pool.slice((page - 1) * NEWS_PAGE_SIZE, page * NEWS_PAGE_SIZE);
+  const { featured, items, page, pageCount, total, categories } =
+    await getNewsListPage(category, parsePage(params.page));
 
   return (
     <div className="bg-paper px-6 pb-24 pt-28 text-sand md:px-16 md:pb-32 md:pt-36">
@@ -86,7 +66,7 @@ export default async function NewsPage({
           className="mb-14 max-w-4xl"
         />
 
-        {all.length === 0 ? (
+        {total === 0 ? (
           <EmptyState align="center" message={t('emptyState')} />
         ) : (
           <>
@@ -146,16 +126,16 @@ export default async function NewsPage({
               <FilterChip
                 href={listHref(null)}
                 active={!category}
-                count={all.length}
+                count={total}
               >
                 {t('categories.all')}
               </FilterChip>
-              {categories.map((key) => (
+              {categories.map(({ key, count }) => (
                 <FilterChip
                   key={key}
                   href={listHref(key)}
                   active={category === key}
-                  count={counts.get(key)}
+                  count={count}
                 >
                   {t(`categories.${key}`)}
                 </FilterChip>

@@ -1,7 +1,16 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ArticleType, ContentStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { SLUG_PATTERN } from '../../../common/utils/slug.js';
 
 /** Pagination et filtre de rubrique (08_API_Specification.md §1). */
 export class ListArticlesDto {
@@ -24,6 +33,18 @@ export class ListArticlesDto {
   @IsOptional()
   @IsEnum(ArticleType)
   type?: ArticleType;
+}
+
+/** Liste publique : peut écarter un article déjà affiché à part (« à la une »). */
+export class ListPublishedArticlesDto extends ListArticlesDto {
+  @ApiPropertyOptional({
+    description:
+      'Slug d’un article à exclure de la liste et du total (ex. article à la une).',
+  })
+  @IsOptional()
+  @MaxLength(120)
+  @Matches(SLUG_PATTERN)
+  exclude?: string;
 }
 
 /** Filtre de statut, réservé à l'administration. */

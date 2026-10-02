@@ -4,7 +4,7 @@ import {
   ActualitesService,
   type ArticleWithCover,
 } from './actualites.service.js';
-import { ListArticlesDto } from './dto/list-articles.dto.js';
+import { ListPublishedArticlesDto } from './dto/list-articles.dto.js';
 
 /** Représentation publique : ni `id`, ni `status`, ni dates internes. */
 function toPublic(article: ArticleWithCover) {
@@ -34,8 +34,12 @@ export class ActualitesController {
   constructor(private readonly actualitesService: ActualitesService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Articles publiés (rubrique, pagination)' })
-  async list(@Query() query: ListArticlesDto) {
+  @ApiOperation({
+    summary: 'Articles publiés (rubrique, exclusion, pagination)',
+    description:
+      '`meta.types` : nombre d’articles publiés par rubrique, sans tenir compte des filtres.',
+  })
+  async list(@Query() query: ListPublishedArticlesDto) {
     const { data, meta } = await this.actualitesService.listPublished(query);
     return { data: data.map(toPublic), meta };
   }

@@ -22,6 +22,10 @@ const CATEGORY_BY_TYPE: Record<string, NewsCategory> = {
   COMMUNIQUE: 'communique',
 };
 
+const TYPE_BY_CATEGORY = Object.fromEntries(
+  Object.entries(CATEGORY_BY_TYPE).map(([type, category]) => [category, type]),
+) as Record<NewsCategory, string>;
+
 interface PublicArticle {
   slug: string;
   type: string;
@@ -40,11 +44,35 @@ interface PublicArticle {
 
 interface ArticlesPage {
   data: PublicArticle[];
-  meta: { page: number; limit: number; total: number };
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    /** Articles publiés par type, indépendamment des filtres. */
+    types: Partial<Record<string, number>>;
+  };
 }
 
-async function fetchPage(page: number): Promise<ArticlesPage> {
-  const res = await fetch(`${API_URL}/articles?limit=${PAGE_SIZE}&page=${page}`, {
+interface ArticlesQuery {
+  page: number;
+  limit: number;
+  type?: string;
+  exclude?: string;
+}
+
+async function fetchPage({
+  page,
+  limit,
+  type,
+  exclude,
+}: ArticlesQuery): Promise<ArticlesPage> {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (type) params.set('type', type);
+  if (exclude) params.set('exclude', exclude);
+  const res = await fetch(`${API_URL}/articles?${params}`, {
     next: { revalidate: ARTICLES_REVALIDATE_SECONDS, tags: [ARTICLES_TAG] },
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -54,11 +82,11 @@ async function fetchPage(page: number): Promise<ArticlesPage> {
 /** Tous les articles publiés (pagination suivie) ; `null` si l'API échoue. */
 async function fetchAllPublished(): Promise<PublicArticle[] | null> {
   try {
-    const first = await fetchPage(1);
+    const first = await fetchPage({ page: 1, limit: PAGE_SIZE });
     const all = [...first.data];
     const pages = Math.ceil(first.meta.total / PAGE_SIZE);
     for (let page = 2; page <= pages; page++) {
-      all.push(...(await fetchPage(page)).data);
+      all.push(...(await fetchPage({ page, limit: PAGE_SIZE })).data);
     }
     return all;
   } catch {
@@ -82,7 +110,59 @@ export async function getPublishedNews(
 ): Promise<NewsItem[] | null> {
   const articles = await fetchAllPublished();
   if (!articles || articles.length === 0) return null;
+  return toNewsItems(articles, locale);
+}
 
+export interface NewsListing {
+  items: NewsItem[];
+  /** Total correspondant aux filtres (`category`, `exclude`). */
+  total: number;
+  /** Articles publiés par rubrique, indépendamment des filtres. */
+  counts: Partial<Record<NewsCategory, number>>;
+}
+
+/**
+ * Une seule page d'articles, paginée et filtrée par l'API ; `null` si l'API
+ * échoue (l'appelant décide alors du repli).
+ */
+export async function getNewsListing(
+  locale: string,
+  query: {
+    page: number;
+    limit: number;
+    category?: NewsCategory | null;
+    /** Slug (= `NewsItem.id`) à écarter, ex. l'actualité à la une. */
+    exclude?: string;
+  },
+): Promise<NewsListing | null> {
+  let result: ArticlesPage;
+  try {
+    result = await fetchPage({
+      page: query.page,
+      limit: query.limit,
+      type: query.category ? TYPE_BY_CATEGORY[query.category] : undefined,
+      exclude: query.exclude,
+    });
+  } catch {
+    return null;
+  }
+
+  const counts: NewsListing['counts'] = {};
+  for (const [type, count] of Object.entries(result.meta.types ?? {})) {
+    const category = CATEGORY_BY_TYPE[type];
+    if (category && count) counts[category] = count;
+  }
+  return {
+    items: await toNewsItems(result.data, locale),
+    total: result.meta.total,
+    counts,
+  };
+}
+
+async function toNewsItems(
+  articles: PublicArticle[],
+  locale: string,
+): Promise<NewsItem[]> {
   const t = await getTranslations({ locale, namespace: 'NewsPage' });
   const english = locale === 'en';
   const pick = (fr: string | null, en: string | null) =>
