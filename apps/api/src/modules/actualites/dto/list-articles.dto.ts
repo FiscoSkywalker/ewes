@@ -1,10 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ArticleType, ContentStatus } from '@prisma/client';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
+  IsString,
   Matches,
   Max,
   MaxLength,
@@ -47,10 +49,36 @@ export class ListPublishedArticlesDto extends ListArticlesDto {
   exclude?: string;
 }
 
-/** Filtre de statut, réservé à l'administration. */
+export const ARTICLE_SORT_FIELDS = ['titleFr', 'type', 'publishedAt', 'updatedAt'] as const;
+export type ArticleSortField = (typeof ARTICLE_SORT_FIELDS)[number];
+
+/** Statut, recherche et tri, réservés à l'administration. */
 export class ListAdminArticlesDto extends ListArticlesDto {
   @ApiPropertyOptional({ enum: ContentStatus })
   @IsOptional()
   @IsEnum(ContentStatus)
   status?: ContentStatus;
+
+  @ApiPropertyOptional({
+    description: 'Recherche (sans casse) dans les titres, le slug, les résumés et le contexte FR/EN.',
+    maxLength: 100,
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @MaxLength(100)
+  q?: string;
+
+  @ApiPropertyOptional({
+    enum: ARTICLE_SORT_FIELDS,
+    description: 'Sans tri explicite : parutions les plus récentes d’abord.',
+  })
+  @IsOptional()
+  @IsIn(ARTICLE_SORT_FIELDS)
+  sort?: ArticleSortField;
+
+  @ApiPropertyOptional({ enum: ['asc', 'desc'], default: 'desc' })
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  order: 'asc' | 'desc' = 'desc';
 }

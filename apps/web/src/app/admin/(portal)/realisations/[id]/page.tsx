@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Building2,
   CalendarRange,
-  Languages,
   MapPin,
   Star,
 } from 'lucide-react';
@@ -32,10 +31,10 @@ import {
   PublicationPanel,
   type ChecklistItem,
 } from '@/components/admin/content/publication-panel';
+import { TranslationCard } from '@/components/admin/content/translation-card';
 import { RealisationForm } from '@/components/admin/realisations/realisation-form';
 import {
   Badge,
-  Card,
   ErrorState,
   LoadingRegion,
   Skeleton,
@@ -208,59 +207,16 @@ function Detail({ realisation: r }: { realisation: Realisation }) {
             afterDeleteHref="/admin/realisations"
             onPublished={(saved) => applySaved(queryClient, saved)}
           />
-          <TranslationCard realisation={r} />
+          <TranslationCard
+            pairs={[
+              ['Intitulé', r.titleFr, r.titleEn],
+              ['Description', r.descriptionFr, r.descriptionEn],
+              ['Objectifs', r.objectivesFr, r.objectivesEn],
+              ['Résultats', r.resultsFr, r.resultsEn],
+            ]}
+          />
         </div>
       </div>
     </>
-  );
-}
-
-/** Avancement de la version anglaise : seuls comptent les textes déjà rédigés en français. */
-function TranslationCard({ realisation: r }: { realisation: Realisation }) {
-  const pairs: [string, string | null, string | null][] = [
-    ['Intitulé', r.titleFr, r.titleEn],
-    ['Description', r.descriptionFr, r.descriptionEn],
-    ['Objectifs', r.objectivesFr, r.objectivesEn],
-    ['Résultats', r.resultsFr, r.resultsEn],
-  ];
-  const expected = pairs.filter(([, fr]) => fr && fr.trim() !== '');
-  const done = expected.filter(([, , en]) => en && en.trim() !== '');
-  const percent = expected.length
-    ? Math.round((done.length / expected.length) * 100)
-    : 0;
-  const missing = expected.filter(([, , en]) => !en || en.trim() === '');
-
-  return (
-    <Card title="Version anglaise">
-      <div className="flex items-center gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
-          <Languages size={18} aria-hidden="true" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-ink">
-            {done.length} texte{done.length > 1 ? 's' : ''} sur{' '}
-            {expected.length} traduit{done.length > 1 ? 's' : ''}
-          </p>
-          <div
-            role="progressbar"
-            aria-label="Avancement de la traduction"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={percent}
-            className="mt-2 h-1.5 overflow-hidden rounded-full bg-sunken"
-          >
-            <div
-              className="h-full rounded-full bg-brand transition-[width] duration-500"
-              style={{ width: `${percent}%` }}
-            />
-          </div>
-        </div>
-      </div>
-      <p className="mt-3 text-xs leading-relaxed text-ink-subtle">
-        {missing.length > 0
-          ? `À traduire : ${missing.map(([label]) => label.toLowerCase()).join(', ')}. Sans version anglaise, le site en anglais affiche le texte français.`
-          : 'Toutes les versions anglaises sont renseignées.'}
-      </p>
-    </Card>
   );
 }
