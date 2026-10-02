@@ -12,6 +12,20 @@ Le portail d'administration est le plan de contrôle opérationnel : il permet �
 
 Tableau de bord (synthèse) ; contenu éditorial (pages, services, experts, médias, catégories) ; réalisations/projets ; actualités & publications ; documents publics ; espace documentaire privé (dossiers, fichiers, droits) ; messages de contact ; utilisateurs & rôles ; journal d'audit ; paramètres.
 
+> **Navigation implémentée (2026-10-02)** — source unique : `apps/web/src/lib/admin/navigation.ts` (menu, fil d'Ariane, palette de commandes et garde d'affichage en dérivent). A = Administrateur, G = Gestionnaire, U = Utilisateur.
+>
+> | Groupe | Entrées (sous-entrées) | Rôles |
+> |---|---|---|
+> | Pilotage | Tableau de bord `/admin` | A, G |
+> | Contenus du site | Pages institutionnelles ; Pôles & services (Pôles d'expertise, Prestations, Experts) ; Réalisations (Toutes, Nouvelle, Partenaires & bailleurs) ; Actualités & publications (Tous les articles, Nouvel article) ; Documents publics (Bibliothèque, Publier un document) ; Médiathèque | A, G |
+> | Espace documentaire | Dossiers & fichiers ; Recherche ; Archives | A, G, U |
+> | | Droits d'accès (Par dossier, Par document) | A |
+> | Relation client | Messages de contact (À traiter, Traités) — pastille du nombre de messages non traités | A, G |
+> | Administration | Utilisateurs & rôles (Tous les comptes, Inviter) ; Journal d'audit ; Suivi des e-mails (pastille des envois en échec) ; Paramètres (Général, Messagerie) | A |
+> | Compte (menu utilisateur) | Mon profil ; Guide d'utilisation | A, G, U |
+>
+> L'Utilisateur arrive directement sur l'espace documentaire (pas de tableau de bord). Masquer une entrée est un **confort d'affichage** : chaque écran appelle une route NestJS protégée par ses propres guards ; une adresse ouverte sans le rôle requis affiche « Accès non autorisé » sans fil d'Ariane (rien n'est révélé de la section), et le serveur refuserait de toute façon les données. Les écrans non encore construits affichent un état « en préparation » listant ce qu'ils permettront (route attrape-tout `app/admin/(portal)/[...slug]`) ; un écran réel créé à son adresse le remplace automatiquement. **À valider avec EWES** : contenu de « Paramètres » (aucun paramètre éditable n'est spécifié à ce jour) et « Partenaires & bailleurs » comme écran dédié.
+
 # 3. Matrice de permissions
 
 | Rôle | Accès |

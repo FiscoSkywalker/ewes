@@ -40,6 +40,8 @@ Header avec menu principal (Accueil, À propos, Nos services, Nos réalisations,
 
 Interface de type dashboard : navigation latérale par module (Éditorial, Documentaire, Contacts, Utilisateurs, Tableau de bord). Priorité à la densité d'information et à l'efficacité opérationnelle plutôt qu'à la démonstration visuelle.
 
+> Note (2026-10-02) — coquille du portail livrée (`apps/web/src/components/admin/`). **Thème clair/sombre** propre au portail (le site public reste mono-thème) : tokens sémantiques `canvas`, `panel`, `raised`, `sunken`, `line`, `ink`/`ink-muted`/`ink-subtle`, `brand`, `env` (malachite), `ing` (cuivre), `ok`/`warn`/`bad`, définis dans `app/admin/admin.css` (contrastes ≥ 4,5:1 dans les deux thèmes) ; préférence Clair/Sombre/Système mémorisée par navigateur, posée avant le premier rendu (aucun flash), bascule animée (View Transitions, désactivée si « réduire les animations »). **Mise en page** : barre latérale sur le fond, contenu dans un panneau en relief ; barre latérale repliable en rail d'icônes (touche `[`, menus flottants au survol), tiroir sur mobile ; barre supérieure avec fil d'Ariane, recherche, thème, notifications, menu du compte. **Palette de commandes** (Ctrl K / ⌘ K, ou `/`) : aller à tout écran autorisé ou lancer une action. États standard : squelette de chargement, « accès non autorisé », « page introuvable », écran « en préparation » pour les modules pas encore construits. Navigation complète et règles de visibilité : `14_Admin_Backoffice.md` §2.
+
 # 8. Accessibilité et contenu
 
 Contraste suffisant pour une lecture confortable, texte redimensionnable, libellés en français clair pour le public EWES (RDC), pas d'abréviation non expliquée, dates et unités localisées par langue.

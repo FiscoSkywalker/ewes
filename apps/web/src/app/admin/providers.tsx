@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@/components/admin/theme-provider';
 
 /**
  * `retry: false` : la seule tentative de récupération sur 401 (rotation du
@@ -18,5 +19,9 @@ export function AdminProviders({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={client}>
+      <ThemeProvider>{children}</ThemeProvider>
+    </QueryClientProvider>
+  );
 }

@@ -1,0 +1,276 @@
+@import '../globals.css';
+
+/*
+ * Thème du portail (blueprint/05_UI_UX_System.md §3 et §7) — clair et sombre.
+ *
+ * Le site public reste mono-thème (voir globals.css) ; le portail, outil de
+ * travail quotidien, a ses propres tokens sémantiques, dérivés de la même
+ * palette de marque : bleu acier (eau) pour l'accent, malachite (environnement)
+ * et cuivre (ingénierie) pour distinguer les modules, nuit pétrole pour le
+ * mode sombre. `data-theme` est posé sur <html> avant le premier rendu par
+ * le script de `app/admin/layout.tsx` (aucun flash au chargement).
+ *
+ * Contrastes vérifiés (texte sur `panel`) : ink ≥ 14:1, ink-muted ≥ 6:1,
+ * ink-subtle ≥ 4,5:1, brand ≥ 5:1 — dans les deux thèmes.
+ */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+  --ui-canvas: #e9eff1;
+  --ui-panel: #ffffff;
+  --ui-raised: #ffffff;
+  --ui-sunken: #f2f6f7;
+  --ui-line: rgba(16, 42, 52, 0.09);
+  --ui-line-strong: rgba(16, 42, 52, 0.16);
+
+  --ui-ink: #10262f;
+  --ui-ink-muted: #4a626d;
+  --ui-ink-subtle: #5f747d;
+
+  --ui-brand: #397187;
+  --ui-brand-strong: #285b70;
+  --ui-brand-soft: rgba(57, 113, 135, 0.1);
+  --ui-on-brand: #ffffff;
+
+  --ui-env: #1c7a57;
+  --ui-env-soft: rgba(28, 122, 87, 0.1);
+  --ui-ing: #a8561f;
+  --ui-ing-soft: rgba(168, 86, 31, 0.1);
+
+  --ui-ok: #1e7a3d;
+  --ui-ok-soft: rgba(30, 122, 61, 0.1);
+  --ui-warn: #8f5c0f;
+  --ui-warn-soft: rgba(183, 121, 31, 0.13);
+  --ui-bad: #b3261e;
+  --ui-bad-soft: rgba(179, 38, 30, 0.09);
+
+  --ui-shadow-panel:
+    0 1px 2px rgba(16, 42, 52, 0.04), 0 8px 28px -12px rgba(16, 42, 52, 0.12);
+  --ui-shadow-pop:
+    0 1px 2px rgba(16, 42, 52, 0.06), 0 24px 60px -18px rgba(16, 42, 52, 0.32);
+  --ui-glow: rgba(57, 113, 135, 0.16);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --ui-canvas: #051115;
+  --ui-panel: #0a1b21;
+  --ui-raised: #0f242b;
+  --ui-sunken: #0d2127;
+  --ui-line: rgba(170, 215, 228, 0.08);
+  --ui-line-strong: rgba(170, 215, 228, 0.15);
+
+  --ui-ink: #e4eef0;
+  --ui-ink-muted: #a3b8bf;
+  --ui-ink-subtle: #7f979f;
+
+  --ui-brand: #8cc3d6;
+  --ui-brand-strong: #b3dbe8;
+  --ui-brand-soft: rgba(140, 195, 214, 0.12);
+  --ui-on-brand: #06161b;
+
+  --ui-env: #5ad1a1;
+  --ui-env-soft: rgba(90, 209, 161, 0.12);
+  --ui-ing: #eba36f;
+  --ui-ing-soft: rgba(235, 163, 111, 0.12);
+
+  --ui-ok: #5ad1a1;
+  --ui-ok-soft: rgba(90, 209, 161, 0.12);
+  --ui-warn: #f0b45a;
+  --ui-warn-soft: rgba(240, 180, 90, 0.13);
+  --ui-bad: #ff8a80;
+  --ui-bad-soft: rgba(255, 138, 128, 0.12);
+
+  --ui-shadow-panel:
+    0 0 0 1px rgba(170, 215, 228, 0.04), 0 18px 50px -20px rgba(0, 0, 0, 0.7);
+  --ui-shadow-pop:
+    0 0 0 1px rgba(170, 215, 228, 0.06), 0 30px 70px -20px rgba(0, 0, 0, 0.8);
+  --ui-glow: rgba(140, 195, 214, 0.14);
+}
+
+@theme inline {
+  --color-canvas: var(--ui-canvas);
+  --color-panel: var(--ui-panel);
+  --color-raised: var(--ui-raised);
+  --color-sunken: var(--ui-sunken);
+  --color-line: var(--ui-line);
+  --color-line-strong: var(--ui-line-strong);
+
+  --color-ink: var(--ui-ink);
+  --color-ink-muted: var(--ui-ink-muted);
+  --color-ink-subtle: var(--ui-ink-subtle);
+
+  --color-brand: var(--ui-brand);
+  --color-brand-strong: var(--ui-brand-strong);
+  --color-brand-soft: var(--ui-brand-soft);
+  --color-on-brand: var(--ui-on-brand);
+
+  --color-env: var(--ui-env);
+  --color-env-soft: var(--ui-env-soft);
+  --color-ing: var(--ui-ing);
+  --color-ing-soft: var(--ui-ing-soft);
+
+  --color-ok: var(--ui-ok);
+  --color-ok-soft: var(--ui-ok-soft);
+  --color-warn: var(--ui-warn);
+  --color-warn-soft: var(--ui-warn-soft);
+  --color-bad: var(--ui-bad);
+  --color-bad-soft: var(--ui-bad-soft);
+
+  --shadow-panel: var(--ui-shadow-panel);
+  --shadow-pop: var(--ui-shadow-pop);
+}
+
+/* --- Coquille du portail --- */
+
+.portal-body {
+  background: var(--ui-canvas);
+  color: var(--ui-ink);
+}
+
+/* Barres de défilement discrètes, accordées au thème. */
+.portal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-line-strong) transparent;
+}
+
+/*
+ * Halo d'ambiance en tête de la zone de contenu : trois lueurs aux couleurs
+ * des pôles, très atténuées pour ne jamais gêner la lecture.
+ */
+.portal-aurora {
+  background:
+    radial-gradient(60% 120% at 12% 0%, var(--ui-glow), transparent 70%),
+    radial-gradient(40% 90% at 70% 0%, var(--ui-env-soft), transparent 70%),
+    radial-gradient(30% 80% at 100% 0%, var(--ui-ing-soft), transparent 70%);
+  mask-image: linear-gradient(to bottom, black, transparent);
+}
+
+/* Ouverture/fermeture animée d'un sous-menu (hauteur automatique). */
+.portal-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.portal-collapse[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+.portal-collapse > * {
+  overflow: hidden;
+}
+
+@keyframes portal-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes portal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes portal-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes portal-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes portal-ring {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-10deg);
+  }
+  60% {
+    transform: rotate(6deg);
+  }
+  80% {
+    transform: rotate(-3deg);
+  }
+}
+
+.animate-pop-in {
+  animation: portal-pop-in 160ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+  transform-origin: top right;
+}
+.animate-fade-in {
+  animation: portal-fade-in 160ms ease-out both;
+}
+.animate-rise-in {
+  animation: portal-rise-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.animate-ring {
+  animation: portal-ring 900ms ease-in-out 1;
+  transform-origin: 50% 10%;
+}
+
+.portal-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--ui-sunken) 25%,
+    var(--ui-line) 50%,
+    var(--ui-sunken) 75%
+  );
+  background-size: 200% 100%;
+  animation: portal-shimmer 1.4s linear infinite;
+}
+
+/*
+ * Bascule clair/sombre : révélation circulaire depuis le bouton cliqué
+ * (View Transitions API). Limitée à la classe `theme-transition`, posée
+ * uniquement le temps de la bascule, pour ne pas toucher aux autres
+ * transitions de page.
+ */
+html.theme-transition::view-transition-old(root),
+html.theme-transition::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html.theme-transition::view-transition-new(root) {
+  animation: portal-theme-reveal 560ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+@keyframes portal-theme-reveal {
+  from {
+    clip-path: circle(0 at var(--theme-x, 50%) var(--theme-y, 0));
+  }
+  to {
+    clip-path: circle(
+      var(--theme-r, 150vmax) at var(--theme-x, 50%) var(--theme-y, 0)
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-collapse,
+  .animate-pop-in,
+  .animate-fade-in,
+  .animate-rise-in,
+  .animate-ring,
+  .portal-skeleton {
+    animation: none;
+    transition: none;
+  }
+}
