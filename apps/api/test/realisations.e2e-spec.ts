@@ -241,6 +241,132 @@ describe('Realisations (e2e)', () => {
     expect(locked.body.code).toBe('REALISATION_SLUG_LOCKED');
   });
 
+  it('searches, sorts and counts the admin list per status without leaking filters between them', async () => {
+    const needle = `srch${stamp}`;
+    const slugOf = (letter: string) => `${prefix}-${needle}-${letter}`;
+    const a = await create(slugOf('a'), { year: 2023, projectType: 'EIES' });
+    await create(slugOf('b'));
+    await create(slugOf('c'), {
+      year: 2025,
+      projectType: 'AUDIT',
+      clientName: 'Societe 100%_exacte',
+      location: `Lieu-${needle}`,
+    });
+    // `a` est publiée en dernier : c'est aussi la plus récemment modifiée.
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/realisations/${a}/publish`)
+      .set(auth)
+      .expect(200);
+
+    const get = (query: string) =>
+      request(app.getHttpServer()).get(`/api/v1/admin/realisations?${query}`).set(auth);
+    const letters = (res: request.Response) =>
+      (res.body.data as { slug: string }[]).map((r) => r.slug.slice(-1));
+
+    // Recherche insensible à la casse ; compteurs par statut.
+    const found = await get(`q=${needle.toUpperCase()}&limit=100`).expect(200);
+    expect(found.body.meta.total).toBe(3);
+    expect(found.body.meta.statuses).toEqual({ DRAFT: 2, PUBLISHED: 1 });
+    // Le client et le lieu sont cherchés aussi.
+    expect(letters(await get(`q=lieu-${needle}`).expect(200))).toEqual(['c']);
+
+    // Le filtre de statut restreint la liste, pas les compteurs ; type et recherche, si.
+    const drafts = await get(`q=${needle}&status=DRAFT`).expect(200);
+    expect(drafts.body.meta.total).toBe(2);
+    expect(drafts.body.meta.statuses).toEqual({ DRAFT: 2, PUBLISHED: 1 });
+    const eies = await get(`q=${needle}&projectType=EIES`).expect(200);
+    expect(eies.body.meta.total).toBe(1);
+    expect(eies.body.meta.statuses).toEqual({ PUBLISHED: 1 });
+
+    // `%` et `_` sont cherchés littéralement, jamais comme jokers.
+    const literal = await get('q=%25').expect(200);
+    expect(
+      (literal.body.data as Record<string, string | null>[]).every((r) =>
+        ['titleFr', 'titleEn', 'clientName', 'location', 'slug'].some((f) => r[f]?.includes('%')),
+      ),
+    ).toBe(true);
+    expect(letters(literal)).toContain('c');
+    expect((await get('q=100%25_exacte').expect(200)).body.meta.total).toBe(1);
+    expect((await get('q=100%25Xexacte').expect(200)).body.meta.total).toBe(0);
+
+    // Tri : titre, année et type (valeur absente toujours en dernier), date de modification.
+    const sorted = async (sort: string, order: string) =>
+      letters(await get(`q=${needle}&sort=${sort}&order=${order}`).expect(200));
+    expect(await sorted('titleFr', 'asc')).toEqual(['a', 'b', 'c']);
+    expect(await sorted('titleFr', 'desc')).toEqual(['c', 'b', 'a']);
+    expect(await sorted('year', 'asc')).toEqual(['a', 'c', 'b']);
+    expect(await sorted('year', 'desc')).toEqual(['c', 'a', 'b']);
+    expect(await sorted('projectType', 'asc')).toEqual(['c', 'a', 'b']);
+    expect(await sorted('projectType', 'desc')).toEqual(['a', 'c', 'b']);
+    expect((await sorted('updatedAt', 'desc'))[0]).toBe('a');
+    expect((await sorted('updatedAt', 'asc')).at(-1)).toBe('a');
+
+    // Tri + pagination : chaque ligne apparaît une fois.
+    const page = async (n: number) =>
+      letters(await get(`q=${needle}&sort=titleFr&order=asc&limit=1&page=${n}`).expect(200));
+    expect([await page(1), await page(2), await page(3)]).toEqual([['a'], ['b'], ['c']]);
+
+    // Paramètres refusés avec le champ fautif ; aucune injection par le champ de tri.
+    for (const bad of ['sort=slug', 'sort=year;drop', 'order=up', `q=${'x'.repeat(101)}`]) {
+      const res = await get(bad).expect(400);
+      expect(JSON.stringify(res.body)).toContain(bad.split('=')[0]);
+    }
+  });
+
+  it('deletes logically with a confirmation trail and audits every publication change', async () => {
+    const id = await create(`${prefix}-trail`, { year: 2024, projectType: 'ETUDE' });
+    const post = (action: string) =>
+      request(app.getHttpServer()).post(`/api/v1/admin/realisations/${id}/${action}`).set(auth);
+
+    await post('publish').expect(200);
+    await post('publish').expect(200); // déjà publiée : aucun changement, aucune trace
+    await post('unpublish').expect(200);
+    await post('unpublish').expect(200); // déjà en brouillon
+    await post('archive').expect(200);
+
+    // Un Utilisateur ne supprime rien (jeton obtenu avant : une requête supertest ne doit pas en chevaucher une autre).
+    const userToken = await login(userEmail);
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/realisations/${id}`)
+      .set({ Authorization: `Bearer ${userToken}` })
+      .expect(403);
+    await request(app.getHttpServer()).delete(`/api/v1/admin/realisations/${id}`).expect(401);
+
+    await post('publish').expect(200);
+    await request(app.getHttpServer())
+      .get(`/api/v1/realisations/${prefix}-trail`)
+      .expect(200);
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/realisations/${id}`)
+      .set(auth)
+      .expect(204);
+
+    // Disparue partout : site, fiche d'administration, liste ; la ligne reste en base.
+    await request(app.getHttpServer()).get(`/api/v1/realisations/${prefix}-trail`).expect(404);
+    await request(app.getHttpServer()).get(`/api/v1/admin/realisations/${id}`).set(auth).expect(404);
+    await request(app.getHttpServer()).delete(`/api/v1/admin/realisations/${id}`).set(auth).expect(404);
+    const row = await prisma.realisation.findUniqueOrThrow({ where: { id } });
+    expect(row.deletedAt).not.toBeNull();
+
+    const trail = await prisma.auditLog.findMany({
+      where: { entityType: 'Realisation', entityId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(trail.map((e) => e.action)).toEqual([
+      'REALISATION_PUBLISHED',
+      'REALISATION_UNPUBLISHED',
+      'REALISATION_ARCHIVED',
+      'REALISATION_PUBLISHED',
+      'REALISATION_DELETED',
+    ]);
+    expect(trail.every((e) => e.actorId !== null)).toBe(true);
+    expect(trail[0]).toMatchObject({
+      beforeData: { status: 'DRAFT', slug: `${prefix}-trail` },
+      afterData: { status: 'PUBLISHED' },
+    });
+    expect(trail[4].afterData).toEqual({ deleted: true });
+  });
+
   it('caps simultaneously featured published realisations', async () => {
     // Libère la place éventuellement prise par des données existantes.
     const alreadyFeatured = await prisma.realisation.count({

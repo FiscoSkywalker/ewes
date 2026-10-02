@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -16,6 +17,8 @@ import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { RealisationsService } from './realisations.service.js';
 import { CreateRealisationDto } from './dto/create-realisation.dto.js';
 import { UpdateRealisationDto } from './dto/update-realisation.dto.js';
@@ -57,21 +60,40 @@ export class AdminRealisationsController {
   @Post(':id/publish')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Publier explicitement une réalisation' })
-  publish(@Param('id', ParseUUIDPipe) id: string) {
-    return this.realisationsService.publish(id);
+  publish(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.realisationsService.publish(actor, id);
   }
 
   @Post(':id/unpublish')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Dépublier (retour en brouillon)' })
-  unpublish(@Param('id', ParseUUIDPipe) id: string) {
-    return this.realisationsService.unpublish(id);
+  unpublish(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.realisationsService.unpublish(actor, id);
   }
 
   @Post(':id/archive')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Archiver (dépublié, conservé pour l’historique)' })
-  archive(@Param('id', ParseUUIDPipe) id: string) {
-    return this.realisationsService.archive(id);
+  archive(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.realisationsService.archive(actor, id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Supprimer (suppression logique)' })
+  async remove(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    await this.realisationsService.remove(actor, id);
   }
 }

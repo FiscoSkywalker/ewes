@@ -1,23 +1,18 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CircleAlert, FileText, Upload } from 'lucide-react';
-import {
-  ApiError,
-  backendJson,
-  describeError,
-  fieldErrors,
-} from '@/lib/api/backend';
+import { backendJson } from '@/lib/api/backend';
+import { applyApiErrors } from '@/lib/admin/form-errors';
 import {
   CATEGORY_LABELS,
   DOCUMENT_CATEGORIES,
   documentSchema,
   fileProblem,
   formatBytes,
-  slugify,
   type DocumentFormValues,
   type ServiceOption,
 } from '@/lib/admin/public-documents';
@@ -31,6 +26,7 @@ import {
   Select,
   Textarea,
 } from '../ui';
+import { FormAlert, SlugCard, useAutoSlug } from '../content/form-parts';
 
 interface DocumentFormProps {
   mode: 'create' | 'edit';
@@ -43,7 +39,10 @@ interface DocumentFormProps {
   onSubmit: (values: DocumentFormValues, file: File | null) => Promise<unknown>;
 }
 
-const SLUG_ERROR_CODES = ['DOCUMENT_SLUG_TAKEN', 'DOCUMENT_SLUG_LOCKED'];
+const SLUG_CODES = {
+  DOCUMENT_SLUG_TAKEN: 'slug',
+  DOCUMENT_SLUG_LOCKED: 'slug',
+} as const;
 
 /**
  * Formulaire d'un document public (création et modification) : React Hook
@@ -85,13 +84,12 @@ export function DocumentForm({
     name: ['titleFr', 'titleEn', 'excerptFr', 'excerptEn'],
   });
 
-  // Création : le slug suit le titre tant que la personne ne l'a pas modifié elle-même.
-  const slugEdited = Boolean(dirtyFields.slug);
-  useEffect(() => {
-    if (mode === 'create' && !slugEdited) {
-      setValue('slug', slugify(titleFr), { shouldValidate: false });
-    }
-  }, [mode, slugEdited, titleFr, setValue]);
+  useAutoSlug({
+    enabled: mode === 'create',
+    edited: Boolean(dirtyFields.slug),
+    title: titleFr,
+    setSlug: (slug) => setValue('slug', slug, { shouldValidate: false }),
+  });
 
   async function submit(values: DocumentFormValues) {
     setFormError(null);
@@ -103,40 +101,24 @@ export function DocumentForm({
       await onSubmit(values, file);
       reset(values);
     } catch (error) {
-      const byField = fieldErrors(error);
-      let placed = false;
-      for (const [field, message] of Object.entries(byField)) {
-        if (field in defaults) {
-          setError(field as keyof DocumentFormValues, { message });
-          placed = true;
-        } else if (field === 'file') {
-          setFileError(message);
-          placed = true;
-        }
-      }
-      if (error instanceof ApiError && SLUG_ERROR_CODES.includes(error.code)) {
-        setError('slug', { message: error.message });
-        placed = true;
-      }
-      if (!placed) setFormError(describeError(error).message);
+      setFormError(
+        applyApiErrors(error, {
+          setError,
+          fields: Object.keys(defaults),
+          codes: SLUG_CODES,
+          onExtraField: (field, message) => {
+            if (field !== 'file') return false;
+            setFileError(message);
+            return true;
+          },
+        }),
+      );
     }
   }
 
   return (
     <form onSubmit={handleSubmit(submit)} noValidate className="space-y-6">
-      {formError && (
-        <div
-          role="alert"
-          className="flex items-start gap-2.5 rounded-xl border border-bad/30 bg-bad-soft px-4 py-3 text-sm text-bad"
-        >
-          <CircleAlert
-            size={18}
-            aria-hidden="true"
-            className="mt-0.5 shrink-0"
-          />
-          {formError}
-        </div>
-      )}
+      {formError && <FormAlert>{formError}</FormAlert>}
 
       <Card
         title="Contenu"
@@ -218,28 +200,12 @@ export function DocumentForm({
         </div>
       </Card>
 
-      <Card title="Adresse">
-        <Field
-          label="Slug"
-          required
-          error={errors.slug?.message}
-          hint={
-            slugLocked
-              ? 'Ce document est publié : son adresse ne peut plus changer (des liens y renvoient peut-être).'
-              : mode === 'create'
-                ? 'Généré à partir du titre ; modifiable tant que le document n’est pas publié. Il ne pourra plus changer ensuite.'
-                : 'Modifiable tant que le document n’a jamais été publié.'
-          }
-        >
-          <Input
-            maxLength={120}
-            spellCheck={false}
-            disabled={slugLocked}
-            className="font-mono text-[13px]"
-            {...register('slug')}
-          />
-        </Field>
-      </Card>
+      <SlugCard
+        registration={register('slug')}
+        error={errors.slug?.message}
+        locked={slugLocked}
+        mode={mode}
+      />
 
       {mode === 'create' && (
         <Card

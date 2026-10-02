@@ -478,6 +478,10 @@ const ACTION_LABELS: Record<string, string> = {
   PUBLIC_DOCUMENT_UNPUBLISHED: 'Document public dépublié',
   PUBLIC_DOCUMENT_ARCHIVED: 'Document public archivé',
   PUBLIC_DOCUMENT_DELETED: 'Document public supprimé',
+  REALISATION_PUBLISHED: 'Réalisation publiée',
+  REALISATION_UNPUBLISHED: 'Réalisation dépubliée',
+  REALISATION_ARCHIVED: 'Réalisation archivée',
+  REALISATION_DELETED: 'Réalisation supprimée',
 };
 
 function actionLabel(action: string): string {
