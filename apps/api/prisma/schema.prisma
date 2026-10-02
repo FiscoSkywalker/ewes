@@ -75,6 +75,7 @@ model User {
   documentAccessGrants DocumentAccessGrant[]
   auditLogs            AuditLog[]            @relation("AuditActor")
   notifications        Notification[]
+  mediaUploads         Media[]
 
   @@map("users")
 }
@@ -456,4 +457,22 @@ model MediaAsset {
   createdAt     DateTime @default(now())
 
   @@map("media_assets")
+}
+
+// --- Médias (images publiques téléversées depuis le portail) ---
+
+/// Image publique stockée sur disque (PUBLIC_MEDIA_PATH). Le nom stocké est
+/// aléatoire ; le nom d'origine n'est conservé qu'à titre indicatif.
+model Media {
+  id           String   @id @default(uuid())
+  storedName   String   @unique
+  mimeType     String
+  sizeBytes    Int
+  originalName String?
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("media")
 }

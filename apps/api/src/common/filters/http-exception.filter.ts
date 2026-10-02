@@ -82,6 +82,12 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
         return 'TOO_MANY_REQUESTS';
       case HttpStatus.CONFLICT:
         return 'CONFLICT';
+      case HttpStatus.PAYLOAD_TOO_LARGE:
+        return 'PAYLOAD_TOO_LARGE';
+      case HttpStatus.UNSUPPORTED_MEDIA_TYPE:
+        return 'UNSUPPORTED_MEDIA_TYPE';
+      case HttpStatus.UNPROCESSABLE_ENTITY:
+        return 'UNPROCESSABLE_ENTITY';
       default:
         return 'INTERNAL_ERROR';
     }
