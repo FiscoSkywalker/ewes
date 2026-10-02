@@ -901,7 +901,7 @@
     "title": "Un projet ? Parlons-en.",
     "description": "Étude d’impact, adduction d’eau, analyses, travaux d’ingénierie ou formation : décrivez votre besoin, un expert EWES du pôle concerné vous répond depuis Lubumbashi.",
     "quickContactTitle": "EWES S.A.R.L.",
-    "formNote": "Le formulaire ouvre votre messagerie avec les informations saisies, en attendant l’activation de l’envoi en ligne.",
+    "formNote": "Votre message est transmis directement à l’équipe EWES, qui vous répond par e-mail.",
     "fields": {
       "name": "Nom & Prénom",
       "namePlaceholder": "ex. Ing. Jean Mukendi",
@@ -1010,7 +1010,18 @@
     "errors": {
       "required": "Ce champ est obligatoire.",
       "email": "Saisissez une adresse e-mail valide (ex. nom@entreprise.cd).",
-      "messageShort": "Décrivez votre besoin en {min} caractères au moins."
+      "messageShort": "Décrivez votre besoin en {min} caractères au moins.",
+      "invalid": "Cette valeur n’est pas acceptée : vérifiez-la."
+    },
+    "submit": {
+      "sending": "Envoi en cours…",
+      "successTitle": "Message bien reçu.",
+      "successText": "Merci : votre demande est enregistrée et l’équipe EWES vous répondra dans les meilleurs délais. Un accusé de réception vous est envoyé par e-mail ; s’il n’arrive pas, pensez à vérifier vos courriers indésirables.",
+      "again": "Envoyer un autre message",
+      "rateLimited": "Trop de messages envoyés depuis votre connexion. Patientez quelques minutes avant de réessayer.",
+      "network": "Impossible de joindre le serveur : vérifiez votre connexion et réessayez. Votre saisie est conservée.",
+      "server": "Un problème technique empêche l’envoi pour le moment. Votre saisie est conservée : réessayez dans quelques instants.",
+      "fallback": "Vous pouvez aussi nous écrire directement à"
     },
     "requiredNote": "Les champs marqués * sont obligatoires.",
     "privacyNote": "Vos informations servent uniquement à répondre à votre demande."
