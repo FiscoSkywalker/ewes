@@ -901,7 +901,7 @@
     "title": "A project? Let’s talk.",
     "description": "Impact assessment, water supply, analyses, engineering works or training: describe your need and an EWES expert from the relevant division will get back to you from Lubumbashi.",
     "quickContactTitle": "EWES S.A.R.L.",
-    "formNote": "The form opens your mail client with the information you entered, until online submission is activated.",
+    "formNote": "Your message goes straight to the EWES team, who will reply by e-mail.",
     "fields": {
       "name": "Full Name",
       "namePlaceholder": "e.g. Eng. Jean Mukendi",
@@ -1010,7 +1010,18 @@
     "errors": {
       "required": "This field is required.",
       "email": "Enter a valid email address (e.g. name@company.com).",
-      "messageShort": "Describe your need in at least {min} characters."
+      "messageShort": "Describe your need in at least {min} characters.",
+      "invalid": "This value is not accepted: please check it."
+    },
+    "submit": {
+      "sending": "Sending…",
+      "successTitle": "Message received.",
+      "successText": "Thank you: your request is recorded and the EWES team will get back to you as soon as possible. An acknowledgement is sent to you by e-mail; if it does not arrive, please check your spam folder.",
+      "again": "Send another message",
+      "rateLimited": "Too many messages sent from your connection. Please wait a few minutes before trying again.",
+      "network": "The server cannot be reached: check your connection and try again. What you typed is kept.",
+      "server": "A technical problem prevents sending right now. What you typed is kept: please try again in a moment.",
+      "fallback": "You can also write to us directly at"
     },
     "requiredNote": "Fields marked * are required.",
     "privacyNote": "Your information is used only to answer your request."

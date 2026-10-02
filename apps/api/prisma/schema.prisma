@@ -429,36 +429,54 @@ model DocumentAccessGrant {
 
 // --- Contact ---
 
+/// Message du formulaire de contact. Jamais modifiable après soumission : seul
+/// `status` (suivi nouveau/traité) évolue (blueprint/09_Business_Rules.md §6).
 model ContactMessage {
-  id        String               @id @default(uuid())
-  name      String
-  email     String
-  phone     String?
-  subject   String?
-  message   String
-  status    ContactMessageStatus @default(NOUVEAU)
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
+  id            String               @id @default(uuid())
+  name          String
+  organization  String?
+  email         String
+  phone         String?
+  sector        String?
+  subject       String?
+  message       String
+  locale        String               @default("fr")
+  /// Clé d'idempotence fournie par le formulaire : un renvoi de la même
+  /// soumission ne crée ni doublon ni nouvelle notification.
+  submissionKey String?              @unique
+  /// Empreinte (email + message normalisé) : détecte un double envoi sans clé.
+  contentHash   String               @default("")
+  status        ContactMessageStatus @default(NOUVEAU)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 
   @@index([createdAt])
+  @@index([email, contentHash, createdAt])
   @@map("contact_messages")
 }
 
 // --- Système ---
 
+/// E-mail transactionnel. `idempotencyKey` rend un événement dupliqué sans
+/// effet ; `payload` (sujet, texte) permet de rejouer un envoi échoué ;
+/// `failedAt` + `lastError` rendent l'échec visible de l'Administrateur.
 model Notification {
   id              String    @id @default(uuid())
   recipientEmail  String
   recipientUserId String?
   recipientUser   User?     @relation(fields: [recipientUserId], references: [id])
   type            String
+  idempotencyKey  String?   @unique
   payload         Json?
   sentAt          DateTime?
   failedAt        DateTime?
+  lastError       String?
   attempts        Int       @default(0)
   createdAt       DateTime  @default(now())
 
   @@index([recipientUserId])
+  @@index([type, recipientEmail, createdAt])
+  @@index([failedAt])
   @@map("notifications")
 }
 

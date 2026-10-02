@@ -1,13 +1,15 @@
 'use client';
 
 import { useId, useRef, useState, type FormEvent } from 'react';
-import { useTranslations } from 'next-intl';
-import { AlertCircle, Send } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { AlertCircle, CheckCircle2, Loader2, Send } from 'lucide-react';
+import { EWES_CONTACT } from '@/data/contact';
 import {
   CONTACT_MESSAGE_MIN,
   sendContactRequest,
   validateContactRequest,
   type ContactField,
+  type ContactOutcome,
   type ContactRequest,
 } from '@/lib/contact-request';
 
@@ -28,15 +30,18 @@ interface ContactFormProps {
  * par l'Accueil et /contact. Erreurs de validation affichées champ par champ
  * (blueprint/15 §3) et reliées aux champs (`aria-invalid`,
  * `aria-describedby`) ; le premier champ invalide reçoit le focus. Champ
- * piège invisible contre les robots. L'envoi passe par
- * `sendContactRequest` (`src/lib/contact-request.ts`), seul point à changer
- * lors du branchement sur l'API.
+ * piège invisible contre les robots. L'envoi passe par `sendContactRequest`
+ * (`src/lib/contact-request.ts`, `POST /contact`) : la confirmation n'est
+ * affichée qu'une fois le message enregistré par l'API ; en cas d'échec la
+ * saisie est conservée et le même identifiant d'idempotence est réutilisé,
+ * de sorte qu'un renvoi ne crée jamais de doublon.
  *
  * Style « nuit » : le formulaire vit sur fond nuit, à l'Accueil comme sur
  * /contact.
  */
 export function ContactForm({ onSectorChange }: ContactFormProps) {
   const t = useTranslations('ContactPage');
+  const locale = useLocale();
   const sectors = t.raw('sectors') as Sector[];
   const id = useId();
   const formRef = useRef<HTMLFormElement>(null);
@@ -53,6 +58,10 @@ export function ContactForm({ onSectorChange }: ContactFormProps) {
     ReturnType<typeof validateContactRequest>
   >({});
   const [trap, setTrap] = useState('');
+  const [sending, setSending] = useState(false);
+  const [outcome, setOutcome] = useState<ContactOutcome | null>(null);
+  /** Identifie cette soumission ; créé à l'envoi, renouvelé seulement après un succès. */
+  const submissionKey = useRef<string | null>(null);
 
   const update = (field: ContactField, value: string) => {
     setFormData((data) => ({ ...data, [field]: value }));
@@ -77,21 +86,49 @@ export function ContactForm({ onSectorChange }: ContactFormProps) {
       return;
     }
 
-    const sectorLabel =
-      sectors.find((s) => s.value === formData.sector)?.label ??
-      formData.sector;
-    await sendContactRequest(
-      { ...formData, sector: sectorLabel },
-      {
-        subject: `${t('quickContactTitle')} — ${formData.name}`,
-        name: t('fields.name'),
-        organization: t('fields.organization'),
-        email: t('fields.email'),
-        phone: t('fields.phone'),
-        sector: t('fields.sector'),
-        message: t('fields.message'),
-      },
-    );
+    if (sending) return; // Double clic : une seule requête à la fois.
+    setSending(true);
+    setOutcome(null);
+    // Même clé pour toute nouvelle tentative de ce message (jamais de doublon).
+    submissionKey.current ??= crypto.randomUUID();
+    const result = await sendContactRequest(formData, {
+      locale,
+      idempotencyKey: submissionKey.current,
+    });
+    setSending(false);
+
+    if (result.kind === 'success') {
+      setOutcome(result);
+      return;
+    }
+    if (result.kind === 'invalid') {
+      // Champs refusés par l'API : affichés un par un, le premier reçoit le focus.
+      setErrors(
+        Object.fromEntries(
+          result.fields.map((field) => [field, 'invalid' as const]),
+        ),
+      );
+      formRef.current
+        ?.querySelector<HTMLElement>(`[name="${result.fields[0]}"]`)
+        ?.focus();
+      return;
+    }
+    setOutcome(result);
+  };
+
+  /** Nouveau message après un succès : formulaire vierge et nouvelle clé. */
+  const startOver = () => {
+    setFormData({
+      name: '',
+      organization: '',
+      email: '',
+      phone: '',
+      sector: sectors[0]?.value ?? '',
+      message: '',
+    });
+    setErrors({});
+    setOutcome(null);
+    submissionKey.current = null;
   };
 
   const fieldClass = (field: ContactField) =>
@@ -119,6 +156,39 @@ export function ContactForm({ onSectorChange }: ContactFormProps) {
         {t(`errors.${errors[field]}`, { min: CONTACT_MESSAGE_MIN })}
       </span>
     );
+
+  if (outcome?.kind === 'success') {
+    return (
+      <div
+        role="status"
+        className="relative grid content-start gap-5 border border-on-night/12 bg-night-deep/60 p-5 backdrop-blur-md sm:p-8 lg:p-10"
+      >
+        <CheckCircle2
+          size={28}
+          className="text-malachite-bright"
+          aria-hidden="true"
+        />
+        <h3 className="font-heading text-2xl font-semibold text-on-night">
+          {t('submit.successTitle')}
+        </h3>
+        <p className="max-w-md text-sm leading-6 text-on-night-muted">
+          {t('submit.successText')}
+        </p>
+        <button
+          type="button"
+          onClick={startOver}
+          className="primary-button on-night w-fit"
+        >
+          {t('submit.again')}
+        </button>
+      </div>
+    );
+  }
+
+  const failure =
+    outcome && outcome.kind !== 'invalid'
+      ? t(`submit.${outcome.kind}`)
+      : null;
 
   return (
     <form
@@ -254,14 +324,51 @@ export function ContactForm({ onSectorChange }: ContactFormProps) {
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-2">
-        <button type="submit" className="primary-button on-night">
-          {t('submitLabel')}
-          <Send size={14} />
+        <button
+          type="submit"
+          disabled={sending}
+          aria-busy={sending}
+          className="primary-button on-night disabled:cursor-wait disabled:opacity-70"
+        >
+          {sending ? t('submit.sending') : t('submitLabel')}
+          {sending ? (
+            <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+          ) : (
+            <Send size={14} />
+          )}
         </button>
         <p className="max-w-sm text-[11px] leading-5 text-on-night-muted/80">
           {t('requiredNote')} {t('privacyNote')} {t('formNote')}
         </p>
       </div>
+
+      {failure && (
+        <p
+          role="alert"
+          className="flex items-start gap-2 border border-copper-bright/40 bg-copper-bright/10 p-4 text-sm leading-6 text-on-night"
+        >
+          <AlertCircle
+            size={16}
+            className="mt-1 flex-none text-copper-bright"
+            aria-hidden="true"
+          />
+          <span>
+            {failure}{' '}
+            {outcome?.kind !== 'rateLimited' && (
+              <>
+                {t('submit.fallback')}{' '}
+                <a
+                  href={`mailto:${EWES_CONTACT.email}`}
+                  className="underline underline-offset-4"
+                >
+                  {EWES_CONTACT.email}
+                </a>
+                .
+              </>
+            )}
+          </span>
+        </p>
+      )}
     </form>
   );
 }
