@@ -20,6 +20,8 @@ interface PublicRealisation {
   year: number | null;
   yearEnd: number | null;
   projectType: string | null;
+  /** Absent d'une réponse mise en cache avant l'arrivée des images. */
+  images?: { url: string; altFr: string | null; altEn: string | null }[];
 }
 
 interface RealisationsPage {
@@ -59,13 +61,20 @@ async function fetchAllPublished(): Promise<PublicRealisation[] | null> {
 function toProject(item: PublicRealisation, locale: string): Project | null {
   // Le registre public exige année et type (obligatoires à la publication).
   if (item.year === null || item.projectType === null) return null;
+  const mission = (locale === 'en' && item.titleEn) || item.titleFr;
+  // La première image de la galerie est l'image principale ; sans image, couverture générée.
+  const [main] = item.images ?? [];
   return {
     id: item.slug,
     category: item.projectType as ProjectCategory,
     year: item.year,
     yearEnd: item.yearEnd,
     client: item.clientName ?? '',
-    mission: (locale === 'en' && item.titleEn) || item.titleFr,
+    mission,
+    ...(main && {
+      image: main.url,
+      imageAlt: (locale === 'en' && main.altEn) || main.altFr || mission,
+    }),
   };
 }
 

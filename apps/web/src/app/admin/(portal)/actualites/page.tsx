@@ -13,6 +13,7 @@ import {
   type Article,
   type ArticleType,
 } from '@/lib/admin/articles';
+import { thumbOf } from '@/lib/admin/media';
 import type { ContentStatus } from '@/lib/admin/public-documents';
 import { PageHeader } from '@/components/admin/page-header';
 import { PublicationBadge } from '@/components/admin/content/publication-badge';
@@ -65,7 +66,7 @@ const COLUMNS: Column<Article>[] = [
               // Image publique servie par l'API via `/uploads/*` : pas d'optimisation Next nécessaire dans le portail.
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={cover.url}
+                src={thumbOf(cover.url)}
                 alt=""
                 loading="lazy"
                 className="size-full object-cover"

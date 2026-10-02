@@ -47,7 +47,7 @@ export function MediaTile({
           {/* Image publique servie par l'API via `/uploads/*` : pas d'optimisation Next nécessaire dans le portail. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={media.url}
+            src={media.thumbUrl}
             alt=""
             loading="lazy"
             decoding="async"

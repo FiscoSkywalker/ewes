@@ -32,6 +32,7 @@ import {
   type ChecklistItem,
 } from '@/components/admin/content/publication-panel';
 import { TranslationCard } from '@/components/admin/content/translation-card';
+import { GalleryCard } from '@/components/admin/realisations/gallery-card';
 import { RealisationForm } from '@/components/admin/realisations/realisation-form';
 import {
   Badge,
@@ -172,27 +173,35 @@ function Detail({ realisation: r }: { realisation: Realisation }) {
       />
 
       <div className="grid items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
-        {/* `key` : après un enregistrement, le formulaire repart des valeurs du serveur. */}
-        <RealisationForm
-          key={r.updatedAt}
-          mode="edit"
-          defaults={toFormValues(r)}
-          slugLocked={r.publishedAt !== null}
-          submitLabel="Enregistrer les modifications"
-          cancelHref="/admin/realisations"
-          onSubmit={async (values) => {
-            const saved = await backendJson<Realisation>(
-              `admin/realisations/${r.id}`,
-              {
-                method: 'PATCH',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify(toPayload(values)),
-              },
-            );
-            await applySaved(queryClient, saved);
-            toast.success('Modifications enregistrées');
-          }}
-        />
+        <div className="space-y-6">
+          {/* `key` : après un enregistrement, la galerie repart de ce que le serveur a renvoyé. */}
+          <GalleryCard
+            key={r.images.map((image) => image.id).join()}
+            realisation={r}
+            onSaved={(saved) => applySaved(queryClient, saved)}
+          />
+          {/* `key` : après un enregistrement, le formulaire repart des valeurs du serveur. */}
+          <RealisationForm
+            key={r.updatedAt}
+            mode="edit"
+            defaults={toFormValues(r)}
+            slugLocked={r.publishedAt !== null}
+            submitLabel="Enregistrer les modifications"
+            cancelHref="/admin/realisations"
+            onSubmit={async (values) => {
+              const saved = await backendJson<Realisation>(
+                `admin/realisations/${r.id}`,
+                {
+                  method: 'PATCH',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify(toPayload(values)),
+                },
+              );
+              await applySaved(queryClient, saved);
+              toast.success('Modifications enregistrées');
+            }}
+          />
+        </div>
 
         <div className="space-y-6 lg:sticky lg:top-4">
           <PublicationPanel<Realisation>

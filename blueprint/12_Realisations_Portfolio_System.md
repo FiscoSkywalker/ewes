@@ -33,3 +33,5 @@ Liste de réalisations et fiche détail sont rendues en SSG/ISR (contenu qui cha
 # 7. Références
 
 `04_User_Flows.md`, `07_Database_Design.md`, `09_Business_Rules.md`, `15_Public_Site_Pages.md`, `16_Rendering_State_Strategy.md`.
+
+> Note (2026-10-02) — **galerie d'images livrée** : `PUT /admin/realisations/:id/images` (voir `08`), écran « Images » de la fiche (`GalleryCard`) et image principale sur la liste d'administration et sur le site public (`Project.image`/`imageAlt`, repli sur la couverture générée). Documents associés et partenaires restent à faire.

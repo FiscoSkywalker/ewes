@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -22,6 +23,7 @@ import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js
 import { RealisationsService } from './realisations.service.js';
 import { CreateRealisationDto } from './dto/create-realisation.dto.js';
 import { UpdateRealisationDto } from './dto/update-realisation.dto.js';
+import { SetRealisationImagesDto } from './dto/set-realisation-images.dto.js';
 import { ListAdminRealisationsDto } from './dto/list-realisations.dto.js';
 
 @ApiTags('admin/realisations')
@@ -55,6 +57,18 @@ export class AdminRealisationsController {
     @Body() dto: UpdateRealisationDto,
   ) {
     return this.realisationsService.update(id, dto);
+  }
+
+  @Put(':id/images')
+  @ApiOperation({
+    summary:
+      'Définir la galerie (images de la médiathèque, dans l’ordre d’affichage)',
+  })
+  setImages(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: SetRealisationImagesDto,
+  ) {
+    return this.realisationsService.setImages(id, dto);
   }
 
   @Post(':id/publish')

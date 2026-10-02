@@ -11,7 +11,9 @@ import { FrontendRevalidator } from '../../common/revalidation/frontend-revalida
 import { escapeLike } from '../../common/utils/like.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
+import { MediaService } from '../media/media.service.js';
 import type { CreateRealisationDto } from './dto/create-realisation.dto.js';
+import type { SetRealisationImagesDto } from './dto/set-realisation-images.dto.js';
 import type { UpdateRealisationDto } from './dto/update-realisation.dto.js';
 import type {
   ListAdminRealisationsDto,
@@ -36,12 +38,17 @@ const PUBLIC_ORDER = [
   { createdAt: 'asc' },
 ] satisfies Prisma.RealisationOrderByWithRelationInput[];
 
-const WITH_SERVICE = {
+const WITH_RELATIONS = {
   service: { select: { slug: true } },
+  // Galerie dans l'ordre d'affichage ; la première image est l'image principale.
+  images: {
+    orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
+    select: { id: true, url: true, altFr: true, altEn: true, position: true },
+  },
 } satisfies Prisma.RealisationInclude;
 
-export type RealisationWithService = Prisma.RealisationGetPayload<{
-  include: typeof WITH_SERVICE;
+export type RealisationWithRelations = Prisma.RealisationGetPayload<{
+  include: typeof WITH_RELATIONS;
 }>;
 
 @Injectable()
@@ -50,10 +57,13 @@ export class RealisationsService {
     private readonly prisma: PrismaService,
     private readonly revalidator: FrontendRevalidator,
     private readonly audit: AuditService,
+    private readonly media: MediaService,
   ) {}
 
   /** Lecture publique : PUBLISHED, non supprimée, date de publication atteinte. */
-  private publicWhere(query?: ListRealisationsDto): Prisma.RealisationWhereInput {
+  private publicWhere(
+    query?: ListRealisationsDto,
+  ): Prisma.RealisationWhereInput {
     return {
       status: ContentStatus.PUBLISHED,
       deletedAt: null,
@@ -77,7 +87,7 @@ export class RealisationsService {
     const [data, total] = await Promise.all([
       this.prisma.realisation.findMany({
         where,
-        include: WITH_SERVICE,
+        include: WITH_RELATIONS,
         orderBy: PUBLIC_ORDER,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
@@ -90,7 +100,7 @@ export class RealisationsService {
   async findPublishedBySlug(slug: string) {
     const realisation = await this.prisma.realisation.findFirst({
       where: { ...this.publicWhere(), slug },
-      include: WITH_SERVICE,
+      include: WITH_RELATIONS,
     });
     if (!realisation) throw new NotFoundException(REALISATION_NOT_FOUND);
     return realisation;
@@ -108,11 +118,11 @@ export class RealisationsService {
       deletedAt: null,
       ...this.filters(query),
       ...(search && {
-        OR: (['titleFr', 'titleEn', 'clientName', 'location', 'slug'] as const).map(
-          (field) => ({
-            [field]: { contains: search, mode: 'insensitive' as const },
-          }),
-        ),
+        OR: (
+          ['titleFr', 'titleEn', 'clientName', 'location', 'slug'] as const
+        ).map((field) => ({
+          [field]: { contains: search, mode: 'insensitive' as const },
+        })),
       }),
     };
     const where: Prisma.RealisationWhereInput = {
@@ -132,9 +142,11 @@ export class RealisationsService {
     const [data, total, groups] = await Promise.all([
       this.prisma.realisation.findMany({
         where,
-        include: WITH_SERVICE,
+        include: WITH_RELATIONS,
         // `id` départage les ex æquo : une page ne doit ni répéter ni sauter de ligne.
-        orderBy: primary ? [primary, { updatedAt: 'desc' }, { id: 'asc' }] : PUBLIC_ORDER,
+        orderBy: primary
+          ? [primary, { updatedAt: 'desc' }, { id: 'asc' }]
+          : PUBLIC_ORDER,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
@@ -147,13 +159,16 @@ export class RealisationsService {
     ]);
     const statuses: Partial<Record<ContentStatus, number>> = {};
     for (const group of groups) statuses[group.status] = group._count._all;
-    return { data, meta: { page: query.page, limit: query.limit, total, statuses } };
+    return {
+      data,
+      meta: { page: query.page, limit: query.limit, total, statuses },
+    };
   }
 
   async findById(id: string) {
     const realisation = await this.prisma.realisation.findFirst({
       where: { id, deletedAt: null },
-      include: WITH_SERVICE,
+      include: WITH_RELATIONS,
     });
     if (!realisation) throw new NotFoundException(REALISATION_NOT_FOUND);
     return realisation;
@@ -164,7 +179,7 @@ export class RealisationsService {
     try {
       return await this.prisma.realisation.create({
         data: dto,
-        include: WITH_SERVICE,
+        include: WITH_RELATIONS,
       });
     } catch (error) {
       throw this.translateWriteError(error);
@@ -198,7 +213,7 @@ export class RealisationsService {
       updated = await this.prisma.realisation.update({
         where: { id },
         data: dto,
-        include: WITH_SERVICE,
+        include: WITH_RELATIONS,
       });
     } catch (error) {
       throw this.translateWriteError(error);
@@ -207,6 +222,42 @@ export class RealisationsService {
       await this.revalidate(updated.slug);
     }
     return updated;
+  }
+
+  /**
+   * Remplace la galerie : l'ordre du tableau est l'ordre d'affichage. Chaque
+   * adresse doit désigner une image de la médiathèque (jamais une adresse
+   * quelconque : le site l'afficherait telle quelle).
+   */
+  async setImages(id: string, dto: SetRealisationImagesDto) {
+    const current = await this.findById(id);
+
+    const urls = dto.images.map((image) => image.url);
+    if (new Set(urls).size !== urls.length) {
+      throw new BadRequestException({
+        code: 'REALISATION_IMAGE_DUPLICATE',
+        message: 'La même image ne peut figurer qu’une fois dans la galerie.',
+        details: ['images'],
+      });
+    }
+    for (const url of urls) await this.media.findByUrl(url);
+
+    await this.prisma.$transaction([
+      this.prisma.realisationImage.deleteMany({ where: { realisationId: id } }),
+      this.prisma.realisationImage.createMany({
+        data: dto.images.map((image, position) => ({
+          realisationId: id,
+          url: image.url,
+          altFr: image.altFr?.trim() || null,
+          altEn: image.altEn?.trim() || null,
+          position,
+        })),
+      }),
+    ]);
+    if (current.status === ContentStatus.PUBLISHED) {
+      await this.revalidate(current.slug);
+    }
+    return this.findById(id);
   }
 
   /** Publication explicite ; exige les champs nécessaires au filtrage public. */
@@ -221,7 +272,8 @@ export class RealisationsService {
     if (missing.length > 0) {
       throw new UnprocessableEntityException({
         code: 'REALISATION_PUBLISH_INCOMPLETE',
-        message: 'Des champs obligatoires manquent pour publier cette réalisation.',
+        message:
+          'Des champs obligatoires manquent pour publier cette réalisation.',
         details: missing,
       });
     }
@@ -233,21 +285,36 @@ export class RealisationsService {
         status: ContentStatus.PUBLISHED,
         publishedAt: current.publishedAt ?? new Date(),
       },
-      include: WITH_SERVICE,
+      include: WITH_RELATIONS,
     });
-    await this.record(actor, 'REALISATION_PUBLISHED', published, current.status);
+    await this.record(
+      actor,
+      'REALISATION_PUBLISHED',
+      published,
+      current.status,
+    );
     await this.revalidate(published.slug);
     return published;
   }
 
   /** Retire immédiatement la fiche du site public (retour en brouillon). */
   unpublish(actor: AuthenticatedUser, id: string) {
-    return this.setStatus(actor, id, ContentStatus.DRAFT, 'REALISATION_UNPUBLISHED');
+    return this.setStatus(
+      actor,
+      id,
+      ContentStatus.DRAFT,
+      'REALISATION_UNPUBLISHED',
+    );
   }
 
   /** Dépublie en conservant la fiche pour l'historique interne. */
   archive(actor: AuthenticatedUser, id: string) {
-    return this.setStatus(actor, id, ContentStatus.ARCHIVED, 'REALISATION_ARCHIVED');
+    return this.setStatus(
+      actor,
+      id,
+      ContentStatus.ARCHIVED,
+      'REALISATION_ARCHIVED',
+    );
   }
 
   private async setStatus(
@@ -261,7 +328,7 @@ export class RealisationsService {
     const updated = await this.prisma.realisation.update({
       where: { id },
       data: { status },
-      include: WITH_SERVICE,
+      include: WITH_RELATIONS,
     });
     await this.record(actor, action, updated, current.status);
     await this.revalidate(updated.slug);
@@ -278,7 +345,9 @@ export class RealisationsService {
       where: { id },
       data: { deletedAt: new Date() },
     });
-    await this.record(actor, 'REALISATION_DELETED', current, current.status, { deleted: true });
+    await this.record(actor, 'REALISATION_DELETED', current, current.status, {
+      deleted: true,
+    });
     await this.revalidate(current.slug);
   }
 
