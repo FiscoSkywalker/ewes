@@ -34,6 +34,7 @@ export function ProjectSheet({
 }: ProjectSheetProps) {
   const t = useTranslations('RealisationsPage.sheet');
   const tCategory = useTranslations('RealisationsPage.categoryDetails');
+  const tDetail = useTranslations('RealisationsPage.detail');
   const dialogRef = useRef<HTMLDialogElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -60,9 +61,7 @@ export function ProjectSheet({
       ? `${project.year}–${project.yearEnd}`
       : `${project.year}`
     : '';
-  const duration = project?.yearEnd
-    ? project.yearEnd - project.year + 1
-    : null;
+  const duration = project?.yearEnd ? project.yearEnd - project.year + 1 : null;
 
   const facts = project
     ? [
@@ -139,6 +138,14 @@ export function ProjectSheet({
               <p className="mt-3 text-sm leading-7 text-sand/80">
                 {tCategory(project.category)}
               </p>
+              {project.slug && (
+                <Link
+                  href={`/realisations/${project.slug}`}
+                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-sand px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-paper transition-opacity hover:opacity-85"
+                >
+                  {tDetail('openSheet')} <ArrowRight size={13} />
+                </Link>
+              )}
             </div>
 
             <aside className="md:border-l md:border-border-subtle md:pl-8">
@@ -173,8 +180,18 @@ export function ProjectSheet({
             className="grid grid-cols-2 border-t border-border-subtle"
           >
             {[
-              { item: previous, label: t('previous'), icon: ArrowLeft, align: 'text-left' },
-              { item: next, label: t('next'), icon: ArrowRight, align: 'text-right' },
+              {
+                item: previous,
+                label: t('previous'),
+                icon: ArrowLeft,
+                align: 'text-left',
+              },
+              {
+                item: next,
+                label: t('next'),
+                icon: ArrowRight,
+                align: 'text-right',
+              },
             ].map(({ item, label, icon: Icon, align }, index) => (
               <button
                 key={label}

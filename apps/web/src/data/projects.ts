@@ -21,6 +21,8 @@ export interface Project {
    */
   image?: string;
   imageAlt?: string;
+  /** Adresse de la fiche détaillée (`/realisations/{slug}`) : absente des références statiques de repli. */
+  slug?: string;
   location?: string;
   summary?: string;
 }
