@@ -183,6 +183,29 @@ model ServiceOffering {
   @@map("service_offerings")
 }
 
+/// Chiffre clé de la page À propos : une valeur, son suffixe, son libellé et un sous-texte, en FR/EN.
+model KeyFigure {
+  id        String  @id @default(uuid())
+  value     Int     @default(0)
+  /// Renseignée, la valeur affichée est le nombre d'années écoulées depuis cette année (calculée à chaque lecture) ; `value` est alors ignorée.
+  sinceYear Int?
+  suffixFr  String?
+  suffixEn  String?
+  labelFr   String
+  labelEn   String?
+  subtextFr String?
+  subtextEn String?
+  sortOrder Int     @default(0)
+  /// Masqué, le chiffre est conservé mais n'est pas affiché sur le site.
+  isVisible Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+  @@map("key_figures")
+}
+
 model Expert {
   id        String   @id @default(uuid())
   fullName  String
