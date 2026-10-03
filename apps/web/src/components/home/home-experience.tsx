@@ -66,17 +66,19 @@ export function HomeExperience({
       </div>
 
       <ServicesOverview poles={poles} />
-      <EnvironmentSection />
+      <EnvironmentSection data={poles?.env} />
       <WaterSection
         reducedMotion={reducedMotion}
         dpr={dpr}
         particleMultiplier={particleMultiplier}
         webglAvailable={webglAvailable}
+        data={poles?.eau}
       />
       <EngineeringSection
         reducedMotion={reducedMotion}
         dpr={dpr}
         webglAvailable={webglAvailable}
+        data={poles?.ing}
       />
 
       <MethodSection />

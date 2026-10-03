@@ -8,6 +8,7 @@ import { EWES_CONTACT } from '@/data/contact';
 import { ExpertsGallery } from '@/components/public/experts-gallery';
 import { SectionHeading } from '@/components/public/section-heading';
 import { resolvePageHeader } from '@/lib/api/public-pages';
+import { getPoleServices } from '@/lib/api/public-services';
 import { ButtonLink } from '@/components/public/ui';
 
 /**
@@ -55,6 +56,13 @@ export default async function AboutPage({
   }[];
   const research = tResearch.raw('items') as { title: string; text: string }[];
   const experts = tPage.raw('team.experts') as Expert[];
+  // Noms des pôles pilotés par le portail (repli sur les messages).
+  const poles = await getPoleServices(locale);
+  const poleNames = {
+    env: poles.env?.name,
+    eau: poles.eau?.name,
+    ing: poles.ing?.name,
+  };
 
   return (
     <div className="text-sand">
@@ -196,7 +204,7 @@ export default async function AboutPage({
               {t('teamText')}
             </p>
           </div>
-          <ExpertsGallery experts={experts} />
+          <ExpertsGallery experts={experts} poleNames={poleNames} />
           <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
             {tPage('team.hint')}
           </p>

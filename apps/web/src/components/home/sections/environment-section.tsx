@@ -6,10 +6,16 @@ import { useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/public/section-heading';
 import { EnvironmentServicesList } from '@/components/public/environment-services-list';
 import { useInView } from '@/hooks/useInView';
+import { poleEyebrow } from '@/lib/poles';
+import type { PoleContent } from '@/components/public/service-chapter';
 import { POLE_ANCHORS } from './services-overview';
 
-/** Chapitre ENV (Environnement) de l'Accueil, accent malachite — homepage uniquement. */
-export function EnvironmentSection() {
+/**
+ * Chapitre ENV (Environnement) de l'Accueil, accent malachite — homepage
+ * uniquement. Nom, accroche, présentation et prestations viennent du portail
+ * (`data`) ; sans elles, les textes d'origine des messages.
+ */
+export function EnvironmentSection({ data }: { data?: PoleContent }) {
   const t = useTranslations('Environment');
   const figureRef = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
@@ -81,11 +87,11 @@ export function EnvironmentSection() {
 
         <div className="ml-auto max-w-3xl">
           <SectionHeading
-            eyebrow={t('eyebrow')}
-            title={t('title')}
-            description={t('description')}
+            eyebrow={data ? poleEyebrow('env', data.name) : t('eyebrow')}
+            title={data ? (data.tagline ?? data.name) : t('title')}
+            description={data ? data.description : t('description')}
           />
-          <EnvironmentServicesList />
+          <EnvironmentServicesList offerings={data?.offerings} />
         </div>
       </div>
     </section>

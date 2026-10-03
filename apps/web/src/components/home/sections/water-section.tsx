@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/public/section-heading';
 import { WaterServicesList } from '@/components/public/water-services-list';
 import { useSectionActivity } from '@/hooks/useSectionActivity';
+import { poleEyebrow } from '@/lib/poles';
+import type { PoleContent } from '@/components/public/service-chapter';
 import { POLE_ANCHORS } from './services-overview';
 
 /** Préparée pendant un temps mort, ~1 s après le chargement (voir `useSectionActivity`). */
@@ -23,6 +25,8 @@ interface WaterSectionProps {
   dpr: number;
   particleMultiplier: number;
   webglAvailable: boolean;
+  /** Contenu du pôle piloté par le portail ; absent, les textes d'origine des messages. */
+  data?: PoleContent;
 }
 
 /** Chapitre H₂O (Eau) de l'Accueil, avec simulation d'eau WebGL — homepage uniquement. */
@@ -31,6 +35,7 @@ export function WaterSection({
   dpr,
   particleMultiplier,
   webglAvailable,
+  data,
 }: WaterSectionProps) {
   const t = useTranslations('Water');
   const { ref, mounted, active } = useSectionActivity<HTMLElement>({
@@ -57,12 +62,12 @@ export function WaterSection({
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgb(213,228,234)_0%,rgba(213,228,234,.9)_14%,rgba(213,228,234,.9)_86%,rgb(213,228,234)_100%)] md:hidden" />
       <div className="relative z-10 mx-auto w-full max-w-[1440px]">
         <SectionHeading
-          eyebrow={t('eyebrow')}
-          title={t('title')}
-          description={t('description')}
+          eyebrow={data ? poleEyebrow('eau', data.name) : t('eyebrow')}
+          title={data ? (data.tagline ?? data.name) : t('title')}
+          description={data ? data.description : t('description')}
           className="max-w-3xl"
         />
-        <WaterServicesList />
+        <WaterServicesList offerings={data?.offerings} />
       </div>
     </section>
   );

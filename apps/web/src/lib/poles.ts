@@ -23,6 +23,10 @@ export const POLE_CODES: Record<PoleKey, string> = {
   ing: 'ING',
 };
 
+/** Sur-titre d'un chapitre de pôle : « ENV · Environnement ». Le nom vient du portail. */
+export const poleEyebrow = (pole: PoleKey, name: string) =>
+  `${POLE_CODES[pole]} · ${name}`;
+
 /** Accent minéral : malachite (Environnement), bleu acier (Eau), cuivre (Ingénierie). */
 export const POLE_ACCENT_NAMES: Record<PoleKey, string> = {
   env: 'Malachite',

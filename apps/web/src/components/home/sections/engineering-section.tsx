@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/public/section-heading';
 import { EngineeringItemsList } from '@/components/public/engineering-items-list';
 import { useSectionActivity } from '@/hooks/useSectionActivity';
+import { poleEyebrow } from '@/lib/poles';
+import type { PoleContent } from '@/components/public/service-chapter';
 import { POLE_ANCHORS } from './services-overview';
 
 /** Préparée après la scène de l'eau, pour ne pas cumuler les deux en un seul temps mort. */
@@ -22,6 +24,8 @@ interface EngineeringSectionProps {
   reducedMotion: boolean;
   dpr: number;
   webglAvailable: boolean;
+  /** Contenu du pôle piloté par le portail ; absent, les textes d'origine des messages. */
+  data?: PoleContent;
 }
 
 /** Chapitre ING (Travaux d'ingénierie) de l'Accueil, accent cuivre, avec maquette 3D WebGL — homepage uniquement. */
@@ -29,6 +33,7 @@ export function EngineeringSection({
   reducedMotion,
   dpr,
   webglAvailable,
+  data,
 }: EngineeringSectionProps) {
   const t = useTranslations('Engineering');
   const { ref, mounted, active } = useSectionActivity<HTMLElement>({
@@ -55,11 +60,11 @@ export function EngineeringSection({
       <div className="relative z-10 mx-auto w-full max-w-[1440px]">
         <div className="max-w-3xl">
           <SectionHeading
-            eyebrow={t('eyebrow')}
-            title={t('title')}
-            description={t('description')}
+            eyebrow={data ? poleEyebrow('ing', data.name) : t('eyebrow')}
+            title={data ? (data.tagline ?? data.name) : t('title')}
+            description={data ? data.description : t('description')}
           />
-          <EngineeringItemsList />
+          <EngineeringItemsList offerings={data?.offerings} />
         </div>
       </div>
     </section>

@@ -1,8 +1,9 @@
 import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { ArrowUp, Lock } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { EWES_CONTACT } from '@/data/contact';
+import { getPoleServices } from '@/lib/api/public-services';
 
 /**
  * Pied de page institutionnel partagé (blueprint/05_UI_UX_System.md §6) —
@@ -13,6 +14,8 @@ export async function Footer() {
   const t = await getTranslations('Footer');
   const tNav = await getTranslations('Nav');
   const tPoles = await getTranslations('ServicesOverview');
+  // Noms des pôles pilotés par le portail ; repli sur les messages.
+  const poles = await getPoleServices(await getLocale());
   const partners = t.raw('partners') as string[];
 
   const sitemap = [
@@ -61,13 +64,13 @@ export async function Footer() {
         <div className="grid content-start gap-2.5">
           <h2 className={headingClass}>{t('polesTitle')}</h2>
           <Link href="/services" className={linkClass}>
-            {tPoles('poles.env')}
+            {poles.env?.name ?? tPoles('poles.env')}
           </Link>
           <Link href="/services" className={linkClass}>
-            {tPoles('poles.eau')}
+            {poles.eau?.name ?? tPoles('poles.eau')}
           </Link>
           <Link href="/services" className={linkClass}>
-            {tPoles('poles.ing')}
+            {poles.ing?.name ?? tPoles('poles.ing')}
           </Link>
           <Link href="/contact" className={linkClass}>
             {t('training')}
