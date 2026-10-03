@@ -26,6 +26,11 @@ import {
 import { PageHeader } from '@/components/admin/page-header';
 import { useSession } from '@/components/admin/session';
 import { ActivationLink } from '@/components/admin/users/activation-link';
+import {
+  AccountCard,
+  CardList,
+  InvitationCard,
+} from '@/components/admin/users/mobile-cards';
 import { UserAvatar } from '@/components/admin/users/user-avatar';
 import {
   Badge,
@@ -202,11 +207,6 @@ export default function UsersPage() {
             <span className="block truncate text-xs text-ink-subtle">
               {user.email}
             </span>
-            {/* Petit écran : le rôle passe sous l'adresse (la colonne dédiée est masquée). */}
-            <span className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:hidden">
-              <StatusChip kind="role" value={user.role} />
-              {!user.isActive && <Badge>Désactivé</Badge>}
-            </span>
           </span>
         </span>
       ),
@@ -215,13 +215,11 @@ export default function UsersPage() {
       id: 'role',
       header: 'Rôle',
       sortable: true,
-      hideBelow: 'sm',
       cell: (user) => <StatusChip kind="role" value={user.role} />,
     },
     {
       id: 'state',
       header: 'État',
-      hideBelow: 'sm',
       cell: (user) =>
         user.isActive ? (
           <Badge tone="ok" dot>
@@ -293,7 +291,7 @@ export default function UsersPage() {
       header: 'Invité(e)',
       className: 'min-w-60',
       cell: (invitation) => (
-        <span className="flex items-start gap-3 sm:items-center">
+        <span className="flex items-center gap-3">
           <UserAvatar
             name={invitation.fullName}
             role={invitation.role}
@@ -306,14 +304,6 @@ export default function UsersPage() {
             <span className="block truncate text-xs text-ink-subtle">
               {invitation.email}
             </span>
-            {/* Petit écran : rôle, état et actions sous le nom (les colonnes dédiées sont masquées). */}
-            <span className="mt-2 flex flex-wrap items-center gap-2 sm:hidden">
-              <StatusChip kind="role" value={invitation.role} />
-              {invitationStatus(invitation)}
-            </span>
-            <span className="mt-2.5 block sm:hidden">
-              {invitationActions(invitation)}
-            </span>
           </span>
         </span>
       ),
@@ -321,13 +311,11 @@ export default function UsersPage() {
     {
       id: 'role',
       header: 'Rôle',
-      hideBelow: 'sm',
       cell: (invitation) => <StatusChip kind="role" value={invitation.role} />,
     },
     {
       id: 'status',
       header: 'Invitation',
-      hideBelow: 'sm',
       cell: invitationStatus,
     },
     {
@@ -350,7 +338,6 @@ export default function UsersPage() {
       id: 'actions',
       header: <span className="sr-only">Actions</span>,
       align: 'end',
-      hideBelow: 'sm',
       className: 'whitespace-nowrap',
       cell: invitationActions,
     },
@@ -373,6 +360,36 @@ export default function UsersPage() {
     />
   );
 
+  const invitationsEmpty = filtered ? (
+    noResults
+  ) : (
+    <EmptyState
+      icon={MailPlus}
+      title="Aucune invitation en attente"
+      description="Les personnes invitées apparaissent ici jusqu’à ce qu’elles aient activé leur compte."
+      action={
+        <ButtonLink
+          href="/admin/utilisateurs/nouveau"
+          icon={UserPlus}
+          size="sm"
+        >
+          Inviter un utilisateur
+        </ButtonLink>
+      }
+    />
+  );
+  const accountsEmpty = filtered ? (
+    noResults
+  ) : view === 'inactive' ? (
+    <EmptyState
+      icon={UserRoundCheck}
+      title="Aucun compte désactivé"
+      description="Un compte désactivé ne peut plus se connecter ; son historique et ses droits sont conservés."
+    />
+  ) : (
+    <EmptyState icon={Users} title="Aucun compte" />
+  );
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -388,7 +405,7 @@ export default function UsersPage() {
 
       {/* Les trois rôles : repère de lecture et filtre rapide (comptes actifs). */}
       <section aria-label="Répartition par rôle">
-        <ul className="grid gap-3 sm:grid-cols-3">
+        <ul className="grid grid-cols-3 gap-2.5 sm:gap-3">
           {ALL_ROLES.map((value) => {
             const profile = ROLE_PROFILES[value];
             const Icon = profile.icon;
@@ -403,7 +420,7 @@ export default function UsersPage() {
                     if (view === 'invitations') setView('active');
                   }}
                   className={cx(
-                    'flex h-full w-full items-start gap-3.5 rounded-2xl border p-4 text-left transition-[border-color,background-color]',
+                    'flex h-full w-full flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-[border-color,background-color] sm:flex-row sm:gap-3.5 sm:p-4',
                     focusRing,
                     selected
                       ? 'border-brand bg-brand-soft/45'
@@ -412,19 +429,19 @@ export default function UsersPage() {
                 >
                   <span
                     className={cx(
-                      'grid size-10 shrink-0 place-items-center rounded-xl',
+                      'grid size-9 shrink-0 place-items-center rounded-xl sm:size-10',
                       profile.tile,
                     )}
                   >
                     <Icon size={19} aria-hidden="true" />
                   </span>
                   <span className="min-w-0">
-                    <span className="flex items-baseline gap-2">
-                      <span className="text-sm font-semibold text-ink">
+                    <span className="flex flex-col-reverse sm:flex-row sm:items-baseline sm:gap-2">
+                      <span className="text-[11.5px] font-semibold leading-tight text-ink sm:text-sm">
                         {profile.label}s
                       </span>
                       <span
-                        className="text-lg font-semibold tabular-nums text-ink"
+                        className="text-xl font-semibold leading-tight tabular-nums text-ink sm:text-lg"
                         aria-label={
                           users.data
                             ? plural(
@@ -438,7 +455,7 @@ export default function UsersPage() {
                         {users.data ? countByRole(value) : '–'}
                       </span>
                     </span>
-                    <span className="mt-0.5 block text-xs leading-snug text-ink-subtle">
+                    <span className="mt-0.5 hidden text-xs leading-snug text-ink-subtle sm:block">
                       {profile.tagline}
                     </span>
                   </span>
@@ -449,11 +466,12 @@ export default function UsersPage() {
         </ul>
       </section>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <SegmentedControl<View>
           label="Afficher"
           value={view}
           onChange={setView}
+          className="w-full sm:w-auto"
           options={[
             {
               value: 'active',
@@ -487,61 +505,69 @@ export default function UsersPage() {
       </div>
 
       {view === 'invitations' ? (
-        <DataTable<Invitation>
-          caption="Invitations en attente"
-          columns={invitationColumns}
-          rows={filtered ? shownInvitations : invitations.data}
-          getRowId={(invitation) => invitation.id}
-          isLoading={invitations.isLoading}
-          error={invitations.error}
-          onRetry={() => invitations.refetch()}
-          empty={
-            filtered ? (
-              noResults
-            ) : (
-              <EmptyState
-                icon={MailPlus}
-                title="Aucune invitation en attente"
-                description="Les personnes invitées apparaissent ici jusqu’à ce qu’elles aient activé leur compte."
-                action={
-                  <ButtonLink
-                    href="/admin/utilisateurs/nouveau"
-                    icon={UserPlus}
-                    size="sm"
-                  >
-                    Inviter un utilisateur
-                  </ButtonLink>
-                }
+        <>
+          <CardList<Invitation>
+            className="sm:hidden"
+            label="Invitations en attente"
+            rows={filtered ? shownInvitations : invitations.data}
+            getId={(invitation) => invitation.id}
+            isLoading={invitations.isLoading}
+            error={invitations.error}
+            onRetry={() => invitations.refetch()}
+            empty={invitationsEmpty}
+            render={(invitation) => (
+              <InvitationCard
+                invitation={invitation}
+                busy={busyId === invitation.id}
+                onResend={() => resend.mutate(invitation)}
+                onRevoke={() => void revoke(invitation)}
               />
-            )
-          }
-        />
+            )}
+          />
+          <DataTable<Invitation>
+            className="hidden sm:block"
+            caption="Invitations en attente"
+            columns={invitationColumns}
+            rows={filtered ? shownInvitations : invitations.data}
+            getRowId={(invitation) => invitation.id}
+            isLoading={invitations.isLoading}
+            error={invitations.error}
+            onRetry={() => invitations.refetch()}
+            empty={invitationsEmpty}
+          />
+        </>
       ) : (
-        <DataTable<UserSummary>
-          caption={view === 'active' ? 'Comptes actifs' : 'Comptes désactivés'}
-          columns={userColumns}
-          rows={users.data ? shownUsers : undefined}
-          getRowId={(user) => user.id}
-          rowHref={(user) => `/admin/utilisateurs/${user.id}`}
-          sort={sort}
-          onSortChange={setSort}
-          isLoading={users.isLoading}
-          error={users.error}
-          onRetry={() => users.refetch()}
-          empty={
-            filtered ? (
-              noResults
-            ) : view === 'inactive' ? (
-              <EmptyState
-                icon={UserRoundCheck}
-                title="Aucun compte désactivé"
-                description="Un compte désactivé ne peut plus se connecter ; son historique et ses droits sont conservés."
-              />
-            ) : (
-              <EmptyState icon={Users} title="Aucun compte" />
-            )
-          }
-        />
+        <>
+          <CardList<UserSummary>
+            className="sm:hidden"
+            label={view === 'active' ? 'Comptes actifs' : 'Comptes désactivés'}
+            rows={users.data ? shownUsers : undefined}
+            getId={(user) => user.id}
+            isLoading={users.isLoading}
+            error={users.error}
+            onRetry={() => users.refetch()}
+            empty={accountsEmpty}
+            render={(user) => (
+              <AccountCard user={user} isSelf={user.id === session.id} />
+            )}
+          />
+          <DataTable<UserSummary>
+            className="hidden sm:block"
+            caption={
+              view === 'active' ? 'Comptes actifs' : 'Comptes désactivés'
+            }
+            columns={userColumns}
+            rows={users.data ? shownUsers : undefined}
+            getRowId={(user) => user.id}
+            rowHref={(user) => `/admin/utilisateurs/${user.id}`}
+            sort={sort}
+            onSortChange={setSort}
+            isLoading={users.isLoading}
+            error={users.error}
+            onRetry={() => users.refetch()}
+            empty={accountsEmpty}
+          />
+        </>
       )}
 
       {users.data && view !== 'invitations' && (

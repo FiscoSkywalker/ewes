@@ -605,4 +605,97 @@ describe('Utilisateurs et rôles (e2e)', () => {
       ).toBe(true);
     });
   });
+  describe('historique d’un compte (journal d’audit)', () => {
+    it('paginates, filters by action and period, and searches by author or action', async () => {
+      const target = await makeUser('history', Role.UTILISATEUR);
+      // 5 entrées : 2 changements de rôle, 1 désactivation, 1 réactivation (+ aucune autre).
+      const send = (path: string, body?: object) =>
+        as(admin.auth)
+          .patch(`/admin/users/${target.id}/${path}`, body)
+          .expect(200);
+      await send('role', { role: Role.GESTIONNAIRE });
+      await send('role', { role: Role.UTILISATEUR });
+      await as(admin.auth)
+        .post(`/admin/users/${target.id}/deactivate`)
+        .expect(200);
+      await as(admin.auth)
+        .post(`/admin/users/${target.id}/reactivate`)
+        .expect(200);
+
+      const history = (query = '') =>
+        as(admin.auth)
+          .get(
+            `/admin/audit-logs?entityType=User&entityId=${target.id}${query}`,
+          )
+          .expect(200)
+          .then(
+            (res) =>
+              res.body as {
+                data: {
+                  action: string;
+                  createdAt: string;
+                  actor: { fullName: string } | null;
+                }[];
+                meta: { page: number; limit: number; total: number };
+              },
+          );
+
+      const all = await history();
+      expect(all.meta.total).toBe(4);
+      // Du plus récent au plus ancien.
+      expect(all.data.map((e) => e.action)).toEqual([
+        'USER_REACTIVATED',
+        'USER_DEACTIVATED',
+        'USER_ROLE_CHANGED',
+        'USER_ROLE_CHANGED',
+      ]);
+
+      // Pagination : pages de 3, total inchangé, aucun doublon entre pages.
+      const first = await history('&limit=3&page=1');
+      const second = await history('&limit=3&page=2');
+      expect(first.data).toHaveLength(3);
+      expect(second.data).toHaveLength(1);
+      expect(second.meta).toMatchObject({ page: 2, limit: 3, total: 4 });
+      expect(second.data[0].action).toBe('USER_ROLE_CHANGED');
+      expect((await history('&limit=3&page=3')).data).toHaveLength(0);
+
+      // Filtre par action : le total suit le filtre.
+      const roles = await history('&action=USER_ROLE_CHANGED');
+      expect(roles.meta.total).toBe(2);
+
+      // Recherche : auteur (casse ignorée), code d'action avec espaces, rien de trouvé.
+      expect((await history('&q=e2e%20administrateur')).meta.total).toBe(4);
+      expect((await history('&q=role%20changed')).meta.total).toBe(2);
+      expect((await history('&q=REACTIVATED')).meta.total).toBe(1);
+      expect((await history('&q=personne-ne-porte-ce-nom')).meta.total).toBe(0);
+      // Un « % » saisi est cherché littéralement, il ne ramène pas tout.
+      expect((await history('&q=%25')).meta.total).toBe(0);
+      expect(
+        (await history('&q=role%20changed&action=USER_REACTIVATED')).meta.total,
+      ).toBe(0);
+
+      // Période : jour inclus, bornes UTC.
+      const today = new Date().toISOString().slice(0, 10);
+      const yesterday = new Date(Date.now() - 86_400_000)
+        .toISOString()
+        .slice(0, 10);
+      const tomorrow = new Date(Date.now() + 86_400_000)
+        .toISOString()
+        .slice(0, 10);
+      expect((await history(`&from=${today}&to=${today}`)).meta.total).toBe(4);
+      expect((await history(`&to=${yesterday}`)).meta.total).toBe(0);
+      expect((await history(`&from=${tomorrow}`)).meta.total).toBe(0);
+    });
+
+    it('rejects malformed paging, search and period parameters', async () => {
+      const get = (query: string) =>
+        as(admin.auth).get(`/admin/audit-logs${query}`);
+      await get('?limit=101').expect(400);
+      await get('?page=0').expect(400);
+      await get('?from=hier').expect(400);
+      await get('?to=2026-02-31').expect(400);
+      await get(`?q=${'x'.repeat(101)}`).expect(400);
+      await as(gestAuth).get('/admin/audit-logs?q=a').expect(403);
+    });
+  });
 });

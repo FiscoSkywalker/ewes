@@ -11,25 +11,19 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
-  History,
   KeyRound,
   Mail,
   UserRoundCheck,
   UserRoundX,
 } from 'lucide-react';
-import { ApiError, backendJson, type Paginated } from '@/lib/api/backend';
+import { ApiError, backendJson } from '@/lib/api/backend';
 import { invalidatePortalData } from '@/lib/admin/invalidate';
 import { relativeTime } from '@/lib/admin/format';
 import { homePathFor } from '@/lib/admin/roles';
-import {
-  ROLE_PROFILES,
-  USER_ACTION_LABELS,
-  auditDetail,
-  type AuditEntry,
-  type UserDetail,
-} from '@/lib/admin/users';
+import { ROLE_PROFILES, type UserDetail } from '@/lib/admin/users';
 import { useSession } from '@/components/admin/session';
 import { PortalNotFound } from '@/components/admin/states';
+import { UserHistory } from '@/components/admin/users/user-history';
 import { RoleDialog } from '@/components/admin/users/role-dialog';
 import { RoleScope } from '@/components/admin/users/role-scope';
 import { UserAvatar } from '@/components/admin/users/user-avatar';
@@ -37,7 +31,6 @@ import {
   Badge,
   Button,
   Card,
-  EmptyState,
   ErrorState,
   LoadingRegion,
   Skeleton,
@@ -162,7 +155,7 @@ function Detail({ user }: { user: UserDetail }) {
 
   return (
     <>
-      <div className="animate-rise-in flex flex-col gap-5 sm:flex-row sm:items-center">
+      <div className="animate-rise-in flex items-center gap-4 sm:gap-5">
         <UserAvatar
           name={user.fullName}
           role={user.role}
@@ -251,7 +244,7 @@ function Detail({ user }: { user: UserDetail }) {
               <Row label="Adresse e-mail">
                 <a
                   href={`mailto:${user.email}`}
-                  className="inline-flex items-center gap-1.5 break-all font-medium text-brand hover:underline"
+                  className="inline-flex items-center gap-1.5 font-medium [overflow-wrap:anywhere] text-brand hover:underline"
                 >
                   <Mail size={13} aria-hidden="true" className="shrink-0" />
                   {user.email}
@@ -355,10 +348,12 @@ function PageHeaderBlock({
         )}
         {isSelf && <Badge tone="brand">Vous</Badge>}
       </p>
-      <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-[28px]">
+      <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-[28px]">
         {user.fullName}
       </h1>
-      <p className="mt-1 break-all text-sm text-ink-muted">{user.email}</p>
+      <p className="mt-1 text-sm text-ink-muted [overflow-wrap:anywhere]">
+        {user.email}
+      </p>
     </div>
   );
 }
@@ -393,84 +388,5 @@ function Note({ children }: { children: ReactNode }) {
       />
       <span>{children}</span>
     </p>
-  );
-}
-
-/** Historique du compte (journal d'audit) : changements de rôle, désactivations, activation. */
-function UserHistory({ userId }: { userId: string }) {
-  const history = useQuery({
-    queryKey: historyKey(userId),
-    queryFn: () =>
-      backendJson<Paginated<AuditEntry>>(
-        `admin/audit-logs?entityType=User&entityId=${userId}&limit=20`,
-      ),
-  });
-
-  return (
-    <Card
-      title="Historique"
-      description="Les actions enregistrées sur ce compte, de la plus récente à la plus ancienne."
-      padding="none"
-    >
-      {history.isLoading ? (
-        <LoadingRegion>
-          <div className="space-y-4 p-5">
-            <Skeleton className="h-10" />
-            <Skeleton className="h-10" />
-          </div>
-        </LoadingRegion>
-      ) : history.error ? (
-        <ErrorState
-          error={history.error}
-          onRetry={() => history.refetch()}
-          retrying={history.isRefetching}
-        />
-      ) : !history.data?.data.length ? (
-        <EmptyState
-          icon={History}
-          title="Aucune action enregistrée"
-          description="Les changements de rôle et les désactivations de ce compte apparaîtront ici."
-        />
-      ) : (
-        <ol className="px-5 py-4">
-          {history.data.data.map((entry, index, list) => {
-            const detail = auditDetail(entry);
-            return (
-              <li key={entry.id} className="relative flex gap-3 pb-5 last:pb-0">
-                {index < list.length - 1 && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute left-[15px] top-8 bottom-0 w-px bg-line-strong"
-                  />
-                )}
-                <span className="relative grid size-8 shrink-0 place-items-center rounded-full bg-sunken text-ink-muted ring-4 ring-panel">
-                  <History size={14} aria-hidden="true" />
-                </span>
-                <div className="min-w-0 pt-0.5">
-                  <p className="text-[13px] font-medium text-ink">
-                    {USER_ACTION_LABELS[entry.action] ?? entry.action}
-                    {detail && (
-                      <span className="font-normal text-ink-muted">
-                        {' '}
-                        · {detail}
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-xs text-ink-subtle">
-                    {entry.actor ? `par ${entry.actor.fullName} · ` : ''}
-                    <time
-                      dateTime={entry.createdAt}
-                      title={new Date(entry.createdAt).toLocaleString('fr')}
-                    >
-                      {relativeTime(entry.createdAt)}
-                    </time>
-                  </p>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      )}
-    </Card>
   );
 }
