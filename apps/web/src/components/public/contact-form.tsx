@@ -3,7 +3,7 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AlertCircle, CheckCircle2, Send } from 'lucide-react';
-import { EWES_CONTACT } from '@/data/contact';
+import { useSiteSettings } from './site-settings-provider';
 import {
   CONTACT_MESSAGE_MIN,
   sendContactRequest,
@@ -43,6 +43,7 @@ interface ContactFormProps {
 export function ContactForm({ onSectorChange }: ContactFormProps) {
   const t = useTranslations('ContactPage');
   const locale = useLocale();
+  const settings = useSiteSettings();
   const sectors = t.raw('sectors') as Sector[];
   const id = useId();
   const formRef = useRef<HTMLFormElement>(null);
@@ -343,10 +344,10 @@ export function ContactForm({ onSectorChange }: ContactFormProps) {
               <>
                 {t('submit.fallback')}{' '}
                 <a
-                  href={`mailto:${EWES_CONTACT.email}`}
+                  href={`mailto:${settings.email}`}
                   className="underline underline-offset-4"
                 >
-                  {EWES_CONTACT.email}
+                  {settings.email}
                 </a>
                 .
               </>

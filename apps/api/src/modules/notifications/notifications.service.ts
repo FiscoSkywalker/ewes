@@ -32,6 +32,9 @@ interface StoredMail {
   sensitive?: boolean;
 }
 
+/** Un envoi unique, sans attente : le test d'envoi du portail doit répondre vite. */
+const SINGLE_ATTEMPT: RetryPolicy = { delaysMs: [0] };
+
 const REDACTED_TEXT = '[Contenu masqué : il contenait un lien à usage unique.]';
 
 const sleep = (ms: number) =>
@@ -61,15 +64,38 @@ export class NotificationsService {
    * Renvoie `null` si la clé d'idempotence existe déjà (événement dupliqué).
    */
   async enqueue(request: NotificationRequest): Promise<Notification | null> {
+    const notification = await this.create(request);
+    if (!notification) return null;
+    // Hors requête : un échec d'envoi n'annule jamais l'événement métier déjà enregistré.
+    void this.deliver(notification.id).catch((error: unknown) =>
+      this.logger.error(
+        `Envoi de la notification ${notification.id} interrompu : ${String(error)}`,
+      ),
+    );
+    return notification;
+  }
+
+  /**
+   * Enregistre puis envoie **dans la requête**, en une seule tentative, pour
+   * que l'appelant (test d'envoi du portail) connaisse le résultat réel.
+   */
+  async sendNow(request: NotificationRequest): Promise<Notification | null> {
+    const notification = await this.create(request);
+    if (!notification) return null;
+    return this.deliver(notification.id, SINGLE_ATTEMPT);
+  }
+
+  private async create(
+    request: NotificationRequest,
+  ): Promise<Notification | null> {
     const payload: StoredMail = {
       subject: request.subject,
       text: request.text,
       replyTo: request.replyTo,
       ...(request.sensitive && { sensitive: true }),
     };
-    let notification: Notification;
     try {
-      notification = await this.prisma.notification.create({
+      return await this.prisma.notification.create({
         data: {
           type: request.type,
           recipientEmail: request.to,
@@ -86,13 +112,6 @@ export class NotificationsService {
       }
       throw error;
     }
-    // Hors requête : un échec d'envoi n'annule jamais l'événement métier déjà enregistré.
-    void this.deliver(notification.id).catch((error: unknown) =>
-      this.logger.error(
-        `Envoi de la notification ${notification.id} interrompu : ${String(error)}`,
-      ),
-    );
-    return notification;
   }
 
   /** Nombre de notifications d'un type adressées à une adresse depuis `since` (limite anti-abus). */
@@ -103,7 +122,10 @@ export class NotificationsService {
   }
 
   /** Tente l'envoi (jusqu'à `delaysMs.length` fois) et consigne le résultat. */
-  async deliver(id: string): Promise<Notification> {
+  async deliver(
+    id: string,
+    policy: RetryPolicy = this.retry,
+  ): Promise<Notification> {
     const notification = await this.prisma.notification.findUnique({
       where: { id },
     });
@@ -114,7 +136,7 @@ export class NotificationsService {
     let attempts = notification.attempts;
     let lastError = 'unknown';
 
-    for (const delay of this.retry.delaysMs) {
+    for (const delay of policy.delaysMs) {
       await sleep(delay);
       attempts += 1;
       try {
@@ -166,6 +188,37 @@ export class NotificationsService {
     });
     if (!notification) throw this.notFound();
     return this.deliver(id);
+  }
+
+  /** État de l'envoi d'e-mails : configuration du transport, sans secret. */
+  transportStatus() {
+    return this.mail.status();
+  }
+
+  /** Synthèse des envois pour l'écran Messagerie : ce qui est parti, ce qui échoue, ce qui attend. */
+  async summary(now = new Date()) {
+    const since = new Date(now.getTime() - 30 * 86_400_000);
+    const [sent, failed, pending, lastSent, lastFailed] = await Promise.all([
+      this.prisma.notification.count({ where: { sentAt: { gte: since } } }),
+      this.prisma.notification.count({
+        where: { sentAt: null, failedAt: { not: null } },
+      }),
+      this.prisma.notification.count({
+        where: { sentAt: null, failedAt: null },
+      }),
+      this.prisma.notification.aggregate({ _max: { sentAt: true } }),
+      this.prisma.notification.aggregate({
+        where: { sentAt: null },
+        _max: { failedAt: true },
+      }),
+    ]);
+    return {
+      sentLast30Days: sent,
+      failed,
+      pending,
+      lastSentAt: lastSent._max.sentAt,
+      lastFailedAt: lastFailed._max.failedAt,
+    };
   }
 
   async list(query: {

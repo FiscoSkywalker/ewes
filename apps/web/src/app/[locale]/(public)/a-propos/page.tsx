@@ -7,12 +7,13 @@ import { getKeyFigures } from '@/lib/api/public-key-figures';
 import type { LocalizedFigure } from '@/lib/key-figures';
 import { KeyFiguresStrip } from '@/components/public/key-figures-strip';
 import type { Expert } from '@/data/experts';
-import { EWES_CONTACT } from '@/data/contact';
 import { ExpertsGallery } from '@/components/public/experts-gallery';
 import { SectionHeading } from '@/components/public/section-heading';
 import { resolvePageHeader } from '@/lib/api/public-pages';
 import { getPoleServices } from '@/lib/api/public-services';
 import { getExperts } from '@/lib/api/public-experts';
+import { getSiteSettings } from '@/lib/api/public-site-settings';
+import { addressFor } from '@/lib/site-settings';
 import { ButtonLink } from '@/components/public/ui';
 
 /**
@@ -48,6 +49,7 @@ export default async function AboutPage({
     title: tPage('title'),
     intro: tPage('description'),
   });
+  const settings = await getSiteSettings();
   const tExpertises = await getTranslations('Expertises');
   const tResearch = await getTranslations('Research');
   const tMetrics = await getTranslations('Metrics');
@@ -132,14 +134,14 @@ export default async function AboutPage({
             >
               <p className="flex items-start gap-3">
                 <MapPin size={15} className="mt-1 flex-none text-primary" />
-                {t('addressLine1')}
+                {addressFor(settings, locale)}
               </p>
               <a
-                href={EWES_CONTACT.phoneHref}
+                href={settings.phoneHref}
                 className="flex items-center gap-3 transition-colors hover:text-primary"
               >
                 <Phone size={15} className="flex-none text-primary" />
-                {EWES_CONTACT.phoneDisplay}
+                {settings.phone}
               </a>
               <p className="border-t border-border pt-4 text-xs leading-5 text-sand/60">
                 {t('networkLine')}

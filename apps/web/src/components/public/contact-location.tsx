@@ -1,6 +1,5 @@
 import { useTranslations } from 'next-intl';
 import { ArrowUpRight, MapPin } from 'lucide-react';
-import { EWES_MAPS_URL } from '@/data/contact';
 import { SectionHeading } from './section-heading';
 import { ButtonAnchor } from '@/components/public/ui';
 
@@ -10,10 +9,16 @@ import { ButtonAnchor } from '@/components/public/ui';
  * sobriété d'infrastructure, blueprint/19). L'itinéraire réel s'ouvre dans
  * Google Maps. Server Component.
  */
-export function ContactLocation() {
+export function ContactLocation({
+  address,
+  mapsUrl,
+}: {
+  /** Adresse du siège dans la langue du visiteur (Paramètres > Général). */
+  address: string;
+  mapsUrl: string;
+}) {
   const t = useTranslations('ContactPage.location');
   const tWorld = useTranslations('World');
-  const tFooter = useTranslations('Footer');
 
   return (
     <section
@@ -29,15 +34,13 @@ export function ContactLocation() {
               <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-primary">
                 {t('addressLabel')}
               </p>
-              <p className="max-w-md text-lg leading-snug">
-                {tFooter('address')}
-              </p>
+              <p className="max-w-md text-lg leading-snug">{address}</p>
             </div>
             <p className="max-w-md border-t border-border pt-5 text-sm leading-6 text-sand/65">
               {tWorld('networkLine')}
             </p>
             <ButtonAnchor
-              href={EWES_MAPS_URL}
+              href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
               icon={ArrowUpRight}

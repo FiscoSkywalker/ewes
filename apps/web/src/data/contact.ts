@@ -1,30 +1,32 @@
+import type { PublicSiteSettings } from '@/lib/site-settings';
+
 /**
- * Coordonnées publiques d'EWES — source : `raw/PROFIL_EWES.md`
- * (« Informations de contact »). Un seul endroit pour le pied de page, la page
- * Contact, le bloc d'appel à l'action et le formulaire. L'adresse, elle, est
- * traduite (messages `Footer.address`).
+ * Coordonnées publiques d'EWES — **valeurs de repli**. Elles se modifient dans
+ * le portail (Paramètres > Général) ; ce fichier ne sert que lorsque l'API est
+ * injoignable (build sans API, panne), pour que le site n'affiche jamais un
+ * numéro vide. Source des valeurs d'origine : `raw/PROFIL_EWES.md`
+ * (« Informations de contact ») ; à garder alignées sur
+ * `apps/api/src/modules/site-settings/site-settings.defaults.ts`.
+ *
+ * Horaires : absents de `raw/PROFIL_EWES.md`, valeurs provisoires À VALIDER
+ * PAR EWES (blueprint/15_Public_Site_Pages.md exige des horaires sur la page
+ * Contact). Heure de Lubumbashi (UTC+2).
  */
-export const EWES_CONTACT = {
-  phoneDisplay: '+243 81 81 53 110',
+export const FALLBACK_SITE_SETTINGS: PublicSiteSettings = {
+  phone: '+243 81 81 53 110',
   phoneHref: 'tel:+243818153110',
   email: 'arthurkaniki@gmail.com',
-  website: 'www.ewes.cd',
-} as const;
-
-/**
- * Horaires d'ouverture du siège, en heure de Lubumbashi (UTC+2). Absents de
- * `raw/PROFIL_EWES.md` : valeurs provisoires, À VALIDER PAR EWES
- * (blueprint/15_Public_Site_Pages.md exige des horaires sur la page Contact).
- * Jours au format `Date.getDay()` (0 = dimanche).
- */
-export const EWES_OFFICE_HOURS = {
-  timeZone: 'Africa/Lubumbashi',
-  openDays: [1, 2, 3, 4, 5],
+  addressFr:
+    '1809, Av. Araucarias, Q/Hewa-Bora, C/Ruashi, Ville de Lubumbashi, RDC',
+  addressEn:
+    '1809, Araucarias Avenue, Hewa-Bora district, Ruashi commune, Lubumbashi, DRC',
+  // Itinéraire : lien de recherche Google Maps, sans clé d'API.
+  mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    '1809, Av. Araucarias, Q/Hewa-Bora, C/Ruashi, Ville de Lubumbashi, RDC',
+  )}`,
+  officeDays: [1, 2, 3, 4, 5],
   opensAt: '08:00',
   closesAt: '17:00',
-} as const;
-
-/** Itinéraire vers le siège (lien de recherche Google Maps, sans clé d'API). */
-export const EWES_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-  '1809 Avenue Araucarias, Ruashi, Lubumbashi, RDC',
-)}`;
+  timeZone: 'Africa/Lubumbashi',
+  social: { linkedin: null, facebook: null, x: null, youtube: null },
+};

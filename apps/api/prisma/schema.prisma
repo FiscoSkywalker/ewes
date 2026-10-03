@@ -529,6 +529,36 @@ model DocumentAccessGrant {
 
 // --- Contact ---
 
+/// Réglages de la plateforme (portail > Paramètres) : une seule ligne (`id` = "site"), créée au premier
+/// enregistrement. Sans ligne, les valeurs d'origine de l'API (`DEFAULT_SITE_SETTINGS`) s'appliquent.
+/// Aucun secret ici : les identifiants SMTP restent dans l'environnement du serveur.
+model SiteSettings {
+  id                    String   @id @default("site")
+  /// Téléphone tel qu'affiché (« +243 81 81 53 110 ») ; le lien `tel:` en est déduit.
+  phone                 String
+  /// Adresse e-mail publique du siège (pied de page, page Contact).
+  email                 String
+  addressFr             String
+  /// Absente : le site anglais affiche l'adresse française.
+  addressEn             String?
+  /// Jours d'ouverture, format `Date.getDay()` (0 = dimanche).
+  officeDays            Int[]
+  /// Heures d'ouverture « HH:MM » à Lubumbashi.
+  opensAt               String
+  closesAt              String
+  linkedinUrl           String?
+  facebookUrl           String?
+  xUrl                  String?
+  youtubeUrl            String?
+  /// Destinataire des messages de contact ; absent, la variable d'environnement CONTACT_NOTIFICATION_EMAIL s'applique.
+  contactRecipientEmail String?
+  /// Envoyer un accusé de réception à l'expéditeur du formulaire de contact.
+  contactAutoReply      Boolean  @default(true)
+  updatedAt             DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
 /// Message du formulaire de contact. Jamais modifiable après soumission : seul
 /// `status` (suivi nouveau/traité) évolue (blueprint/09_Business_Rules.md §6).
 model ContactMessage {

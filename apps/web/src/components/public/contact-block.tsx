@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react';
-import { EWES_CONTACT } from '@/data/contact';
+import { addressFor } from '@/lib/site-settings';
 import { useInView } from '@/hooks/useInView';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ContactForm } from './contact-form';
+import { useSiteSettings } from './site-settings-provider';
 import { OfficeStatusInline } from './office-status';
 import { TopoContours } from './topo-contours';
 import { TextLink } from '@/components/public/ui';
@@ -47,7 +48,8 @@ const ROTATION_MS = 2600;
  */
 export function ContactBlock() {
   const t = useTranslations('ContactBlock');
-  const tFooter = useTranslations('Footer');
+  const locale = useLocale();
+  const settings = useSiteSettings();
   const reducedMotion = useReducedMotion();
 
   const [rotation, setRotation] = useState(0);
@@ -72,19 +74,19 @@ export function ContactBlock() {
     {
       icon: <Phone size={16} />,
       label: t('phone'),
-      value: EWES_CONTACT.phoneDisplay,
-      href: EWES_CONTACT.phoneHref,
+      value: settings.phone,
+      href: settings.phoneHref,
     },
     {
       icon: <Mail size={16} />,
       label: t('email'),
-      value: EWES_CONTACT.email,
-      href: `mailto:${EWES_CONTACT.email}`,
+      value: settings.email,
+      href: `mailto:${settings.email}`,
     },
     {
       icon: <MapPin size={16} />,
       label: t('address'),
-      value: tFooter('address'),
+      value: addressFor(settings, locale),
     },
   ];
 

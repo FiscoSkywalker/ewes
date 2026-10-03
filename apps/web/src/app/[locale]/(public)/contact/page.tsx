@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ArrowDown, ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react';
-import { EWES_CONTACT } from '@/data/contact';
 import { ContactForm } from '@/components/public/contact-form';
 import { ContactLocation } from '@/components/public/contact-location';
 import { OfficeStatus } from '@/components/public/office-status';
@@ -11,6 +10,8 @@ import { SectionHeading } from '@/components/public/section-heading';
 import { TopoContours } from '@/components/public/topo-contours';
 import { buttonClass } from '@/components/public/ui';
 import { resolvePageHeader } from '@/lib/api/public-pages';
+import { getSiteSettings } from '@/lib/api/public-site-settings';
+import { addressFor } from '@/lib/site-settings';
 
 /**
  * Page Contact (blueprint/15_Public_Site_Pages.md) — page statique, point
@@ -75,6 +76,7 @@ export default async function ContactPage({
     intro: t('description'),
   });
   const steps = t.raw('steps.items') as { title: string; text: string }[];
+  const settings = await getSiteSettings();
 
   return (
     <div className="text-sand">
@@ -105,19 +107,19 @@ export default async function ContactPage({
             {t('channels.title')}
           </p>
           <div className="grid gap-4 md:grid-cols-3" data-stagger>
-            <a href={EWES_CONTACT.phoneHref} className={channelClass}>
+            <a href={settings.phoneHref} className={channelClass}>
               <ChannelContent
                 icon={<Phone size={18} />}
                 label={t('channels.call.label')}
-                value={EWES_CONTACT.phoneDisplay}
+                value={settings.phone}
                 hint={t('channels.call.hint')}
               />
             </a>
-            <a href={`mailto:${EWES_CONTACT.email}`} className={channelClass}>
+            <a href={`mailto:${settings.email}`} className={channelClass}>
               <ChannelContent
                 icon={<Mail size={18} />}
                 label={t('channels.write.label')}
-                value={EWES_CONTACT.email}
+                value={settings.email}
                 hint={t('channels.write.hint')}
               />
             </a>
@@ -177,7 +179,10 @@ export default async function ContactPage({
         </div>
       </section>
 
-      <ContactLocation />
+      <ContactLocation
+        address={addressFor(settings, locale)}
+        mapsUrl={settings.mapsUrl}
+      />
     </div>
   );
 }

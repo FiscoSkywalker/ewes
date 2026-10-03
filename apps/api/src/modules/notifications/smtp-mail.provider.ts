@@ -5,6 +5,7 @@ import {
   MailNotConfiguredError,
   type MailMessage,
   type MailProvider,
+  type MailTransportStatus,
 } from './mail-provider.js';
 
 /**
@@ -41,6 +42,25 @@ export class SmtpMailProvider implements MailProvider {
       });
     }
     return { transporter: this.transporter, from };
+  }
+
+  status(): MailTransportStatus {
+    const host = this.config.get<string>('SMTP_HOST')?.trim() || null;
+    const from = this.config.get<string>('SMTP_FROM')?.trim() || null;
+    const port = Number(this.config.get<string>('SMTP_PORT', '587'));
+    const missing = [
+      ...(host ? [] : ['SMTP_HOST']),
+      ...(from ? [] : ['SMTP_FROM']),
+    ];
+    return {
+      configured: missing.length === 0,
+      host,
+      port: Number.isInteger(port) ? port : null,
+      security: host ? (port === 465 ? 'tls' : 'starttls') : null,
+      from,
+      authenticated: Boolean(this.config.get<string>('SMTP_USER')?.trim()),
+      missing,
+    };
   }
 
   async send(message: MailMessage): Promise<void> {
