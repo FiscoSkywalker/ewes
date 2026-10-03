@@ -8,6 +8,7 @@ import { UsersModule } from './modules/users/users.module.js';
 import { PagesModule } from './modules/pages/pages.module.js';
 import { ServicesModule } from './modules/services/services.module.js';
 import { KeyFiguresModule } from './modules/key-figures/key-figures.module.js';
+import { ExpertsModule } from './modules/experts/experts.module.js';
 import { RealisationsModule } from './modules/realisations/realisations.module.js';
 import { ActualitesModule } from './modules/actualites/actualites.module.js';
 import { DocumentsPublicsModule } from './modules/documents-publics/documents-publics.module.js';
@@ -38,6 +39,7 @@ import { HealthModule } from './modules/health/health.module.js';
     PagesModule,
     ServicesModule,
     KeyFiguresModule,
+    ExpertsModule,
     RealisationsModule,
     ActualitesModule,
     DocumentsPublicsModule,

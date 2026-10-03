@@ -15,6 +15,9 @@ const POLE_CLASS: Record<ExpertPole, string> = {
   ing: 'pole-ing',
 };
 
+/** Accent d'un expert sans pôle de rattachement. */
+const NO_POLE_CLASS = 'pole-neutral';
+
 /** Dimensions des visuels provisoires (recadrage sur un visage). */
 const SOURCE_SIZE: Record<string, [number, number]> = {
   '/assets/images/ewes-apropos-equipe.webp': [1536, 1024],
@@ -95,7 +98,8 @@ export function ExpertsGallery({
 }) {
   const t = useTranslations('AboutPage.team');
   const tMessages = useTranslations('ServicesOverview.poles');
-  const tPoles = (pole: ExpertPole) => poleNames?.[pole] ?? tMessages(pole);
+  const tPoles = (pole: ExpertPole | null) =>
+    pole ? (poleNames?.[pole] ?? tMessages(pole)) : '';
   const [active, setActive] = useState(0);
 
   const focusTab = (index: number) => {
@@ -125,7 +129,7 @@ export function ExpertsGallery({
         return (
           <div
             key={expert.id}
-            className={`${POLE_CLASS[expert.pole]} group relative overflow-hidden rounded-sheet bg-night transition-[flex-grow,height] duration-700 ease-[cubic-bezier(.2,.7,.1,1)] lg:h-full lg:min-w-0 ${
+            className={`${expert.pole ? POLE_CLASS[expert.pole] : NO_POLE_CLASS} group relative overflow-hidden rounded-sheet bg-night transition-[flex-grow,height] duration-700 ease-[cubic-bezier(.2,.7,.1,1)] lg:h-full lg:min-w-0 ${
               isActive ? 'h-[560px] lg:flex-[6_1_0%]' : 'h-24 lg:flex-[1_1_0%]'
             }`}
             onMouseEnter={() => setActive(index)}
@@ -178,9 +182,11 @@ export function ExpertsGallery({
               <span className="font-heading text-lg font-bold text-on-night lg:[writing-mode:vertical-rl] lg:rotate-180 lg:whitespace-nowrap">
                 {expert.name}
               </span>
-              <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-on-night-muted lg:hidden">
-                {tPoles(expert.pole)}
-              </span>
+              {expert.pole && (
+                <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-on-night-muted lg:hidden">
+                  {tPoles(expert.pole)}
+                </span>
+              )}
             </div>
 
             {/* Fiche */}
@@ -193,22 +199,27 @@ export function ExpertsGallery({
             >
               <div className="expert-panel-in flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-lg">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-night/60 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-on-night backdrop-blur-md">
-                    <span className="h-1.5 w-1.5 rounded-full bg-pole" />
-                    {t('pole', { pole: tPoles(expert.pole) })}
-                  </span>
+                  {expert.pole && (
+                    <span className="inline-flex items-center gap-2 rounded-full bg-night/60 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-on-night backdrop-blur-md">
+                      <span className="h-1.5 w-1.5 rounded-full bg-pole" />
+                      {t('pole', { pole: tPoles(expert.pole) })}
+                    </span>
+                  )}
                   <h3 className="mt-4 font-heading text-3xl font-bold leading-tight text-on-night sm:text-4xl">
                     {expert.name}
                   </h3>
                   <p className="mt-1 text-sm font-semibold text-on-night">
                     {expert.role}
                   </p>
-                  <p className="mt-4 hidden text-sm leading-6 sm:block">
-                    {expert.bio}
-                  </p>
+                  {expert.bio && (
+                    <p className="mt-4 hidden text-sm leading-6 sm:block">
+                      {expert.bio}
+                    </p>
+                  )}
                   <ul
                     className="mt-5 flex flex-wrap gap-1.5"
                     aria-label={t('specialties')}
+                    hidden={expert.specialties.length === 0}
                   >
                     {expert.specialties.map((specialty) => (
                       <li
@@ -220,14 +231,16 @@ export function ExpertsGallery({
                     ))}
                   </ul>
                 </div>
-                <p className="flex flex-none items-end gap-2 lg:flex-col lg:items-end">
-                  <span className="font-heading text-6xl font-bold leading-none text-transparent [-webkit-text-stroke:1.5px_var(--color-on-night)]">
-                    {expert.years}
-                  </span>
-                  <span className="pb-1 font-mono text-[10px] uppercase tracking-[0.14em] lg:pb-0">
-                    {t('years')}
-                  </span>
-                </p>
+                {expert.years !== null && (
+                  <p className="flex flex-none items-end gap-2 lg:flex-col lg:items-end">
+                    <span className="font-heading text-6xl font-bold leading-none text-transparent [-webkit-text-stroke:1.5px_var(--color-on-night)]">
+                      {expert.years}
+                    </span>
+                    <span className="pb-1 font-mono text-[10px] uppercase tracking-[0.14em] lg:pb-0">
+                      {t('years')}
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
           </div>

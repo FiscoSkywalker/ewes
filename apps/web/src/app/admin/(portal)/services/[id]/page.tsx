@@ -48,9 +48,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const detailKey = (id: string) => ['services', 'detail', id];
 
 /**
- * `/admin/services/<id>` : un pôle d'expertise. Les autres adresses de cette
- * rubrique (ex. `experts`) sont des écrans à venir : l'écran « en
- * préparation » prend le relais plutôt qu'une fausse fiche introuvable.
+ * `/admin/services/<id>` : un pôle d'expertise. Toute autre adresse de cette
+ * rubrique qui n'est pas un identifiant (écran à venir) laisse la main à
+ * l'écran « en préparation » plutôt qu'à une fausse fiche introuvable.
  */
 export default function ServiceDetailPage() {
   const { id } = useParams<{ id: string }>();

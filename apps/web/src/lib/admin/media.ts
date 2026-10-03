@@ -2,7 +2,7 @@ import type { Paginated } from '@/lib/api/backend';
 
 /** Contenu qui affiche une image (renvoyé par `GET /admin/media`). */
 export interface MediaUsage {
-  type: 'ARTICLE' | 'REALISATION' | 'SERVICE';
+  type: 'ARTICLE' | 'REALISATION' | 'SERVICE' | 'EXPERT';
   id: string;
   title: string;
 }
@@ -48,6 +48,7 @@ export const USAGE_TYPE_LABELS: Record<MediaUsage['type'], string> = {
   ARTICLE: 'Article',
   REALISATION: 'Réalisation',
   SERVICE: 'Pôle',
+  EXPERT: 'Expert',
 };
 
 /** Écran d'édition du contenu qui utilise l'image. */
@@ -56,7 +57,9 @@ export const usageHref = (usage: MediaUsage) =>
     ? `/admin/actualites/${usage.id}`
     : usage.type === 'SERVICE'
       ? `/admin/services/${usage.id}`
-      : `/admin/realisations/${usage.id}`;
+      : usage.type === 'EXPERT'
+        ? `/admin/services/experts/${usage.id}`
+        : `/admin/realisations/${usage.id}`;
 
 /**
  * Vignette d'une image d'après son adresse publique (`/uploads/<nom>`), pour

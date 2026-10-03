@@ -12,6 +12,7 @@ import {
   Layers,
   Newspaper,
   Trash2,
+  UserRound,
   Hammer,
 } from 'lucide-react';
 import { backendJson } from '@/lib/api/backend';
@@ -33,6 +34,7 @@ const USAGE_ICONS = {
   ARTICLE: Newspaper,
   REALISATION: Hammer,
   SERVICE: Layers,
+  EXPERT: UserRound,
 } as const;
 
 /**

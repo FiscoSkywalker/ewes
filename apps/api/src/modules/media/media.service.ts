@@ -63,7 +63,7 @@ const storedNameOf = (url: string) =>
 
 /** Contenu qui affiche une image : un article, une réalisation non supprimé ou un pôle. */
 export interface MediaUsage {
-  type: 'ARTICLE' | 'REALISATION' | 'SERVICE';
+  type: 'ARTICLE' | 'REALISATION' | 'SERVICE' | 'EXPERT';
   id: string;
   title: string;
 }
@@ -213,7 +213,7 @@ export class MediaService {
     storedNames?: string[],
   ): Promise<Map<string, MediaUsage[]>> {
     const urls = storedNames && { in: storedNames.map(mediaUrl) };
-    const [articles, realisations, services] = await Promise.all([
+    const [articles, realisations, services, experts] = await Promise.all([
       this.prisma.articleImage.findMany({
         where: { ...(urls && { url: urls }), article: { deletedAt: null } },
         select: { url: true, article: { select: { id: true, titleFr: true } } },
@@ -231,6 +231,10 @@ export class MediaService {
       this.prisma.service.findMany({
         where: urls ? { imageUrl: urls } : { imageUrl: { not: null } },
         select: { id: true, nameFr: true, imageUrl: true },
+      }),
+      this.prisma.expert.findMany({
+        where: urls ? { photoUrl: urls } : { photoUrl: { not: null } },
+        select: { id: true, fullName: true, photoUrl: true },
       }),
     ]);
 
@@ -261,6 +265,10 @@ export class MediaService {
     for (const row of services) {
       if (!row.imageUrl) continue;
       add(row.imageUrl, { type: 'SERVICE', id: row.id, title: row.nameFr });
+    }
+    for (const row of experts) {
+      if (!row.photoUrl) continue;
+      add(row.photoUrl, { type: 'EXPERT', id: row.id, title: row.fullName });
     }
     return usage;
   }
