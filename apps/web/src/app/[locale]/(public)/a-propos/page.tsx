@@ -12,6 +12,7 @@ import { ExpertsGallery } from '@/components/public/experts-gallery';
 import { SectionHeading } from '@/components/public/section-heading';
 import { resolvePageHeader } from '@/lib/api/public-pages';
 import { getPoleServices } from '@/lib/api/public-services';
+import { getExperts } from '@/lib/api/public-experts';
 import { ButtonLink } from '@/components/public/ui';
 
 /**
@@ -65,7 +66,10 @@ export default async function AboutPage({
     text: string;
   }[];
   const research = tResearch.raw('items') as { title: string; text: string }[];
-  const experts = tPage.raw('team.experts') as Expert[];
+  // Équipe pilotée par le portail ; les profils provisoires des messages ne servent que si
+  // l'API est injoignable. Une équipe non publiée (liste vide) masque la section.
+  const experts =
+    (await getExperts(locale)) ?? (tPage.raw('team.experts') as Expert[]);
   // Noms des pôles pilotés par le portail (repli sur les messages).
   const poles = await getPoleServices(locale);
   const poleNames = {
@@ -183,26 +187,28 @@ export default async function AboutPage({
       </section>
 
       {/* Équipe & experts */}
-      <section className="bg-white px-6 py-20 md:px-16 md:py-28">
-        <div className="mx-auto w-full max-w-[1440px]">
-          <div className="mb-12 grid gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-end">
-            <SectionHeading
-              eyebrow={t('teamTitle')}
-              title={tPage('team.title')}
-            />
-            <p
-              className="max-w-md text-sm leading-7 text-sand/72 lg:justify-self-end"
-              data-reveal
-            >
-              {t('teamText')}
+      {experts.length > 0 && (
+        <section id="equipe" className="bg-white px-6 py-20 md:px-16 md:py-28">
+          <div className="mx-auto w-full max-w-[1440px]">
+            <div className="mb-12 grid gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-end">
+              <SectionHeading
+                eyebrow={t('teamTitle')}
+                title={tPage('team.title')}
+              />
+              <p
+                className="max-w-md text-sm leading-7 text-sand/72 lg:justify-self-end"
+                data-reveal
+              >
+                {t('teamText')}
+              </p>
+            </div>
+            <ExpertsGallery experts={experts} poleNames={poleNames} />
+            <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+              {tPage('team.hint')}
             </p>
           </div>
-          <ExpertsGallery experts={experts} poleNames={poleNames} />
-          <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-            {tPage('team.hint')}
-          </p>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Publics & recherche */}
       <section className="bg-paper px-6 py-20 md:px-16 md:py-28">

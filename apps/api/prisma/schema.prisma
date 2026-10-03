@@ -219,20 +219,32 @@ model KeyFigure {
   @@map("key_figures")
 }
 
+/// Expert présenté dans la galerie « Équipe & experts » de la page À propos.
 model Expert {
-  id        String   @id @default(uuid())
-  fullName  String
-  roleFr    String
-  roleEn    String?
-  bioFr     String?
-  bioEn     String?
-  photoUrl  String?
-  serviceId String?
-  service   Service? @relation(fields: [serviceId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String        @id @default(uuid())
+  fullName          String
+  roleFr            String
+  roleEn            String?
+  bioFr             String?
+  bioEn             String?
+  /// Spécialités affichées en pastilles (une par entrée), FR et EN.
+  specialtiesFr     String[]      @default([])
+  specialtiesEn     String[]      @default([])
+  yearsOfExperience Int?
+  /// Portrait : adresse d'une image de la médiathèque (`/uploads/<nom>`) ; absent, un monogramme.
+  photoUrl          String?
+  /// Pôle de rattachement (couleur d'accent et pastille « Pôle … »).
+  serviceId         String?
+  service           Service?      @relation(fields: [serviceId], references: [id])
+  sortOrder         Int           @default(0)
+  /// Un profil est une personne : jamais public avant une publication explicite.
+  status            ContentStatus @default(DRAFT)
+  publishedAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   @@index([serviceId])
+  @@index([sortOrder])
   @@map("experts")
 }
 

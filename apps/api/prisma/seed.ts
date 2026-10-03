@@ -23,7 +23,9 @@ import * as argon2 from 'argon2';
  */
 /** Reprend le titre/l'introduction statiques de /a-propos (messages `AboutPage`). */
 async function seedAboutPage(prisma: PrismaClient) {
-  const existing = await prisma.page.findUnique({ where: { slug: 'a-propos' } });
+  const existing = await prisma.page.findUnique({
+    where: { slug: 'a-propos' },
+  });
   if (existing) {
     console.log('Page a-propos déjà présente — rien à faire.');
     return;
@@ -131,6 +133,58 @@ async function seedServices(prisma: PrismaClient) {
     });
     console.log(`Service ${slug} créé (${frList.length} prestations).`);
   }
+}
+
+interface ExpertMessage {
+  name: string;
+  role: string;
+  pole: 'env' | 'eau' | 'ing';
+  years: number;
+  specialties: string[];
+  bio: string;
+}
+
+/**
+ * Importe les six profils **provisoires** de /a-propos (`AboutPage.team.experts`,
+ * personnes fictives) **en brouillon** : un profil est une personne, rien ne
+ * devient public sans publication explicite depuis le portail, où l'équipe les
+ * remplace par les vrais experts. Idempotent : ne fait rien si la table n'est pas vide.
+ */
+async function seedExperts(prisma: PrismaClient) {
+  if ((await prisma.expert.count()) > 0) {
+    console.log('Experts déjà présents — rien à faire.');
+    return;
+  }
+  const fr = readMessages('fr').AboutPage.team.experts as ExpertMessage[];
+  const en = readMessages('en').AboutPage.team.experts as ExpertMessage[];
+  const slugOf = {
+    env: 'environnement',
+    eau: 'eau',
+    ing: 'ingenierie',
+  } as const;
+  const services = await prisma.service.findMany({
+    select: { id: true, slug: true },
+  });
+
+  for (const [index, expert] of fr.entries()) {
+    const english = en[index];
+    await prisma.expert.create({
+      data: {
+        fullName: expert.name,
+        roleFr: expert.role,
+        roleEn: english?.role,
+        bioFr: expert.bio,
+        bioEn: english?.bio,
+        specialtiesFr: expert.specialties,
+        specialtiesEn: english?.specialties ?? [],
+        yearsOfExperience: expert.years,
+        serviceId: services.find((s) => s.slug === slugOf[expert.pole])?.id,
+        sortOrder: index,
+        status: ContentStatus.DRAFT,
+      },
+    });
+  }
+  console.log(`${fr.length} experts provisoires importés (brouillons).`);
 }
 
 interface ProjectMessage {
@@ -271,13 +325,15 @@ interface DocumentMessage {
   excerpt: string;
 }
 
-const DOCUMENT_CATEGORIES: Record<DocumentMessage['category'], DocumentCategory> =
-  {
-    report: DocumentCategory.REPORT,
-    guide: DocumentCategory.GUIDE,
-    datasheet: DocumentCategory.DATASHEET,
-    brochure: DocumentCategory.BROCHURE,
-  };
+const DOCUMENT_CATEGORIES: Record<
+  DocumentMessage['category'],
+  DocumentCategory
+> = {
+  report: DocumentCategory.REPORT,
+  guide: DocumentCategory.GUIDE,
+  datasheet: DocumentCategory.DATASHEET,
+  brochure: DocumentCategory.BROCHURE,
+};
 
 const POLE_SERVICE_SLUGS = {
   env: 'environnement',
@@ -397,6 +453,7 @@ async function main() {
     await seedAdmin(prisma, email, password);
     await seedAboutPage(prisma);
     await seedServices(prisma);
+    await seedExperts(prisma);
     await seedRealisations(prisma);
     await seedArticles(prisma);
     await seedPublicDocuments(prisma);

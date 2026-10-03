@@ -120,7 +120,13 @@ export const NAV_GROUPS: NavGroup[] = [
         tone: 'brand',
         description:
           'Les chiffres de la bande affichée sur la page À propos, en français et en anglais.',
-        keywords: ['statistiques', 'indicateurs', 'compteurs', 'à propos', 'nombres'],
+        keywords: [
+          'statistiques',
+          'indicateurs',
+          'compteurs',
+          'à propos',
+          'nombres',
+        ],
         features: [
           'Valeur fixe ou années écoulées depuis une année',
           'Libellé et précision FR/EN, ordre, affichage',
@@ -159,12 +165,21 @@ export const NAV_GROUPS: NavGroup[] = [
             id: 'services-experts',
             label: 'Experts',
             href: '/admin/services/experts',
-            description: 'L’équipe d’experts présentée sur le site, par pôle.',
-            keywords: ['équipe', 'consultants', 'personnel'],
+            description:
+              'L’équipe présentée sur la page À propos : portrait, fonction, présentation et spécialités.',
+            keywords: ['équipe', 'consultants', 'personnel', 'personnes'],
             features: [
-              'Fiche expert (fonction, biographie FR/EN, photo)',
-              'Rattachement à un pôle',
+              'Fiche expert FR/EN avec portrait et pôle',
+              'Ordre d’affichage, publication explicite',
             ],
+          },
+          {
+            id: 'services-experts-new',
+            label: 'Nouvel expert',
+            href: '/admin/services/experts/nouveau',
+            description: 'Créer un profil d’expert (enregistré en brouillon).',
+            keywords: ['ajouter', 'créer', 'équipe'],
+            quickAction: true,
           },
         ],
       },
