@@ -185,6 +185,7 @@ describe('Utilisateurs et rôles (e2e)', () => {
     await prisma.userInvitation.deleteMany({
       where: { id: { in: invitations.map((i) => i.id) } },
     });
+    await prisma.loginFailure.deleteMany({ where: { email: likeTag } });
     await prisma.session.deleteMany({ where: { userId: { in: ids } } });
     await prisma.user.deleteMany({ where: { id: { in: ids } } });
     await app.close();
@@ -696,6 +697,147 @@ describe('Utilisateurs et rôles (e2e)', () => {
       await get('?to=2026-02-31').expect(400);
       await get(`?q=${'x'.repeat(101)}`).expect(400);
       await as(gestAuth).get('/admin/audit-logs?q=a').expect(403);
+    });
+  });
+
+  describe('verrouillage après échecs de connexion', () => {
+    const MAX = 3;
+    let previous: string | undefined;
+
+    beforeAll(() => {
+      previous = process.env.LOGIN_LOCKOUT_MAX_FAILURES;
+      process.env.LOGIN_LOCKOUT_MAX_FAILURES = String(MAX);
+    });
+    afterAll(() => {
+      if (previous === undefined) delete process.env.LOGIN_LOCKOUT_MAX_FAILURES;
+      else process.env.LOGIN_LOCKOUT_MAX_FAILURES = previous;
+    });
+
+    const attempt = (who: string, secret: string) =>
+      api().post('/api/v1/auth/login').send({ email: who, password: secret });
+    const failures = (who: string) =>
+      prisma.loginFailure.count({ where: { email: who.toLowerCase() } });
+    const events = (entityId: string, action: string) =>
+      prisma.auditLog.findMany({ where: { entityId, action } });
+    const failN = async (who: string, n: number) => {
+      for (let i = 0; i < n; i++)
+        await attempt(who, 'mauvais-mot-de-passe').expect(401);
+    };
+
+    it('locks after repeated failures — even the right password is refused — and traces the lock once', async () => {
+      const user = await makeUser('lock1', Role.UTILISATEUR);
+      await failN(user.email, MAX);
+
+      const refused = await attempt(user.email, password).expect(429);
+      expect(refused.body.code).toBe('LOGIN_LOCKED');
+      expect(refused.body.message).toMatch(/Réessayez dans \d+ minutes?/);
+
+      // Tentatives refusées : ni comptées (le verrou ne se prolonge pas), ni tracées une à une.
+      await attempt(user.email, 'encore-un-essai').expect(429);
+      expect(await failures(user.email)).toBe(MAX);
+      expect(await events(user.id, 'AUTH_LOGIN_FAILED')).toHaveLength(MAX);
+      const locked = await events(user.id, 'AUTH_ACCOUNT_LOCKED');
+      expect(locked).toHaveLength(1);
+      expect(locked[0]).toMatchObject({
+        actorId: null,
+        afterData: { email: user.email, failures: MAX },
+      });
+      expect(JSON.stringify(locked[0])).not.toContain('mauvais-mot-de-passe');
+      // Aucune session ouverte pendant le verrou.
+      expect(await prisma.session.count({ where: { userId: user.id } })).toBe(
+        0,
+      );
+    });
+
+    it('answers an unknown address exactly like a known one (no account discovery)', async () => {
+      const user = await makeUser('lock2', Role.UTILISATEUR);
+      const ghost = `${tag}-fantome@ewes.example`;
+      await failN(user.email, MAX);
+      await failN(ghost, MAX);
+
+      const known = await attempt(user.email, password).expect(429);
+      const unknown = await attempt(ghost, password).expect(429);
+      expect(unknown.body.code).toBe(known.body.code);
+      expect(unknown.body.message).toBe(known.body.message);
+      // Même la trace de bascule existe pour l'adresse inconnue, sans compte visé.
+      const row = await prisma.auditLog.findFirst({
+        where: {
+          action: 'AUTH_ACCOUNT_LOCKED',
+          afterData: { path: ['email'], equals: ghost },
+        },
+      });
+      expect(row).toMatchObject({ entityId: null, actorId: null });
+    });
+
+    it('resets the counter on a successful login', async () => {
+      const user = await makeUser('lock3', Role.UTILISATEUR);
+      await failN(user.email, MAX - 1);
+      await attempt(user.email, password).expect(200);
+      expect(await failures(user.email)).toBe(0);
+      // Il faut de nouveau MAX échecs pour verrouiller.
+      await failN(user.email, MAX - 1);
+      await attempt(user.email, password).expect(200);
+    });
+
+    it('lets the lock lapse by itself once the window has passed', async () => {
+      const user = await makeUser('lock4', Role.UTILISATEUR);
+      await failN(user.email, MAX);
+      await attempt(user.email, password).expect(429);
+      await prisma.loginFailure.updateMany({
+        where: { email: user.email },
+        data: { createdAt: new Date(Date.now() - 16 * 60_000) },
+      });
+      await attempt(user.email, password).expect(200);
+    });
+
+    it('shows who is locked to the Administrateur, who can unlock (audited once) — nobody else can', async () => {
+      const user = await makeUser('lock5', Role.GESTIONNAIRE);
+      const calm = await makeUser('calm', Role.UTILISATEUR);
+      await failN(user.email, MAX);
+
+      const detail = await as(admin.auth)
+        .get(`/admin/users/${user.id}`)
+        .expect(200);
+      expect(detail.body.lockedUntil).toEqual(expect.any(String));
+      expect(
+        new Date(detail.body.lockedUntil as string).getTime(),
+      ).toBeGreaterThan(Date.now());
+      expect(detail.body.recentFailures).toBe(MAX);
+      const list = (await as(admin.auth).get('/admin/users').expect(200))
+        .body as {
+        id: string;
+        lockedUntil: string | null;
+      }[];
+      expect(list.find((u) => u.id === user.id)!.lockedUntil).not.toBeNull();
+      expect(list.find((u) => u.id === calm.id)!.lockedUntil).toBeNull();
+
+      // La personne verrouillée ni personne d'autre que l'Administrateur ne lève le verrou.
+      await as(gestAuth).post(`/admin/users/${user.id}/unlock`).expect(403);
+      await api().post(`/api/v1/admin/users/${user.id}/unlock`).expect(401);
+      await attempt(user.email, password).expect(429);
+
+      const unlocked = await as(admin.auth)
+        .post(`/admin/users/${user.id}/unlock`)
+        .expect(200);
+      expect(unlocked.body).toMatchObject({
+        lockedUntil: null,
+        recentFailures: 0,
+      });
+      await attempt(user.email, password).expect(200);
+
+      const audit = await events(user.id, 'USER_UNLOCKED');
+      expect(audit).toHaveLength(1);
+      expect(audit[0]).toMatchObject({
+        actorId: admin.id,
+        beforeData: { locked: true },
+        afterData: { locked: false },
+      });
+      // Déverrouiller un compte qui ne l'est pas : sans effet, sans trace de plus.
+      await as(admin.auth).post(`/admin/users/${user.id}/unlock`).expect(200);
+      expect(await events(user.id, 'USER_UNLOCKED')).toHaveLength(1);
+      await as(admin.auth)
+        .post('/admin/users/00000000-0000-4000-8000-000000000000/unlock')
+        .expect(404);
     });
   });
 });

@@ -117,6 +117,21 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+/// Échecs de connexion récents, par adresse saisie (compte existant ou non : le
+/// verrouillage ne doit pas révéler si une adresse a un compte). Table de travail,
+/// pas un journal : purgée au fil de l'eau, effacée par une connexion réussie ou
+/// un déverrouillage ; la trace durable est dans `AuditLog`.
+model LoginFailure {
+  id        String   @id @default(uuid())
+  /// Adresse normalisée (minuscules).
+  email     String
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([createdAt])
+  @@map("login_failures")
+}
+
 /// Invitation à créer un compte. Le compte n'existe qu'à l'acceptation (aucun
 /// mot de passe factice en base) ; le jeton envoyé par e-mail n'est conservé
 /// que haché. « En attente » = ni acceptée, ni révoquée ; « expirée » = en attente

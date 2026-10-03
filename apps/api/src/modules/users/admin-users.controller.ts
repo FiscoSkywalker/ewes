@@ -113,6 +113,19 @@ export class AdminUsersController {
     return this.usersService.setActive(actor, id, false);
   }
 
+  @Post(':id/unlock')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Lever le verrouillage après échecs de connexion et remettre le compteur à zéro',
+  })
+  unlock(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.usersService.unlock(actor, id);
+  }
+
   @Post(':id/reactivate')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Réactiver un compte désactivé' })

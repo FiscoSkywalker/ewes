@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Clock,
+  Lock,
+  LockOpen,
   MailPlus,
   RefreshCw,
   SearchX,
@@ -19,6 +22,7 @@ import { normalizeText, plural, relativeTime } from '@/lib/admin/format';
 import { ALL_ROLES, type Role } from '@/lib/admin/roles';
 import {
   ROLE_PROFILES,
+  isLocked,
   type Invitation,
   type InviteResult,
   type UserSummary,
@@ -121,6 +125,20 @@ export default function UsersPage() {
     onSettled: () => setBusyId(null),
   });
 
+  const unlock = useMutation({
+    mutationFn: (user: UserSummary) =>
+      backendJson<UserSummary>(`admin/users/${user.id}/unlock`, {
+        method: 'POST',
+      }),
+    onMutate: (user) => setBusyId(user.id),
+    onSuccess: async (_saved, user) => {
+      await invalidatePortalData(queryClient);
+      toast.success(`Compte déverrouillé : ${user.fullName}`);
+    },
+    onError: (error) => toast.error(error),
+    onSettled: () => setBusyId(null),
+  });
+
   async function revoke(invitation: Invitation) {
     const done = await confirm({
       title: 'Retirer cette invitation ?',
@@ -147,6 +165,7 @@ export default function UsersPage() {
   }
 
   const all = users.data ?? [];
+  const lockedUsers = all.filter((user) => user.isActive && isLocked(user));
   const active = all.filter((user) => user.isActive);
   const inactive = all.filter((user) => !user.isActive);
   const accounts = view === 'inactive' ? inactive : active;
@@ -220,14 +239,22 @@ export default function UsersPage() {
     {
       id: 'state',
       header: 'État',
-      cell: (user) =>
-        user.isActive ? (
-          <Badge tone="ok" dot>
-            Actif
-          </Badge>
-        ) : (
-          <Badge>Désactivé</Badge>
-        ),
+      cell: (user) => (
+        <span className="flex flex-wrap items-center gap-1.5">
+          {user.isActive ? (
+            <Badge tone="ok" dot>
+              Actif
+            </Badge>
+          ) : (
+            <Badge>Désactivé</Badge>
+          )}
+          {isLocked(user) && (
+            <Badge tone="warn" icon={Lock}>
+              Verrouillé
+            </Badge>
+          )}
+        </span>
+      ),
     },
     {
       id: 'activity',
@@ -465,6 +492,61 @@ export default function UsersPage() {
           })}
         </ul>
       </section>
+
+      {lockedUsers.length > 0 && (
+        <section
+          aria-label="Comptes verrouillés"
+          className="rounded-2xl border border-warn/35 bg-warn-soft/50 p-4"
+        >
+          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+            <Lock size={16} aria-hidden="true" className="text-warn" />
+            {plural(
+              lockedUsers.length,
+              'compte verrouillé',
+              'comptes verrouillés',
+            )}{' '}
+            après des échecs de connexion répétés
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+            Le verrouillage se lève de lui-même ; vous pouvez le lever tout de
+            suite si la personne est bien celle qu’elle dit être.
+          </p>
+          <ul className="mt-3 divide-y divide-warn/20">
+            {lockedUsers.map((user) => (
+              <li
+                key={user.id}
+                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2.5 first:pt-0 last:pb-0"
+              >
+                <span className="min-w-0">
+                  <Link
+                    href={`/admin/utilisateurs/${user.id}`}
+                    className="text-sm font-medium text-ink hover:underline"
+                  >
+                    {user.fullName}
+                  </Link>
+                  <span className="block text-xs text-ink-subtle">
+                    jusqu’à{' '}
+                    {new Date(user.lockedUntil as string).toLocaleTimeString(
+                      'fr',
+                      { hour: '2-digit', minute: '2-digit' },
+                    )}
+                  </span>
+                </span>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  icon={LockOpen}
+                  loading={busyId === user.id}
+                  onClick={() => unlock.mutate(user)}
+                  aria-label={`Déverrouiller ${user.fullName}`}
+                >
+                  Déverrouiller
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <SegmentedControl<View>

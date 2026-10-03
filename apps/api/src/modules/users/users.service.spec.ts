@@ -56,7 +56,17 @@ describe('UsersService — dernier administrateur', () => {
       documentAccessGrant: { count: vi.fn(async () => 0) },
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    service = new UsersService(prisma as any, audit as any);
+    service = new UsersService(
+      prisma as any,
+      audit as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {
+        statusMany: vi.fn(async () => new Map()),
+        status: vi.fn(async () => ({ locked: false, until: null })),
+        recentFailures: vi.fn(async () => 0),
+        clear: vi.fn(),
+      } as any,
+    );
   });
 
   it('refuses to demote the only active administrator', async () => {

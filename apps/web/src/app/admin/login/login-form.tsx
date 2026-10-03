@@ -22,7 +22,13 @@ const inputClasses =
  * erroné ») pour ne pas permettre l'énumération de comptes
  * (blueprint/10_Security.md §4).
  */
-function messageForStatus(status: number, apiMessage?: string): string {
+function messageForStatus(
+  status: number,
+  apiMessage?: string,
+  code?: string,
+): string {
+  // Verrouillage : le message dit combien de temps attendre (même texte pour toute adresse).
+  if (code === 'LOGIN_LOCKED' && apiMessage) return apiMessage;
   if (status === 429) {
     return 'Trop de tentatives. Patientez quelques instants avant de réessayer.';
   }
@@ -65,7 +71,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(messageForStatus(res.status, data?.message));
+        setError(messageForStatus(res.status, data?.message, data?.code));
         setPending(false);
         return;
       }

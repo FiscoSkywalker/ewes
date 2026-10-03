@@ -9,6 +9,7 @@ import { Prisma, Role, User } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
+import { LoginLockoutService } from './login-lockout.service.js';
 import {
   toUserView,
   type UserDetailView,
@@ -28,6 +29,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly lockout: LoginLockoutService,
   ) {}
 
   /** `email` est comparé insensible à la casse : la contrainte unique en base est appliquée sur la valeur normalisée à la création. */
@@ -57,8 +59,13 @@ export class UsersService {
     const lastActive = new Map(
       activity.map((row) => [row.userId, row._max.createdAt]),
     );
+    const locked = await this.lockout.statusMany(users.map((u) => u.email));
     return users.map((user) =>
-      toUserView(user, lastActive.get(user.id) ?? null),
+      toUserView(
+        user,
+        lastActive.get(user.id) ?? null,
+        locked.get(user.email.toLowerCase()) ?? null,
+      ),
     );
   }
 
@@ -67,20 +74,24 @@ export class UsersService {
       where: { id, deletedAt: null },
     });
     if (!user) throw new NotFoundException(USER_NOT_FOUND);
-    const [last, activeSessions, folders, documents] = await Promise.all([
-      this.prisma.session.aggregate({
-        where: { userId: id },
-        _max: { createdAt: true },
-      }),
-      this.prisma.session.count({
-        where: { userId: id, revokedAt: null, expiresAt: { gt: new Date() } },
-      }),
-      this.prisma.folderAccessGrant.count({ where: { userId: id } }),
-      this.prisma.documentAccessGrant.count({ where: { userId: id } }),
-    ]);
+    const [last, activeSessions, folders, documents, lock, recentFailures] =
+      await Promise.all([
+        this.prisma.session.aggregate({
+          where: { userId: id },
+          _max: { createdAt: true },
+        }),
+        this.prisma.session.count({
+          where: { userId: id, revokedAt: null, expiresAt: { gt: new Date() } },
+        }),
+        this.prisma.folderAccessGrant.count({ where: { userId: id } }),
+        this.prisma.documentAccessGrant.count({ where: { userId: id } }),
+        this.lockout.status(user.email),
+        this.lockout.recentFailures(user.email),
+      ]);
     return {
-      ...toUserView(user, last._max.createdAt),
+      ...toUserView(user, last._max.createdAt, lock.until),
       activeSessions,
+      recentFailures,
       grants: { folders, documents },
     };
   }
@@ -162,6 +173,32 @@ export class UsersService {
         entityId: id,
         before: { isActive: !active, email: changed.email },
         after: { isActive: active, email: changed.email },
+      });
+    }
+    return this.detail(id);
+  }
+
+  /**
+   * Lève le verrouillage d'un compte sans attendre la fin de la fenêtre et
+   * remet son compteur d'échecs à zéro. Audité seulement s'il était verrouillé.
+   * Ne déverrouille jamais ailleurs que par l'Administrateur : la personne
+   * verrouillée n'a aucun moyen de le faire elle-même.
+   */
+  async unlock(actor: AuthenticatedUser, id: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!user) throw new NotFoundException(USER_NOT_FOUND);
+    const before = await this.lockout.status(user.email);
+    await this.lockout.clear(user.email);
+    if (before.locked) {
+      await this.audit.record({
+        actorId: actor.id,
+        action: 'USER_UNLOCKED',
+        entityType: 'User',
+        entityId: id,
+        before: { locked: true, email: user.email },
+        after: { locked: false, email: user.email },
       });
     }
     return this.detail(id);
