@@ -85,9 +85,17 @@ function Portrait({ expert, sizes }: { expert: Expert; sizes: string }) {
  * Pattern d'onglets (flèches du clavier) ; sur mobile, les lames
  * s'empilent en accordéon.
  */
-export function ExpertsGallery({ experts }: { experts: Expert[] }) {
+export function ExpertsGallery({
+  experts,
+  poleNames,
+}: {
+  experts: Expert[];
+  /** Noms des pôles pilotés par le portail ; un pôle absent retombe sur les messages. */
+  poleNames?: Partial<Record<ExpertPole, string>>;
+}) {
   const t = useTranslations('AboutPage.team');
-  const tPoles = useTranslations('ServicesOverview.poles');
+  const tMessages = useTranslations('ServicesOverview.poles');
+  const tPoles = (pole: ExpertPole) => poleNames?.[pole] ?? tMessages(pole);
   const [active, setActive] = useState(0);
 
   const focusTab = (index: number) => {

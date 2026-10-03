@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { serviceIcon } from '@/lib/service-icons';
 import {
   Activity,
   ClipboardCheck,
@@ -15,6 +16,8 @@ import {
 interface EnvironmentService {
   title: string;
   text: string;
+  /** Clé du pictogramme choisi dans le portail. */
+  icon?: string | null;
 }
 
 const ICONS = [
@@ -28,18 +31,25 @@ const ICONS = [
   Leaf,
 ];
 
-/** Liste des 8 prestations du pôle Environnement — partagée entre l'Accueil et /services. */
-export function EnvironmentServicesList() {
+/**
+ * Prestations du pôle Environnement (chapitre de l'Accueil) : celles du
+ * portail (`offerings`), sinon les textes d'origine des messages.
+ */
+export function EnvironmentServicesList({
+  offerings,
+}: {
+  offerings?: EnvironmentService[];
+}) {
   const t = useTranslations('Environment');
-  const services = t.raw('services') as EnvironmentService[];
+  const services = offerings ?? (t.raw('services') as EnvironmentService[]);
 
   return (
     <div
       className="pointer-events-auto mt-10 border-b border-sand/20"
       data-stagger
     >
-      {services.map(({ title, text }, index) => {
-        const Icon = ICONS[index] ?? FileCheck;
+      {services.map(({ title, text, icon }, index) => {
+        const Icon = serviceIcon(icon) ?? ICONS[index] ?? FileCheck;
         return (
           <article
             key={title}

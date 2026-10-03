@@ -9,10 +9,24 @@ interface WaterService {
   desc: string;
 }
 
-/** Liste des 8 prestations du pôle Eau — partagée entre l'Accueil et /services. */
-export function WaterServicesList() {
+/**
+ * Prestations du pôle Eau (chapitre de l'Accueil) : celles du portail
+ * (`offerings`, numérotées dans l'ordre choisi), sinon les textes d'origine
+ * des messages.
+ */
+export function WaterServicesList({
+  offerings,
+}: {
+  offerings?: { title: string; text: string }[];
+}) {
   const t = useTranslations('Water');
-  const services = t.raw('services') as WaterService[];
+  const services = offerings
+    ? offerings.map<WaterService>(({ title, text }, index) => ({
+        step: String(index + 1).padStart(2, '0'),
+        title,
+        desc: text,
+      }))
+    : (t.raw('services') as WaterService[]);
 
   return (
     <div

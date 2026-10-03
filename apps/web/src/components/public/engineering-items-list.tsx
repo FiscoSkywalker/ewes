@@ -1,19 +1,29 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { serviceIcon } from '@/lib/service-icons';
 import { Box, CheckCircle2, Compass, Ruler } from 'lucide-react';
 
 interface EngineeringItem {
   title: string;
   text: string;
+  /** Clé du pictogramme choisi dans le portail. */
+  icon?: string | null;
 }
 
 const ICONS = [Box, CheckCircle2, Ruler, Compass];
 
-/** Liste des 4 volets du pôle Travaux d'ingénierie — partagée entre l'Accueil et /services. */
-export function EngineeringItemsList() {
+/**
+ * Volets du pôle Travaux d'ingénierie (chapitre de l'Accueil) : ceux du
+ * portail (`offerings`), sinon les textes d'origine des messages.
+ */
+export function EngineeringItemsList({
+  offerings,
+}: {
+  offerings?: EngineeringItem[];
+}) {
   const t = useTranslations('Engineering');
-  const items = t.raw('items') as EngineeringItem[];
+  const items = offerings ?? (t.raw('items') as EngineeringItem[]);
 
   return (
     <div className="pointer-events-auto mt-10 border-y border-sand/20">
@@ -23,8 +33,8 @@ export function EngineeringItemsList() {
       </div>
 
       <div className="grid grid-cols-1 text-xs sm:grid-cols-2" data-stagger>
-        {items.map(({ title, text }, index) => {
-          const Icon = ICONS[index] ?? Compass;
+        {items.map(({ title, text, icon }, index) => {
+          const Icon = serviceIcon(icon) ?? ICONS[index] ?? Compass;
           return (
             <div
               key={title}
