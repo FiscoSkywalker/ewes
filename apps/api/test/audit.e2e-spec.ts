@@ -236,6 +236,26 @@ describe('Journal d’audit (e2e)', () => {
     ).expect(400);
   });
 
+  it('leaves out the actions it is told to, whatever the other filters', async () => {
+    const all = await entries('?entityType=Expert&limit=100');
+    const kinds = new Set(all.data.map((e) => e.action));
+    expect(kinds.has('EXPERT_PUBLISHED')).toBe(true);
+    const without = await entries(
+      '?entityType=Expert&excludeAction=EXPERT_PUBLISHED&limit=100',
+    );
+    expect(without.data.some((e) => e.action === 'EXPERT_PUBLISHED')).toBe(
+      false,
+    );
+    expect(without.meta.total).toBeLessThan(all.meta.total);
+    expect(without.data.length).toBeGreaterThan(0);
+    // Combiné à un filtre d'action : l'exclusion l'emporte.
+    const none = await entries(
+      '?entityType=Expert&action=EXPERT_PUBLISHED&excludeAction=EXPERT_PUBLISHED',
+    );
+    expect(none.meta.total).toBe(0);
+    await logs('?excludeAction=expert_published').expect(400);
+  });
+
   it('describes what exists for the filters', async () => {
     const res = await api()
       .get('/api/v1/admin/audit-logs/facets')

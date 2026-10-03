@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   ChevronRight,
-  Clock,
+  KeyRound,
   RefreshCw,
   ScrollText,
   SearchX,
@@ -21,6 +21,8 @@ import {
   CATEGORIES,
   actionLabel,
   actionTone,
+  actorName,
+  attemptedEmail,
   categoryOf,
   dayOffset,
   entityHref,
@@ -186,9 +188,12 @@ export function AuditJournal() {
     enabled: deniedCodes.length > 0,
     refetchInterval: 60_000,
   });
-  const latest = useQuery({
-    queryKey: ['audit', 'tile', 'latest'],
-    queryFn: () => backendJson<Paginated<AuditRow>>('admin/audit-logs?limit=1'),
+  const failedCount = useQuery({
+    queryKey: ['audit', 'tile', 'failed-logins'],
+    queryFn: () =>
+      backendJson<Paginated<AuditRow>>(
+        `admin/audit-logs?limit=1&from=${dayOffset(0)}&action=AUTH_LOGIN_FAILED`,
+      ),
     refetchInterval: 60_000,
   });
 
@@ -277,7 +282,7 @@ export function AuditJournal() {
         row.actor ? (
           <span className="text-ink">{row.actor.fullName}</span>
         ) : (
-          <span className="text-ink-subtle">Système</span>
+          <span className="text-ink-subtle">{actorName(row)}</span>
         ),
     },
     {
@@ -317,8 +322,6 @@ export function AuditJournal() {
     />
   );
 
-  const latestRow = latest.data?.data[0];
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -334,7 +337,7 @@ export function AuditJournal() {
               void list.refetch();
               void todayCount.refetch();
               void deniedCount.refetch();
-              void latest.refetch();
+              void failedCount.refetch();
               void facets.refetch();
             }}
           >
@@ -419,29 +422,48 @@ export function AuditJournal() {
               );
             })()}
           </li>
-          <li className="hidden md:block">
-            <div
-              className={cx(tile, 'border-line bg-panel')}
-              aria-label="Dernière action"
-            >
-              <span className="grid size-9 shrink-0 place-items-center rounded-xl md:size-10 bg-sunken text-ink-subtle">
-                <Clock size={19} aria-hidden="true" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-xs text-ink-subtle">
-                  Dernière action
-                </span>
-                <span className="block truncate text-sm font-medium text-ink">
-                  {latestRow ? actionLabel(latestRow.action) : '–'}
-                </span>
-                {latestRow && (
-                  <span className="block truncate text-xs text-ink-subtle">
-                    {relativeTime(latestRow.createdAt)}
-                    {latestRow.actor && ` · ${latestRow.actor.fullName}`}
+          <li className="col-span-2 md:col-span-1">
+            {(() => {
+              const count = failedCount.data?.meta.total ?? 0;
+              const alert = count > 0;
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    reset();
+                    setCategory('auth');
+                    setAction('AUTH_LOGIN_FAILED');
+                    setPeriod('today');
+                  }}
+                  className={cx(
+                    tile,
+                    focusRing,
+                    alert
+                      ? 'border-warn/40 bg-warn-soft/50 hover:border-warn/70'
+                      : 'border-line bg-panel hover:border-brand/40',
+                  )}
+                >
+                  <span
+                    className={cx(
+                      'grid size-9 shrink-0 place-items-center rounded-xl md:size-10',
+                      alert
+                        ? 'bg-warn-soft text-warn'
+                        : 'bg-sunken text-ink-subtle',
+                    )}
+                  >
+                    <KeyRound size={19} aria-hidden="true" />
                   </span>
-                )}
-              </span>
-            </div>
+                  <span>
+                    <span className="block text-xs text-ink-subtle">
+                      Échecs de connexion · aujourd’hui
+                    </span>
+                    <span className="block text-xl font-semibold tabular-nums text-ink">
+                      {failedCount.data ? count : '–'}
+                    </span>
+                  </span>
+                </button>
+              );
+            })()}
           </li>
         </ul>
       </section>
@@ -595,7 +617,7 @@ export function AuditJournal() {
               <EntityCell row={row} />
             </span>
             <span className="mt-2 block text-xs text-ink-subtle">
-              {row.actor ? `Par ${row.actor.fullName}` : 'Système'} ·{' '}
+              {row.actor ? `Par ${row.actor.fullName}` : actorName(row)} ·{' '}
               <time dateTime={row.createdAt}>
                 {cell.format(new Date(row.createdAt))}
               </time>
@@ -649,7 +671,19 @@ export function AuditJournal() {
 /** Élément concerné : type, nom (lien si l'écran existe), bénéficiaire d'un droit. */
 function EntityCell({ row }: { row: AuditRow }) {
   if (!row.entityId) {
-    return <span className="text-ink-subtle">—</span>;
+    const attempted = attemptedEmail(row);
+    return attempted ? (
+      <span className="block min-w-0">
+        <span className="block text-xs text-ink-subtle">
+          Compte inconnu · adresse saisie
+        </span>
+        <span className="block truncate text-[13px] font-medium text-ink">
+          {attempted}
+        </span>
+      </span>
+    ) : (
+      <span className="text-ink-subtle">—</span>
+    );
   }
   const name = entityName(row);
   const href = entityHref(row);

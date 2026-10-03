@@ -42,6 +42,16 @@ export class ListAuditLogsDto {
   @Matches(/^[A-Z_]{1,60}(,[A-Z_]{1,60}){0,39}$/)
   action?: string;
 
+  @ApiPropertyOptional({
+    example: 'AUTH_LOGIN_SUCCEEDED',
+    description:
+      'Codes d’action à écarter (jusqu’à 40, séparés par des virgules) : évite qu’une action très fréquente noie les autres.',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[A-Z_]{1,60}(,[A-Z_]{1,60}){0,39}$/)
+  excludeAction?: string;
+
   @ApiPropertyOptional({ example: 'PrivateDocument' })
   @IsOptional()
   @IsString()
