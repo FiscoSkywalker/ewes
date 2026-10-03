@@ -75,6 +75,9 @@ export const ACTION_LABELS: Record<string, string> = {
   USER_ROLE_CHANGED: 'Rôle d’un compte modifié',
   USER_DEACTIVATED: 'Compte désactivé',
   USER_REACTIVATED: 'Compte réactivé',
+  AUTH_LOGIN_SUCCEEDED: 'Connexion réussie',
+  AUTH_LOGIN_FAILED: 'Échec de connexion',
+  AUTH_TOKEN_REUSE_DETECTED: 'Jeton de session rejoué (session fermée)',
 };
 
 /** Libellé d'une action ; un code inconnu (action future) reste lisible. */
@@ -85,7 +88,13 @@ export function actionLabel(action: string): string {
 }
 
 export type AuditCategory =
-  'security' | 'accounts' | 'rights' | 'private' | 'content' | 'contact';
+  | 'security'
+  | 'auth'
+  | 'accounts'
+  | 'rights'
+  | 'private'
+  | 'content'
+  | 'contact';
 
 interface CategoryDef {
   id: AuditCategory;
@@ -99,6 +108,11 @@ export const CATEGORIES: CategoryDef[] = [
     id: 'security',
     label: 'Accès refusés',
     matches: (a) => a.endsWith('_DENIED'),
+  },
+  {
+    id: 'auth',
+    label: 'Connexions',
+    matches: (a) => a.startsWith('AUTH_'),
   },
   { id: 'accounts', label: 'Comptes', matches: (a) => a.startsWith('USER_') },
   {
@@ -128,6 +142,13 @@ export type ActionTone = 'neutral' | 'ok' | 'warn' | 'bad' | 'brand';
 /** Teinte d'une action : jamais seule (le libellé est toujours écrit). */
 export function actionTone(action: string): ActionTone {
   if (action.endsWith('_DENIED')) return 'bad';
+  if (
+    action === 'AUTH_LOGIN_FAILED' ||
+    action === 'AUTH_TOKEN_REUSE_DETECTED'
+  ) {
+    return 'bad';
+  }
+  if (action === 'AUTH_LOGIN_SUCCEEDED') return 'ok';
   if (/(_DELETED|_REVOKED|_DEACTIVATED|_REMOVED)$/.test(action)) return 'warn';
   if (
     /(_PUBLISHED|_GRANTED|_REACTIVATED|_ACCEPTED|_RESTORED|_CREATED|_UPLOADED|_INVITED)$/.test(
@@ -212,6 +233,9 @@ const FIELD_LABELS: Record<string, string> = {
   fileSizeBytes: 'Taille',
   deleted: 'Supprimé',
   fullName: 'Nom',
+  method: 'Méthode',
+  reason: 'Motif',
+  sessionId: 'Session',
 };
 
 const VALUE_LABELS: Record<string, Record<string, string>> = {
@@ -223,6 +247,15 @@ const VALUE_LABELS: Record<string, Record<string, string>> = {
     TRAITE: 'Traité',
   },
   scope: { folder: 'Dossier', document: 'Document' },
+  method: {
+    password: 'Mot de passe',
+    invitation: 'Lien d’invitation',
+  },
+  reason: {
+    unknown_account: 'Compte inconnu',
+    inactive_account: 'Compte désactivé ou supprimé',
+    wrong_password: 'Mot de passe incorrect',
+  },
 };
 
 const shortId = (value: string) =>
@@ -301,3 +334,19 @@ export function describeAgent(userAgent: string | null): string | null {
 /** Jour (UTC) décalé de `days` jours, au format de l'API. */
 export const dayOffset = (days: number) =>
   new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
+
+/** Auteur à afficher : une tentative de connexion n'a pas d'auteur (personne n'est authentifié). */
+export function actorName(row: AuditRow): string {
+  if (row.actor) return row.actor.fullName;
+  return row.action === 'AUTH_LOGIN_FAILED' ||
+    row.action === 'AUTH_TOKEN_REUSE_DETECTED'
+    ? 'Non authentifié'
+    : 'Système';
+}
+
+/** Adresse saisie lors d'un échec de connexion sur un compte inconnu (sans élément à nommer). */
+export function attemptedEmail(row: AuditRow): string | null {
+  if (row.entityId || row.action !== 'AUTH_LOGIN_FAILED') return null;
+  const email = row.afterData?.email;
+  return typeof email === 'string' ? email : null;
+}

@@ -1,10 +1,11 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { createHash, randomUUID } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { AuditService } from '../audit/audit.service.js';
 import { InvitationsService } from '../users/invitations.service.js';
 import { UsersService } from '../users/users.service.js';
 import { parseDurationToSeconds } from '../../common/utils/duration.js';
@@ -38,12 +39,15 @@ const TOKEN_INVALID = {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly invitations: InvitationsService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly audit: AuditService,
   ) {}
 
   async login(email: string, password: string, ctx: RequestContext) {
@@ -58,15 +62,22 @@ export class AuthService {
           password,
         )
         .catch(() => false);
+      await this.traceLoginFailure(
+        email,
+        user?.id ?? null,
+        user ? 'inactive_account' : 'unknown_account',
+      );
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
     const passwordValid = await argon2.verify(user.passwordHash, password);
     if (!passwordValid) {
+      await this.traceLoginFailure(email, user.id, 'wrong_password');
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
     const tokens = await this.issueTokens(user.id, user.role, ctx);
+    await this.traceLoginSuccess(user.id, 'password');
     return {
       ...tokens,
       user: {
@@ -91,6 +102,7 @@ export class AuthService {
   async acceptInvitation(token: string, password: string, ctx: RequestContext) {
     const { user } = await this.invitations.accept(token, password);
     const tokens = await this.issueTokens(user.id, user.role, ctx);
+    await this.traceLoginSuccess(user.id, 'invitation');
     return { ...tokens, user };
   }
 
@@ -116,6 +128,9 @@ export class AuthService {
           where: { id: session.id },
           data: { revokedAt: new Date() },
         });
+        if (session.refreshTokenHash !== this.hashToken(refreshToken)) {
+          await this.traceTokenReuse(session.userId, session.id);
+        }
       }
       throw new UnauthorizedException(TOKEN_INVALID);
     }
@@ -146,6 +161,62 @@ export class AuthService {
       where: { id: payload.sid, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+  }
+
+  /**
+   * Connexions et échecs sont tracés (blueprint/10_Security.md §6). Jamais le
+   * mot de passe ni un jeton. L'adresse IP et le navigateur viennent du
+   * contexte de la requête (`AuditService`).
+   *
+   * Une connexion réussie est tracée **obligatoirement** : sans trace, pas de
+   * session. Un échec ne l'est qu'au mieux : une panne du journal ne doit pas
+   * transformer un refus (401) en erreur serveur, ni distinguer les cas par
+   * leur réponse.
+   */
+  private async traceLoginSuccess(
+    userId: string,
+    method: 'password' | 'invitation',
+  ) {
+    await this.audit.record({
+      actorId: userId,
+      action: 'AUTH_LOGIN_SUCCEEDED',
+      entityType: 'User',
+      entityId: userId,
+      after: { method },
+    });
+  }
+
+  private async traceLoginFailure(
+    attempted: string,
+    userId: string | null,
+    reason: 'unknown_account' | 'inactive_account' | 'wrong_password',
+  ) {
+    try {
+      await this.audit.record({
+        // Personne n'est authentifié : l'auteur est inconnu, le compte visé est l'élément.
+        actorId: null,
+        action: 'AUTH_LOGIN_FAILED',
+        entityType: 'User',
+        entityId: userId ?? undefined,
+        after: { email: attempted.trim().toLowerCase().slice(0, 254), reason },
+      });
+    } catch (error) {
+      this.logger.error(`Échec de connexion non tracé : ${String(error)}`);
+    }
+  }
+
+  private async traceTokenReuse(userId: string, sessionId: string) {
+    try {
+      await this.audit.record({
+        actorId: null,
+        action: 'AUTH_TOKEN_REUSE_DETECTED',
+        entityType: 'User',
+        entityId: userId,
+        after: { sessionId },
+      });
+    } catch (error) {
+      this.logger.error(`Réutilisation de jeton non tracée : ${String(error)}`);
+    }
   }
 
   private async issueTokens(

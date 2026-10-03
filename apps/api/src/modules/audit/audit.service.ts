@@ -51,6 +51,8 @@ export class AuditService {
     actorId?: string;
     /** Un code d'action, ou plusieurs séparés par des virgules. */
     action?: string;
+    /** Codes d'action à écarter (virgules). */
+    excludeAction?: string;
     entityType?: string;
     entityId?: string;
     /** Recherche libre : auteur (nom), code d'action (espaces = `_`), type d'élément. */
@@ -66,6 +68,9 @@ export class AuditService {
         action: query.action.includes(',')
           ? { in: query.action.split(',') }
           : query.action,
+      }),
+      ...(query.excludeAction && {
+        NOT: { action: { in: query.excludeAction.split(',') } },
       }),
       ...(query.entityType && { entityType: query.entityType }),
       ...(query.entityId && { entityId: query.entityId }),

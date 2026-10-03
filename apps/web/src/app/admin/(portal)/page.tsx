@@ -463,7 +463,11 @@ interface AuditRow {
 function RecentActivity() {
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['dashboard', 'audit'],
-    queryFn: () => backendJson<Paginated<AuditRow>>('admin/audit-logs?limit=6'),
+    queryFn: () =>
+      backendJson<Paginated<AuditRow>>(
+        // Les connexions réussies, très fréquentes, noieraient les actions à suivre : elles restent au journal.
+        'admin/audit-logs?limit=6&excludeAction=AUTH_LOGIN_SUCCEEDED',
+      ),
     refetchInterval: 60_000,
   });
 

@@ -130,7 +130,10 @@ export function AuditDetail({
                 </Link>
               ) : (
                 <span className="text-ink-muted">
-                  Système (ou compte supprimé depuis)
+                  {row.action === 'AUTH_LOGIN_FAILED' ||
+                  row.action === 'AUTH_TOKEN_REUSE_DETECTED'
+                    ? 'Non authentifié (personne n’était connecté)'
+                    : 'Système (ou compte supprimé depuis)'}
                 </span>
               )}
             </Row>

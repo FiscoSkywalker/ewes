@@ -55,9 +55,11 @@ describe('AuthService', () => {
     findByEmail: ReturnType<typeof vi.fn>;
     findById: ReturnType<typeof vi.fn>;
   };
+  let audit: { record: ReturnType<typeof vi.fn> };
   let service: AuthService;
 
   beforeEach(() => {
+    audit = { record: vi.fn() };
     vi.clearAllMocks();
     prisma = {
       session: {
@@ -83,6 +85,8 @@ describe('AuthService', () => {
       new JwtService({}),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       makeConfigService() as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      audit as any,
     );
   });
 
@@ -141,6 +145,126 @@ describe('AuthService', () => {
       const createArgs = prisma.session.create.mock.calls[0][0];
       expect(createArgs.data.userId).toBe(user.id);
       expect(createArgs.data.userAgent).toBe(CTX.userAgent);
+    });
+  });
+
+  describe('login audit', () => {
+    it('traces a successful login with its author and method, nothing secret', async () => {
+      const user = makeUser();
+      usersService.findByEmail.mockResolvedValue(user);
+      vi.mocked(argon2.verify).mockResolvedValue(true);
+
+      const result = await service.login(
+        'admin@ewes.example',
+        'correct-password',
+        CTX,
+      );
+
+      expect(audit.record).toHaveBeenCalledTimes(1);
+      expect(audit.record).toHaveBeenCalledWith({
+        actorId: user.id,
+        action: 'AUTH_LOGIN_SUCCEEDED',
+        entityType: 'User',
+        entityId: user.id,
+        after: { method: 'password' },
+      });
+      const traced = JSON.stringify(audit.record.mock.calls);
+      expect(traced).not.toContain('correct-password');
+      expect(traced).not.toContain(result.refreshToken);
+      expect(traced).not.toContain(result.accessToken);
+    });
+
+    it.each([
+      ['an unknown account', null, 'unknown_account'],
+      [
+        'a deactivated account',
+        makeUser({ isActive: false }),
+        'inactive_account',
+      ],
+      ['a wrong password', makeUser(), 'wrong_password'],
+    ])(
+      'traces a failed login on %s with its reason',
+      async (_label, user, reason) => {
+        usersService.findByEmail.mockResolvedValue(user);
+        vi.mocked(argon2.verify).mockResolvedValue(false);
+
+        await expect(
+          service.login('  Admin@EWES.example ', 'a-secret-password', CTX),
+        ).rejects.toMatchObject({ response: { code: 'INVALID_CREDENTIALS' } });
+
+        expect(audit.record).toHaveBeenCalledTimes(1);
+        // Personne n'est authentifié : pas d'auteur ; le compte visé est l'élément s'il existe.
+        expect(audit.record).toHaveBeenCalledWith({
+          actorId: null,
+          action: 'AUTH_LOGIN_FAILED',
+          entityType: 'User',
+          entityId: user ? user.id : undefined,
+          after: { email: 'admin@ewes.example', reason },
+        });
+        expect(JSON.stringify(audit.record.mock.calls)).not.toContain(
+          'a-secret-password',
+        );
+      },
+    );
+
+    it('answers a failed login the same way when the journal is down', async () => {
+      usersService.findByEmail.mockResolvedValue(makeUser());
+      vi.mocked(argon2.verify).mockResolvedValue(false);
+      audit.record.mockRejectedValue(new Error('base indisponible'));
+
+      await expect(
+        service.login('admin@ewes.example', 'wrong-password', CTX),
+      ).rejects.toMatchObject({ response: { code: 'INVALID_CREDENTIALS' } });
+    });
+
+    it('opens no session when a successful login cannot be traced', async () => {
+      usersService.findByEmail.mockResolvedValue(makeUser());
+      vi.mocked(argon2.verify).mockResolvedValue(true);
+      audit.record.mockRejectedValue(new Error('base indisponible'));
+
+      await expect(
+        service.login('admin@ewes.example', 'correct-password', CTX),
+      ).rejects.toThrow('base indisponible');
+    });
+
+    it('traces the reuse of a rotated refresh token, but not a routine expiry', async () => {
+      usersService.findByEmail.mockResolvedValue(makeUser());
+      vi.mocked(argon2.verify).mockResolvedValue(true);
+      const { refreshToken } = await service.login(
+        'admin@ewes.example',
+        'correct-password',
+        CTX,
+      );
+      const session = prisma.session.create.mock.calls[0][0].data;
+      audit.record.mockClear();
+
+      // Expirée avec le bon jeton : usage normal, rien à signaler.
+      prisma.session.findUnique.mockResolvedValue({
+        ...session,
+        revokedAt: null,
+        expiresAt: new Date(Date.now() - 1_000),
+      });
+      await expect(service.refresh(refreshToken, CTX)).rejects.toBeTruthy();
+      expect(audit.record).not.toHaveBeenCalled();
+
+      // Jeton déjà roté : la session porte un autre hash.
+      prisma.session.findUnique.mockResolvedValue({
+        ...session,
+        revokedAt: null,
+        refreshTokenHash: 'stale-hash',
+        expiresAt: new Date(Date.now() + 1_000_000),
+      });
+      await expect(service.refresh(refreshToken, CTX)).rejects.toBeTruthy();
+      expect(audit.record).toHaveBeenCalledWith({
+        actorId: null,
+        action: 'AUTH_TOKEN_REUSE_DETECTED',
+        entityType: 'User',
+        entityId: session.userId,
+        after: { sessionId: session.id },
+      });
+      expect(JSON.stringify(audit.record.mock.calls)).not.toContain(
+        refreshToken,
+      );
     });
   });
 
