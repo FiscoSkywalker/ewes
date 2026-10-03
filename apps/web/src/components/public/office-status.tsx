@@ -3,58 +3,42 @@
 import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Clock } from 'lucide-react';
-import { EWES_OFFICE_HOURS } from '@/data/contact';
+import { hoursOf } from '@/lib/site-settings';
+import {
+  hoursRows,
+  isOpenAt,
+  officeTimeLabel,
+  type OfficeHours,
+} from '@/lib/office-hours';
+import { useSiteSettings } from './site-settings-provider';
 
 interface LocalTime {
   label: string;
   open: boolean;
 }
 
-const toMinutes = (hhmm: string) => {
-  const [h, m] = hhmm.split(':').map(Number);
-  return h * 60 + m;
-};
-
-/** Heure et jour courants à Lubumbashi, quel que soit le fuseau du visiteur. */
-function readLocalTime(locale: string): LocalTime {
+/** Heure et état d'ouverture à Lubumbashi, quel que soit le fuseau du visiteur. */
+function readLocalTime(hours: OfficeHours, locale: string): LocalTime {
   const now = new Date();
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: EWES_OFFICE_HOURS.timeZone,
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(now);
-  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
-  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(
-    get('weekday'),
-  );
-  const minutes = Number(get('hour')) * 60 + Number(get('minute'));
-
   return {
-    label: new Intl.DateTimeFormat(locale, {
-      timeZone: EWES_OFFICE_HOURS.timeZone,
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(now),
-    open:
-      (EWES_OFFICE_HOURS.openDays as readonly number[]).includes(day) &&
-      minutes >= toMinutes(EWES_OFFICE_HOURS.opensAt) &&
-      minutes < toMinutes(EWES_OFFICE_HOURS.closesAt),
+    label: officeTimeLabel(hours.timeZone, locale, now),
+    open: isOpenAt(hours, now),
   };
 }
 
 /** Heure locale du siège, rafraîchie toutes les 15 s (null avant le montage). */
 function useOfficeTime() {
   const locale = useLocale();
+  const settings = useSiteSettings();
   const [time, setTime] = useState<LocalTime | null>(null);
 
   useEffect(() => {
-    const tick = () => setTime(readLocalTime(locale));
+    const hours = hoursOf(settings);
+    const tick = () => setTime(readLocalTime(hours, locale));
     tick();
     const id = window.setInterval(tick, 15_000);
     return () => window.clearInterval(id);
-  }, [locale]);
+  }, [locale, settings]);
 
   return time;
 }
@@ -95,9 +79,11 @@ export function OfficeStatusInline() {
  */
 export function OfficeStatus() {
   const t = useTranslations('ContactPage.status');
+  const locale = useLocale();
   const time = useOfficeTime();
 
-  const hours = `${EWES_OFFICE_HOURS.opensAt} – ${EWES_OFFICE_HOURS.closesAt}`;
+  const settings = useSiteSettings();
+  const rows = hoursRows(hoursOf(settings), locale);
 
   return (
     <div className="tone-night relative overflow-hidden rounded-sheet bg-night p-7 text-on-night shadow-[0_40px_80px_-40px_rgba(6,22,27,0.7)] sm:p-9">
@@ -135,14 +121,14 @@ export function OfficeStatus() {
           <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-on-night-muted">
             {t('hoursTitle')}
           </dt>
-          <dd className="flex justify-between gap-4">
-            <span>{t('weekdays')}</span>
-            <span className="tabular-nums text-on-night-muted">{hours}</span>
-          </dd>
-          <dd className="flex justify-between gap-4">
-            <span>{t('weekend')}</span>
-            <span className="text-on-night-muted">{t('closedDay')}</span>
-          </dd>
+          {rows.map((row) => (
+            <dd key={row.label} className="flex justify-between gap-4">
+              <span>{row.label}</span>
+              <span className="tabular-nums text-on-night-muted">
+                {row.value ?? t('closedDay')}
+              </span>
+            </dd>
+          ))}
         </dl>
 
         <p className="mt-6 text-xs leading-5 text-on-night-muted/80">

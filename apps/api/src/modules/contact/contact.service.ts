@@ -1,5 +1,4 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { ContactMessage, ContactMessageStatus, Prisma } from '@prisma/client';
 import { createHash } from 'node:crypto';
 import { escapeLike } from '../../common/utils/like.js';
@@ -7,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { SiteSettingsService } from '../site-settings/site-settings.service.js';
 import { acknowledgement, teamNotification } from './contact-emails.js';
 import type { ListContactsDto } from './dto/list-contacts.dto.js';
 import type { SubmitContactDto } from './dto/submit-contact.dto.js';
@@ -30,8 +30,8 @@ export class ContactService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
-    private readonly config: ConfigService,
     private readonly audit: AuditService,
+    private readonly siteSettings: SiteSettingsService,
   ) {}
 
   private hashOf(email: string, message: string) {
@@ -46,7 +46,10 @@ export class ContactService {
    * double. Le succès n'est annoncé qu'après l'enregistrement en base ; l'envoi
    * des e-mails est indépendant et son échec reste visible de l'Administrateur.
    */
-  async submit(dto: SubmitContactDto, idempotencyKey?: string): Promise<SubmitResult> {
+  async submit(
+    dto: SubmitContactDto,
+    idempotencyKey?: string,
+  ): Promise<SubmitResult> {
     // Robot (champ piège rempli) : écarté sans rien enregistrer ni notifier.
     if (dto.website && dto.website.trim() !== '') {
       this.logger.warn('Soumission de contact écartée (champ piège rempli).');
@@ -105,7 +108,11 @@ export class ContactService {
 
   /** Notification interne + accusé de réception ; chacun avec sa clé d'idempotence. */
   private async notify(message: ContactMessage) {
-    const team = this.config.get<string>('CONTACT_NOTIFICATION_EMAIL')?.trim();
+    // Réglage du portail d'abord, puis variable d'environnement (Paramètres > Messagerie).
+    const [team, settings] = await Promise.all([
+      this.siteSettings.contactRecipient(),
+      this.siteSettings.current(),
+    ]);
     // Sans destinataire configuré, la notification est tout de même enregistrée :
     // elle apparaît « échouée » (non configuré) dans le suivi des envois.
     const teamMail = teamNotification(message);
@@ -118,13 +125,18 @@ export class ContactService {
       idempotencyKey: `contact:${message.id}:team`,
     });
 
+    // Accusé de réception désactivé dans les réglages : le message reste enregistré et l'équipe prévenue.
+    if (!settings.contactAutoReply) return;
+
     const recentAcks = await this.notifications.countRecent(
       'CONTACT_ACKNOWLEDGEMENT',
       message.email,
       new Date(Date.now() - 60 * 60 * 1000),
     );
     if (recentAcks >= MAX_ACKS_PER_ADDRESS_PER_HOUR) {
-      this.logger.warn('Accusé de réception non envoyé : limite horaire atteinte pour cette adresse.');
+      this.logger.warn(
+        'Accusé de réception non envoyé : limite horaire atteinte pour cette adresse.',
+      );
       return;
     }
     const ack = acknowledgement(message);
@@ -142,7 +154,9 @@ export class ContactService {
     const where: Prisma.ContactMessageWhereInput = {
       ...(query.status && { status: query.status }),
       ...(search && {
-        OR: (['name', 'organization', 'email', 'phone', 'message'] as const).map((field) => ({
+        OR: (
+          ['name', 'organization', 'email', 'phone', 'message'] as const
+        ).map((field) => ({
           [field]: { contains: search, mode: 'insensitive' as const },
         })),
       }),
@@ -163,13 +177,17 @@ export class ContactService {
       this.prisma.contactMessage.count({ where }),
     ]);
     return {
-      data: data.map(({ contentHash: _hash, submissionKey: _key, ...rest }) => rest),
+      data: data.map(
+        ({ contentHash: _hash, submissionKey: _key, ...rest }) => rest,
+      ),
       meta: { page: query.page, limit: query.limit, total },
     };
   }
 
   async get(id: string) {
-    const message = await this.prisma.contactMessage.findUnique({ where: { id } });
+    const message = await this.prisma.contactMessage.findUnique({
+      where: { id },
+    });
     if (!message) {
       throw new NotFoundException({
         code: 'CONTACT_MESSAGE_NOT_FOUND',
@@ -182,10 +200,17 @@ export class ContactService {
   }
 
   /** Seul le statut de suivi se modifie : un message reçu n'est jamais réécrit. */
-  async setStatus(actor: AuthenticatedUser, id: string, status: ContactMessageStatus) {
+  async setStatus(
+    actor: AuthenticatedUser,
+    id: string,
+    status: ContactMessageStatus,
+  ) {
     const current = await this.get(id);
     if (current.status === status) return current;
-    await this.prisma.contactMessage.update({ where: { id }, data: { status } });
+    await this.prisma.contactMessage.update({
+      where: { id },
+      data: { status },
+    });
     await this.audit.record({
       actorId: actor.id,
       action: 'CONTACT_STATUS_CHANGED',

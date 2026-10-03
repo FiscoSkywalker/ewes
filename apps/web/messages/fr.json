@@ -19,7 +19,6 @@
   "Footer": {
     "identity": "Environment, Water and Engineering Services (EWES SARL) : société à responsabilité limitée issue du Pôle de l’Environnement de l’Interface Université de Lubumbashi–Société (IUS).",
     "addressTitle": "Adresse",
-    "address": "1809, Av. Araucarias, Q/Hewa-Bora, C/Ruashi, Ville de Lubumbashi, RDC",
     "contactTitle": "Contact",
     "partnersTitle": "Origine & partenaires",
     "partners": [
@@ -33,6 +32,8 @@
     "privateSpaceLink": "Espace documentaire privé",
     "sitemapTitle": "Plan du site",
     "polesTitle": "Pôles",
+    "socialTitle": "Réseaux sociaux",
+    "newTab": "s’ouvre dans un nouvel onglet",
     "reachTitle": "Nous joindre",
     "training": "Formation",
     "backToTop": "Retour en haut"
@@ -55,7 +56,6 @@
     "hqLabel": "Siège",
     "hqCity": "Lubumbashi",
     "hqRegion": "Haut-Katanga · RDC",
-    "addressLine1": "1809, Av. Araucarias, Q/Hewa-Bora, C/Ruashi, Ville de Lubumbashi.",
     "networkLine": "Une démarche menée en collaboration avec des partenaires belges, français et canadiens.",
     "referenceMission": "Voir nos réalisations",
     "imageCaption": "Équipe multidisciplinaire · RD Congo",
@@ -980,8 +980,6 @@
       "open": "Bureaux ouverts",
       "closed": "Bureaux fermés",
       "hoursTitle": "Horaires",
-      "weekdays": "Lundi – Vendredi",
-      "weekend": "Samedi – Dimanche",
       "closedDay": "Fermé",
       "note": "Une demande envoyée en dehors des horaires est traitée dès la réouverture."
     },

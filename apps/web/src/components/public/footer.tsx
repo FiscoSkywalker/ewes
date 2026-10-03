@@ -2,8 +2,9 @@ import Image from 'next/image';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ArrowUp, Lock } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { EWES_CONTACT } from '@/data/contact';
 import { getPoleServices } from '@/lib/api/public-services';
+import { getSiteSettings } from '@/lib/api/public-site-settings';
+import { activeSocials, addressFor } from '@/lib/site-settings';
 
 /**
  * Pied de page institutionnel partagé (blueprint/05_UI_UX_System.md §6) —
@@ -15,8 +16,12 @@ export async function Footer() {
   const tNav = await getTranslations('Nav');
   const tPoles = await getTranslations('ServicesOverview');
   // Noms des pôles pilotés par le portail ; repli sur les messages.
-  const poles = await getPoleServices(await getLocale());
+  const locale = await getLocale();
+  const poles = await getPoleServices(locale);
   const partners = t.raw('partners') as string[];
+  // Coordonnées pilotées par le portail ; repli sur les valeurs d'origine.
+  const settings = await getSiteSettings();
+  const socials = activeSocials(settings);
 
   const sitemap = [
     { href: '/a-propos', label: tNav('about') },
@@ -79,16 +84,36 @@ export async function Footer() {
 
         <div className="grid content-start gap-2.5">
           <h2 className={headingClass}>{t('reachTitle')}</h2>
-          <a href={EWES_CONTACT.phoneHref} className={linkClass}>
-            {EWES_CONTACT.phoneDisplay}
+          <a href={settings.phoneHref} className={linkClass}>
+            {settings.phone}
           </a>
           <a
-            href={`mailto:${EWES_CONTACT.email}`}
+            href={`mailto:${settings.email}`}
             className={`${linkClass} break-all`}
           >
-            {EWES_CONTACT.email}
+            {settings.email}
           </a>
-          <span className="leading-6">{t('address')}</span>
+          <span className="leading-6">{addressFor(settings, locale)}</span>
+          {socials.length > 0 && (
+            <ul
+              aria-label={t('socialTitle')}
+              className="mt-1 flex flex-wrap gap-2"
+            >
+              {socials.map((network) => (
+                <li key={network.id}>
+                  <a
+                    href={network.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex rounded-full border border-on-night/20 px-3 py-1 text-xs transition-colors hover:border-malachite-bright hover:text-malachite-bright"
+                  >
+                    {network.label}
+                    <span className="sr-only"> ({t('newTab')})</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

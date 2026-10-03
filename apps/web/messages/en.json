@@ -19,7 +19,6 @@
   "Footer": {
     "identity": "Environment, Water and Engineering Services (EWES SARL): a limited liability company that grew out of the Environment Centre of the University of Lubumbashi–Society Interface (IUS).",
     "addressTitle": "Address",
-    "address": "1809, Araucarias Avenue, Hewa-Bora district, Ruashi commune, Lubumbashi, DRC",
     "contactTitle": "Contact",
     "partnersTitle": "Origins & partners",
     "partners": [
@@ -33,6 +32,8 @@
     "privateSpaceLink": "Private document space",
     "sitemapTitle": "Site map",
     "polesTitle": "Areas",
+    "socialTitle": "Social media",
+    "newTab": "opens in a new tab",
     "reachTitle": "Get in touch",
     "training": "Training",
     "backToTop": "Back to top"
@@ -55,7 +56,6 @@
     "hqLabel": "Head office",
     "hqCity": "Lubumbashi",
     "hqRegion": "Haut-Katanga · DRC",
-    "addressLine1": "1809, Araucarias Avenue, Hewa-Bora district, Ruashi commune, Lubumbashi.",
     "networkLine": "Our work is carried out in collaboration with Belgian, French and Canadian partners.",
     "referenceMission": "See our projects",
     "imageCaption": "Multidisciplinary team · DR Congo",
@@ -980,8 +980,6 @@
       "open": "Offices open",
       "closed": "Offices closed",
       "hoursTitle": "Opening hours",
-      "weekdays": "Monday – Friday",
-      "weekend": "Saturday – Sunday",
       "closedDay": "Closed",
       "note": "Requests sent outside office hours are handled as soon as we reopen."
     },

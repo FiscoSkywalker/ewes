@@ -35,6 +35,11 @@ type Finder = (prisma: PrismaService, ids: string[]) => Promise<Row[]>;
  * est seulement moins lisible.
  */
 const FINDERS: Record<string, Finder> = {
+  // Une seule ligne de réglages : un nom fixe suffit, et elle existe toujours.
+  SiteSettings: (_p, ids) =>
+    Promise.resolve(
+      ids.map((id) => ({ id, label: 'Paramètres de la plateforme' })),
+    ),
   Article: async (p, ids) =>
     (
       await p.article.findMany({
