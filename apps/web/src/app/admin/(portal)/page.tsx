@@ -494,6 +494,9 @@ const ACTION_LABELS: Record<string, string> = {
   SERVICE_PUBLISHED: 'Pôle publié',
   SERVICE_UNPUBLISHED: 'Pôle dépublié',
   SERVICE_OFFERING_REMOVED: 'Prestation retirée',
+  KEY_FIGURE_CREATED: 'Chiffre clé ajouté',
+  KEY_FIGURE_UPDATED: 'Chiffre clé modifié',
+  KEY_FIGURE_DELETED: 'Chiffre clé retiré',
 };
 
 function actionLabel(action: string): string {
