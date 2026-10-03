@@ -12,6 +12,8 @@ import {
   ArrowLeft,
   ArrowRight,
   KeyRound,
+  Lock,
+  LockOpen,
   Mail,
   UserRoundCheck,
   UserRoundX,
@@ -20,7 +22,7 @@ import { ApiError, backendJson } from '@/lib/api/backend';
 import { invalidatePortalData } from '@/lib/admin/invalidate';
 import { relativeTime } from '@/lib/admin/format';
 import { homePathFor } from '@/lib/admin/roles';
-import { ROLE_PROFILES, type UserDetail } from '@/lib/admin/users';
+import { ROLE_PROFILES, isLocked, type UserDetail } from '@/lib/admin/users';
 import { useSession } from '@/components/admin/session';
 import { PortalNotFound } from '@/components/admin/states';
 import { UserHistory } from '@/components/admin/users/user-history';
@@ -153,6 +155,25 @@ function Detail({ user }: { user: UserDetail }) {
     if (done) toast.success(active ? 'Compte réactivé' : 'Compte désactivé');
   }
 
+  const locked = isLocked(user);
+
+  async function unlock() {
+    const done = await confirm({
+      title: `Déverrouiller le compte de ${user.fullName} ?`,
+      confirmLabel: 'Déverrouiller',
+      description:
+        'Le compteur d’échecs est remis à zéro : la personne peut de nouveau tenter de se connecter tout de suite. À ne faire que si vous êtes sûr qu’il s’agit bien d’elle.',
+      onConfirm: async () => {
+        const saved = await backendJson<UserDetail>(
+          `admin/users/${user.id}/unlock`,
+          { method: 'POST' },
+        );
+        await applySaved(queryClient, saved);
+      },
+    });
+    if (done) toast.success('Compte déverrouillé');
+  }
+
   return (
     <>
       <div className="animate-rise-in flex items-center gap-4 sm:gap-5">
@@ -265,6 +286,11 @@ function Detail({ user }: { user: UserDetail }) {
                   'Jamais connecté'
                 )}
               </Row>
+              {!locked && user.recentFailures > 0 && (
+                <Row label="Échecs de connexion récents">
+                  {user.recentFailures}
+                </Row>
+              )}
               <Row label="Sessions ouvertes">
                 {user.activeSessions === 0
                   ? 'Aucune'
@@ -272,6 +298,40 @@ function Detail({ user }: { user: UserDetail }) {
               </Row>
             </dl>
           </Card>
+
+          {locked && (
+            <Card
+              title="Compte verrouillé"
+              description="Après des échecs de connexion répétés."
+              className="border-warn/40"
+            >
+              <div className="space-y-4">
+                <p className="text-[13px] leading-relaxed text-ink-muted">
+                  Ce compte refuse toute connexion, même avec le bon mot de
+                  passe, jusqu’à{' '}
+                  <strong className="font-medium text-ink">
+                    {new Date(user.lockedUntil as string).toLocaleTimeString(
+                      'fr',
+                      { hour: '2-digit', minute: '2-digit' },
+                    )}
+                  </strong>
+                  . {user.recentFailures} échec
+                  {user.recentFailures > 1 ? 's' : ''} récent
+                  {user.recentFailures > 1 ? 's' : ''}. Si ce n’est pas la
+                  personne qui s’est trompée, quelqu’un essaie peut-être de
+                  deviner son mot de passe : consultez le journal d’audit.
+                </p>
+                <Button
+                  variant="secondary"
+                  icon={LockOpen}
+                  block
+                  onClick={() => void unlock()}
+                >
+                  Déverrouiller maintenant
+                </Button>
+              </div>
+            </Card>
+          )}
 
           <Card
             title={user.isActive ? 'Désactivation' : 'Compte désactivé'}
@@ -335,6 +395,7 @@ function PageHeaderBlock({
   user: UserDetail;
   isSelf: boolean;
 }) {
+  const locked = isLocked(user);
   return (
     <div className="min-w-0">
       <p className="mb-1.5 flex flex-wrap items-center gap-2 text-xs">
@@ -345,6 +406,11 @@ function PageHeaderBlock({
           </Badge>
         ) : (
           <Badge>Désactivé</Badge>
+        )}
+        {locked && (
+          <Badge tone="warn" icon={Lock}>
+            Verrouillé
+          </Badge>
         )}
         {isSelf && <Badge tone="brand">Vous</Badge>}
       </p>

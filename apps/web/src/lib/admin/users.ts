@@ -13,11 +13,15 @@ export interface UserSummary {
   createdAt: string;
   /** Dernière connexion ou renouvellement de session. */
   lastActiveAt: string | null;
+  /** Fin du verrouillage après échecs de connexion répétés ; `null` si le compte n'est pas verrouillé. */
+  lockedUntil: string | null;
 }
 
 /** `GET /admin/users/:id`. */
 export interface UserDetail extends UserSummary {
   activeSessions: number;
+  /** Échecs de connexion encore comptés dans la fenêtre de verrouillage. */
+  recentFailures: number;
   grants: { folders: number; documents: number };
 }
 
@@ -39,6 +43,10 @@ export interface InviteResult {
   invitation: Invitation;
   activationUrl: string;
 }
+
+/** Compte verrouillé en ce moment (l'API reste juge : elle refuse la connexion). */
+export const isLocked = (user: { lockedUntil: string | null }) =>
+  user.lockedUntil !== null && Date.parse(user.lockedUntil) > Date.now();
 
 /** Validité d'un lien d'invitation (jours), comme l'API. */
 export const INVITATION_VALID_DAYS = 7;
@@ -168,6 +176,8 @@ export const USER_ACTION_LABELS: Record<string, string> = {
   USER_ROLE_CHANGED: 'Rôle modifié',
   USER_DEACTIVATED: 'Compte désactivé',
   USER_REACTIVATED: 'Compte réactivé',
+  USER_UNLOCKED: 'Compte déverrouillé',
+  AUTH_ACCOUNT_LOCKED: 'Compte verrouillé (échecs répétés)',
 };
 
 /** Ligne de journal d'audit (`GET /admin/audit-logs`). */

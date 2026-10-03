@@ -1,4 +1,5 @@
 import { formatBytes } from './public-documents';
+import { dayName } from '@/lib/office-hours';
 import { ROLE_LABELS, isRole } from './roles';
 
 /** Ligne du journal telle que renvoyée par `GET /admin/audit-logs`. */
@@ -68,6 +69,9 @@ export const ACTION_LABELS: Record<string, string> = {
   KEY_FIGURE_CREATED: 'Chiffre clé ajouté',
   KEY_FIGURE_UPDATED: 'Chiffre clé modifié',
   KEY_FIGURE_DELETED: 'Chiffre clé retiré',
+  SETTINGS_GENERAL_UPDATED: 'Réglages du site modifiés',
+  SETTINGS_MAIL_UPDATED: 'Réglages de messagerie modifiés',
+  MAIL_TEST_REQUESTED: 'Test d’envoi d’e-mail',
   USER_INVITED: 'Utilisateur invité',
   USER_INVITATION_RESENT: 'Invitation renvoyée',
   USER_INVITATION_REVOKED: 'Invitation retirée',
@@ -77,6 +81,8 @@ export const ACTION_LABELS: Record<string, string> = {
   USER_REACTIVATED: 'Compte réactivé',
   AUTH_LOGIN_SUCCEEDED: 'Connexion réussie',
   AUTH_LOGIN_FAILED: 'Échec de connexion',
+  AUTH_ACCOUNT_LOCKED: 'Compte verrouillé (échecs répétés)',
+  USER_UNLOCKED: 'Compte déverrouillé',
   AUTH_TOKEN_REUSE_DETECTED: 'Jeton de session rejoué (session fermée)',
 };
 
@@ -94,7 +100,8 @@ export type AuditCategory =
   | 'rights'
   | 'private'
   | 'content'
-  | 'contact';
+  | 'contact'
+  | 'settings';
 
 interface CategoryDef {
   id: AuditCategory;
@@ -130,6 +137,11 @@ export const CATEGORIES: CategoryDef[] = [
     label: 'Messages',
     matches: (a) => a.startsWith('CONTACT_'),
   },
+  {
+    id: 'settings',
+    label: 'Paramètres',
+    matches: (a) => a.startsWith('SETTINGS_') || a.startsWith('MAIL_'),
+  },
   { id: 'content', label: 'Contenus du site', matches: () => true },
 ];
 
@@ -144,14 +156,15 @@ export function actionTone(action: string): ActionTone {
   if (action.endsWith('_DENIED')) return 'bad';
   if (
     action === 'AUTH_LOGIN_FAILED' ||
-    action === 'AUTH_TOKEN_REUSE_DETECTED'
+    action === 'AUTH_TOKEN_REUSE_DETECTED' ||
+    action === 'AUTH_ACCOUNT_LOCKED'
   ) {
     return 'bad';
   }
   if (action === 'AUTH_LOGIN_SUCCEEDED') return 'ok';
   if (/(_DELETED|_REVOKED|_DEACTIVATED|_REMOVED)$/.test(action)) return 'warn';
   if (
-    /(_PUBLISHED|_GRANTED|_REACTIVATED|_ACCEPTED|_RESTORED|_CREATED|_UPLOADED|_INVITED)$/.test(
+    /(_PUBLISHED|_GRANTED|_REACTIVATED|_UNLOCKED|_ACCEPTED|_RESTORED|_CREATED|_UPLOADED|_INVITED)$/.test(
       action,
     )
   ) {
@@ -176,6 +189,7 @@ export const ENTITY_LABELS: Record<string, string> = {
   ContactMessage: 'Message de contact',
   User: 'Compte',
   UserInvitation: 'Invitation',
+  SiteSettings: 'Paramètres',
 };
 
 export const entityTypeLabel = (type: string) => ENTITY_LABELS[type] ?? type;
@@ -236,6 +250,23 @@ const FIELD_LABELS: Record<string, string> = {
   method: 'Méthode',
   reason: 'Motif',
   sessionId: 'Session',
+  failures: 'Échecs consécutifs',
+  until: 'Verrouillé jusqu’à',
+  locked: 'Verrouillé',
+  phone: 'Téléphone',
+  addressFr: 'Adresse (français)',
+  addressEn: 'Adresse (anglais)',
+  officeDays: 'Jours d’ouverture',
+  opensAt: 'Ouverture',
+  closesAt: 'Fermeture',
+  linkedinUrl: 'LinkedIn',
+  facebookUrl: 'Facebook',
+  xUrl: 'X',
+  youtubeUrl: 'YouTube',
+  contactRecipientEmail: 'Destinataire des messages',
+  contactAutoReply: 'Accusé de réception',
+  recipient: 'Destinataire',
+  outcome: 'Résultat',
 };
 
 const VALUE_LABELS: Record<string, Record<string, string>> = {
@@ -247,6 +278,7 @@ const VALUE_LABELS: Record<string, Record<string, string>> = {
     TRAITE: 'Traité',
   },
   scope: { folder: 'Dossier', document: 'Document' },
+  outcome: { sent: 'Envoyé', failed: 'Échec', pending: 'En attente' },
   method: {
     password: 'Mot de passe',
     invitation: 'Lien d’invitation',
@@ -263,7 +295,17 @@ const shortId = (value: string) =>
 
 export function formatAuditValue(key: string, value: unknown): string {
   if (value === null || value === undefined) return '—';
+  if (
+    key === 'until' &&
+    typeof value === 'string' &&
+    !Number.isNaN(Date.parse(value))
+  ) {
+    return new Date(value).toLocaleString('fr');
+  }
   if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
+  if (key === 'officeDays' && Array.isArray(value)) {
+    return value.map((day) => dayName(Number(day), 'fr')).join(', ');
+  }
   if (key === 'role' && isRole(value)) return ROLE_LABELS[value];
   if (key === 'fileSizeBytes' && typeof value === 'number') {
     return formatBytes(value);
@@ -346,7 +388,12 @@ export function actorName(row: AuditRow): string {
 
 /** Adresse saisie lors d'un échec de connexion sur un compte inconnu (sans élément à nommer). */
 export function attemptedEmail(row: AuditRow): string | null {
-  if (row.entityId || row.action !== 'AUTH_LOGIN_FAILED') return null;
+  if (
+    row.entityId ||
+    (row.action !== 'AUTH_LOGIN_FAILED' && row.action !== 'AUTH_ACCOUNT_LOCKED')
+  ) {
+    return null;
+  }
   const email = row.afterData?.email;
   return typeof email === 'string' ? email : null;
 }

@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Clock, RefreshCw, Trash2 } from 'lucide-react';
+import { ChevronRight, Clock, Lock, RefreshCw, Trash2 } from 'lucide-react';
 import { cx, focusRing } from '@/lib/admin/cx';
 import { relativeTime } from '@/lib/admin/format';
-import type { Invitation, UserSummary } from '@/lib/admin/users';
+import { isLocked, type Invitation, type UserSummary } from '@/lib/admin/users';
 import { Badge, Button, StatusChip } from '../ui';
 import { UserAvatar } from './user-avatar';
 
@@ -54,6 +54,11 @@ export function AccountCard({
             </Badge>
           ) : (
             <Badge>Désactivé</Badge>
+          )}
+          {isLocked(user) && (
+            <Badge tone="warn" icon={Lock}>
+              Verrouillé
+            </Badge>
           )}
         </span>
         <span className="mt-2 block text-xs text-ink-subtle">

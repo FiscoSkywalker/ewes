@@ -56,10 +56,24 @@ describe('AuthService', () => {
     findById: ReturnType<typeof vi.fn>;
   };
   let audit: { record: ReturnType<typeof vi.fn> };
+  let lockout: {
+    status: ReturnType<typeof vi.fn>;
+    recordFailure: ReturnType<typeof vi.fn>;
+    clear: ReturnType<typeof vi.fn>;
+    maxFailures: number;
+    windowMs: number;
+  };
   let service: AuthService;
 
   beforeEach(() => {
     audit = { record: vi.fn() };
+    lockout = {
+      status: vi.fn(async () => ({ locked: false, until: null })),
+      recordFailure: vi.fn(async () => false),
+      clear: vi.fn(),
+      maxFailures: 5,
+      windowMs: 15 * 60_000,
+    };
     vi.clearAllMocks();
     prisma = {
       session: {
@@ -87,6 +101,8 @@ describe('AuthService', () => {
       makeConfigService() as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       audit as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      lockout as any,
     );
   });
 
@@ -265,6 +281,103 @@ describe('AuthService', () => {
       expect(JSON.stringify(audit.record.mock.calls)).not.toContain(
         refreshToken,
       );
+    });
+  });
+
+  describe('lockout', () => {
+    it('refuses everything, even the right password, while locked — before touching the account', async () => {
+      lockout.status.mockResolvedValue({
+        locked: true,
+        until: new Date(Date.now() + 4 * 60_000 + 10_000),
+      });
+
+      await expect(
+        service.login('admin@ewes.example', 'correct-password', CTX),
+      ).rejects.toMatchObject({
+        status: 429,
+        response: {
+          code: 'LOGIN_LOCKED',
+          message: expect.stringContaining('5 minutes'),
+        },
+      });
+      // Ni compte lu, ni mot de passe vérifié, ni session, ni échec compté (on ne prolonge pas le verrou).
+      expect(usersService.findByEmail).not.toHaveBeenCalled();
+      expect(argon2.verify).not.toHaveBeenCalled();
+      expect(prisma.session.create).not.toHaveBeenCalled();
+      expect(lockout.recordFailure).not.toHaveBeenCalled();
+    });
+
+    it('answers a locked unknown address exactly like a locked known one', async () => {
+      const until = new Date(Date.now() + 9 * 60_000);
+      lockout.status.mockResolvedValue({ locked: true, until });
+      usersService.findByEmail.mockResolvedValue(null);
+      const known = await service
+        .login('admin@ewes.example', 'x', CTX)
+        .catch((e) => e);
+      const unknown = await service
+        .login('nobody@ewes.example', 'x', CTX)
+        .catch((e) => e);
+      expect(unknown.status).toBe(known.status);
+      expect(unknown.response).toEqual(known.response);
+    });
+
+    it.each([
+      ['an unknown account', null],
+      ['a wrong password', makeUser()],
+    ])('counts a failure on %s', async (_label, user) => {
+      usersService.findByEmail.mockResolvedValue(user);
+      vi.mocked(argon2.verify).mockResolvedValue(false);
+      await expect(
+        service.login(' Admin@EWES.example ', 'nope', CTX),
+      ).rejects.toMatchObject({ response: { code: 'INVALID_CREDENTIALS' } });
+      expect(lockout.recordFailure).toHaveBeenCalledWith(
+        ' Admin@EWES.example ',
+      );
+      // Pas de bascule : une seule trace (l'échec), pas de trace de verrouillage.
+      expect(audit.record).toHaveBeenCalledTimes(1);
+    });
+
+    it('traces the lock once, at the failure that triggers it, and still answers 401', async () => {
+      const user = makeUser();
+      usersService.findByEmail.mockResolvedValue(user);
+      vi.mocked(argon2.verify).mockResolvedValue(false);
+      lockout.recordFailure.mockResolvedValue(true);
+
+      await expect(
+        service.login('admin@ewes.example', 'nope', CTX),
+      ).rejects.toMatchObject({ response: { code: 'INVALID_CREDENTIALS' } });
+
+      const lockCall = audit.record.mock.calls.find(
+        ([entry]) => entry.action === 'AUTH_ACCOUNT_LOCKED',
+      )![0];
+      expect(lockCall).toMatchObject({
+        actorId: null,
+        entityType: 'User',
+        entityId: user.id,
+        after: { email: 'admin@ewes.example', failures: 5 },
+      });
+      expect(JSON.stringify(lockCall)).not.toContain('nope');
+    });
+
+    it('resets the counter on a successful login, and ignores a failing reset', async () => {
+      usersService.findByEmail.mockResolvedValue(makeUser());
+      vi.mocked(argon2.verify).mockResolvedValue(true);
+      await service.login('admin@ewes.example', 'correct-password', CTX);
+      expect(lockout.clear).toHaveBeenCalledWith('admin@ewes.example');
+
+      lockout.clear.mockRejectedValue(new Error('base indisponible'));
+      await expect(
+        service.login('admin@ewes.example', 'correct-password', CTX),
+      ).resolves.toMatchObject({ accessToken: expect.any(String) });
+    });
+
+    it('keeps answering 401 when the lock counter itself fails', async () => {
+      usersService.findByEmail.mockResolvedValue(makeUser());
+      vi.mocked(argon2.verify).mockResolvedValue(false);
+      lockout.recordFailure.mockRejectedValue(new Error('base indisponible'));
+      await expect(
+        service.login('admin@ewes.example', 'nope', CTX),
+      ).rejects.toMatchObject({ response: { code: 'INVALID_CREDENTIALS' } });
     });
   });
 

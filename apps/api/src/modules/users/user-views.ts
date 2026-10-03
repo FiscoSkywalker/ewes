@@ -10,11 +10,15 @@ export interface UserView {
   createdAt: Date;
   /** Dernière connexion ou renouvellement de session (précision : durée du jeton d'accès). */
   lastActiveAt: Date | null;
+  /** Fin du verrouillage après échecs de connexion répétés ; `null` si le compte n'est pas verrouillé. */
+  lockedUntil: Date | null;
 }
 
 export interface UserDetailView extends UserView {
   /** Sessions de connexion encore valides. */
   activeSessions: number;
+  /** Échecs de connexion encore comptés dans la fenêtre de verrouillage. */
+  recentFailures: number;
   /** Droits documentaires explicites (dossiers, documents) : le rôle Utilisateur n'ouvre que ce qu'ils accordent. */
   grants: { folders: number; documents: number };
 }
@@ -22,6 +26,7 @@ export interface UserDetailView extends UserView {
 export const toUserView = (
   user: User,
   lastActiveAt: Date | null,
+  lockedUntil: Date | null = null,
 ): UserView => ({
   id: user.id,
   email: user.email,
@@ -30,6 +35,7 @@ export const toUserView = (
   isActive: user.isActive,
   createdAt: user.createdAt,
   lastActiveAt,
+  lockedUntil,
 });
 
 export type InvitationWithSender = UserInvitation & {

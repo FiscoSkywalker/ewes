@@ -1,4 +1,10 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
@@ -7,6 +13,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { InvitationsService } from '../users/invitations.service.js';
+import { LoginLockoutService } from '../users/login-lockout.service.js';
 import { UsersService } from '../users/users.service.js';
 import { parseDurationToSeconds } from '../../common/utils/duration.js';
 import type {
@@ -48,9 +55,29 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly audit: AuditService,
+    private readonly lockout: LoginLockoutService,
   ) {}
 
   async login(email: string, password: string, ctx: RequestContext) {
+    // Verrouillage d'abord : tant qu'il dure, même le bon mot de passe est refusé
+    // (sinon on pourrait continuer à deviner). Même réponse pour une adresse
+    // inconnue : le verrouillage ne révèle pas l'existence d'un compte.
+    const lock = await this.lockout.status(email);
+    if (lock.locked && lock.until) {
+      const minutes = Math.max(
+        1,
+        Math.ceil((lock.until.getTime() - Date.now()) / 60_000),
+      );
+      throw new HttpException(
+        {
+          code: 'LOGIN_LOCKED',
+          message: `Trop de tentatives de connexion échouées pour cette adresse. Réessayez dans ${minutes} minute${minutes > 1 ? 's' : ''}.`,
+          details: [],
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     const user = await this.usersService.findByEmail(email);
 
     if (!user || !user.isActive || user.deletedAt) {
@@ -78,6 +105,7 @@ export class AuthService {
 
     const tokens = await this.issueTokens(user.id, user.role, ctx);
     await this.traceLoginSuccess(user.id, 'password');
+    await this.forgetFailures(email);
     return {
       ...tokens,
       user: {
@@ -103,6 +131,7 @@ export class AuthService {
     const { user } = await this.invitations.accept(token, password);
     const tokens = await this.issueTokens(user.id, user.role, ctx);
     await this.traceLoginSuccess(user.id, 'invitation');
+    await this.forgetFailures(user.email);
     return { ...tokens, user };
   }
 
@@ -186,7 +215,43 @@ export class AuthService {
     });
   }
 
+  /** Échec : trace, puis compteur de verrouillage (une trace de plus à la bascule). Au mieux, comme la trace. */
   private async traceLoginFailure(
+    attempted: string,
+    userId: string | null,
+    reason: 'unknown_account' | 'inactive_account' | 'wrong_password',
+  ) {
+    await this.traceFailureEntry(attempted, userId, reason);
+    try {
+      if (await this.lockout.recordFailure(attempted)) {
+        const until = new Date(Date.now() + this.lockout.windowMs);
+        await this.audit.record({
+          actorId: null,
+          action: 'AUTH_ACCOUNT_LOCKED',
+          entityType: 'User',
+          entityId: userId ?? undefined,
+          after: {
+            email: attempted.trim().toLowerCase().slice(0, 254),
+            failures: this.lockout.maxFailures,
+            until: until.toISOString(),
+          },
+        });
+      }
+    } catch (error) {
+      this.logger.error(`Compteur de verrouillage non tenu : ${String(error)}`);
+    }
+  }
+
+  /** Connexion réussie : l'adresse repart de zéro. Sans effet sur la réponse si la purge échoue. */
+  private async forgetFailures(email: string) {
+    try {
+      await this.lockout.clear(email);
+    } catch (error) {
+      this.logger.error(`Échecs récents non effacés : ${String(error)}`);
+    }
+  }
+
+  private async traceFailureEntry(
     attempted: string,
     userId: string | null,
     reason: 'unknown_account' | 'inactive_account' | 'wrong_password',
