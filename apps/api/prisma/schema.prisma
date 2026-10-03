@@ -183,11 +183,24 @@ model ServiceOffering {
   @@map("service_offerings")
 }
 
+/// D'où vient la valeur affichée d'un chiffre clé.
+enum KeyFigureSource {
+  /// Nombre saisi à la main.
+  FIXED
+  /// Années écoulées depuis `sinceYear`, recalculées à chaque lecture.
+  YEARS_SINCE
+  /// Nombre de réalisations publiées, compté en direct.
+  MISSIONS
+  /// Nombre de réalisations publiées de type Formation, compté en direct.
+  TRAININGS
+}
+
 /// Chiffre clé de la page À propos : une valeur, son suffixe, son libellé et un sous-texte, en FR/EN.
 model KeyFigure {
-  id        String  @id @default(uuid())
-  value     Int     @default(0)
-  /// Renseignée, la valeur affichée est le nombre d'années écoulées depuis cette année (calculée à chaque lecture) ; `value` est alors ignorée.
+  id        String          @id @default(uuid())
+  value     Int             @default(0)
+  source    KeyFigureSource @default(FIXED)
+  /// Année de départ de la source YEARS_SINCE (la valeur affichée est l'écart avec l'année courante) ; vide pour les autres sources. `value` n'est lue que pour FIXED.
   sinceYear Int?
   suffixFr  String?
   suffixEn  String?
@@ -195,9 +208,9 @@ model KeyFigure {
   labelEn   String?
   subtextFr String?
   subtextEn String?
-  sortOrder Int     @default(0)
+  sortOrder Int             @default(0)
   /// Masqué, le chiffre est conservé mais n'est pas affiché sur le site.
-  isVisible Boolean @default(true)
+  isVisible Boolean         @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

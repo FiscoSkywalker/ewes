@@ -39,6 +39,15 @@ export class AdminKeyFiguresController {
     return (await this.keyFiguresService.list()).map(toAdminView);
   }
 
+  @Get('counts')
+  @ApiOperation({
+    summary:
+      'Nombres actuels de missions et de formations publiées (valeurs des chiffres calculés en direct)',
+  })
+  counts() {
+    return this.keyFiguresService.liveCounts();
+  }
+
   @Post()
   @ApiOperation({ summary: 'Ajouter un chiffre clé (en dernière position)' })
   async create(

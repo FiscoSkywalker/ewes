@@ -12,15 +12,18 @@ import {
   Languages,
   Pencil,
   Plus,
+  RefreshCw,
   Trash2,
 } from 'lucide-react';
 import { backendJson } from '@/lib/api/backend';
 import { invalidatePortalData } from '@/lib/admin/invalidate';
 import {
+  SOURCE_BADGES,
   hasEnglish,
   toPayload,
   type FigureFormValues,
   type KeyFigure,
+  type LiveCounts,
 } from '@/lib/admin/key-figures';
 import { formatFigureValue, MAX_KEY_FIGURES } from '@/lib/key-figures';
 import { plural } from '@/lib/admin/format';
@@ -54,6 +57,11 @@ export default function KeyFiguresPage() {
     queryFn: () => backendJson<KeyFigure[]>(BASE),
   });
   const figures = list.data;
+  // Nombres actuels des valeurs automatiques, pour la fenêtre d'édition.
+  const counts = useQuery({
+    queryKey: ['key-figures', 'counts'],
+    queryFn: () => backendJson<LiveCounts>(`${BASE}/counts`),
+  });
 
   // `undefined` : fermée ; `null` : nouveau chiffre ; sinon le chiffre modifié.
   const [editing, setEditing] = useState<KeyFigure | null | undefined>(
@@ -229,9 +237,14 @@ export default function KeyFiguresPage() {
                         {!figure.isVisible && (
                           <Badge icon={EyeOff}>Masqué</Badge>
                         )}
-                        {figure.sinceYear !== null && (
+                        {figure.source === 'YEARS_SINCE' && (
                           <Badge tone="brand" icon={CalendarClock}>
                             Calculé depuis {figure.sinceYear}
+                          </Badge>
+                        )}
+                        {SOURCE_BADGES[figure.source] && (
+                          <Badge tone="brand" icon={RefreshCw}>
+                            {SOURCE_BADGES[figure.source]}
                           </Badge>
                         )}
                         {!hasEnglish(figure) && (
@@ -303,6 +316,7 @@ export default function KeyFiguresPage() {
         open={editing !== undefined}
         onClose={() => setEditing(undefined)}
         figure={editing ?? null}
+        counts={counts.data}
         onSubmit={save}
       />
     </div>

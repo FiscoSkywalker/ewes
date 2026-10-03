@@ -95,6 +95,9 @@ describe('Key figures (e2e)', () => {
     await prisma.keyFigure.deleteMany({
       where: { labelFr: { startsWith: prefix } },
     });
+    await prisma.realisation.deleteMany({
+      where: { slug: { startsWith: prefix } },
+    });
   });
 
   afterAll(async () => {
@@ -114,6 +117,18 @@ describe('Key figures (e2e)', () => {
     await request(app.getHttpServer())
       .get('/api/v1/admin/key-figures')
       .expect(401);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/key-figures/counts')
+      .expect(401);
+    const counts = await request(app.getHttpServer())
+      .get('/api/v1/admin/key-figures/counts')
+      .set(auth)
+      .expect(200);
+    expect(counts.body).toEqual({
+      missions: expect.any(Number),
+      trainings: expect.any(Number),
+    });
 
     const userToken = await login(userEmail);
     const res = await request(app.getHttpServer())
@@ -181,6 +196,7 @@ describe('Key figures (e2e)', () => {
     const res = await create({
       labelFr: `${prefix} années`,
       value: 99,
+      source: 'YEARS_SINCE',
       sinceYear: year - 5,
     }).expect(201);
     expect(res.body.displayedValue).toBe(5);
@@ -190,25 +206,112 @@ describe('Key figures (e2e)', () => {
     ).body.data.find(
       (f: { labelFr: string }) => f.labelFr === `${prefix} années`,
     );
-    // La valeur saisie (99) est ignorée ; l'année de départ n'est pas exposée.
+    // La valeur saisie (99) est ignorée ; ni l'année de départ ni la source ne sont exposées.
     expect(shown.value).toBe(5);
     expect(shown).not.toHaveProperty('sinceYear');
+    expect(shown).not.toHaveProperty('source');
 
-    // Repasser à une valeur fixe (`null`) rend la valeur saisie.
+    // Repasser à une valeur fixe rend la valeur saisie et efface l'année orpheline.
     const fixed = await request(app.getHttpServer())
       .patch(`/api/v1/admin/key-figures/${res.body.id}`)
       .set(auth)
-      .send({ sinceYear: null })
+      .send({ source: 'FIXED' })
       .expect(200);
     expect(fixed.body.displayedValue).toBe(99);
+    expect(fixed.body.sinceYear).toBeNull();
 
-    // Une année dans le futur donnerait un nombre d'années négatif.
+    // Une année dans le futur donnerait un nombre d'années négatif ; sans année, « années écoulées » n'a pas de sens.
     const future = await create({
       labelFr: `${prefix} futur`,
+      source: 'YEARS_SINCE',
       sinceYear: year + 1,
     });
     expect(future.status).toBe(400);
     expect(future.body.code).toBe('KEY_FIGURE_YEAR_IN_FUTURE');
+    const missing = await create({
+      labelFr: `${prefix} sans année`,
+      source: 'YEARS_SINCE',
+    });
+    expect(missing.status).toBe(400);
+    expect(missing.body.code).toBe('KEY_FIGURE_YEAR_REQUIRED');
+    // Une année envoyée avec une autre source est ignorée, jamais conservée.
+    const ignored = await create({
+      labelFr: `${prefix} orpheline`,
+      sinceYear: 2000,
+    }).expect(201);
+    expect(ignored.body.source).toBe('FIXED');
+    expect(ignored.body.sinceYear).toBeNull();
+  });
+
+  it('counts missions and trainings live from the published realisations only', async () => {
+    const missions = (
+      await create({
+        labelFr: `${prefix} missions`,
+        source: 'MISSIONS',
+      }).expect(201)
+    ).body;
+    const trainings = (
+      await create({
+        labelFr: `${prefix} formations`,
+        source: 'TRAININGS',
+      }).expect(201)
+    ).body;
+    const read = async () => {
+      const list = (
+        await request(app.getHttpServer())
+          .get('/api/v1/admin/key-figures')
+          .set(auth)
+          .expect(200)
+      ).body as { id: string; displayedValue: number }[];
+      const value = (id: string) =>
+        list.find((figure) => figure.id === id)!.displayedValue;
+      return { missions: value(missions.id), trainings: value(trainings.id) };
+    };
+    const before = await read();
+    // Les valeurs sont celles de la base, pas un nombre saisi.
+    expect(before.missions).toBe(
+      await prisma.realisation.count({
+        where: {
+          status: 'PUBLISHED',
+          deletedAt: null,
+          publishedAt: { lte: new Date() },
+        },
+      }),
+    );
+
+    const add = (suffix: string, extra: Record<string, unknown>) =>
+      prisma.realisation.create({
+        data: {
+          slug: `${prefix}-${suffix}`,
+          titleFr: `${prefix} ${suffix}`,
+          year: 2024,
+          status: 'PUBLISHED',
+          publishedAt: new Date(Date.now() - 60_000),
+          ...extra,
+        },
+      });
+    await add('formation', { projectType: 'FORMATION' });
+    await add('audit', { projectType: 'AUDIT' });
+    await add('audit2', { projectType: 'AUDIT' });
+    // Ni un brouillon, ni une réalisation supprimée, ni une parution programmée ne comptent.
+    await add('brouillon', { projectType: 'FORMATION', status: 'DRAFT' });
+    await add('supprimee', { projectType: 'FORMATION', deletedAt: new Date() });
+    await add('future', {
+      projectType: 'FORMATION',
+      publishedAt: new Date(Date.now() + 3_600_000),
+    });
+
+    const after = await read();
+    expect(after.missions).toBe(before.missions + 3);
+    expect(after.trainings).toBe(before.trainings + 1);
+
+    // La page publique reçoit la valeur calculée.
+    const shown = (
+      await request(app.getHttpServer()).get('/api/v1/key-figures').expect(200)
+    ).body.data.find(
+      (f: { labelFr: string }) => f.labelFr === `${prefix} formations`,
+    );
+    expect(shown.value).toBe(after.trainings);
   });
 
   it('validates the body', async () => {
@@ -220,6 +323,7 @@ describe('Key figures (e2e)', () => {
       { suffixFr: 'x'.repeat(21) },
       { labelFr: 'x'.repeat(121) },
       { isVisible: 'oui' },
+      { source: 'AUTRE' },
     ]) {
       const res = await create(body);
       expect(res.status, JSON.stringify(body)).toBe(400);

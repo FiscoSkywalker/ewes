@@ -1,9 +1,40 @@
 import { z } from 'zod';
 import type { LocalizedFigure } from '@/lib/key-figures';
 
+/** D'où vient la valeur d'un chiffre (`KeyFigureSource` de l'API). */
+export type KeyFigureSource =
+  'FIXED' | 'YEARS_SINCE' | 'MISSIONS' | 'TRAININGS';
+
+export const SOURCES: KeyFigureSource[] = [
+  'FIXED',
+  'YEARS_SINCE',
+  'MISSIONS',
+  'TRAININGS',
+];
+
+export const SOURCE_LABELS: Record<KeyFigureSource, string> = {
+  FIXED: 'Nombre saisi à la main',
+  YEARS_SINCE: 'Années écoulées depuis une année',
+  MISSIONS: 'Nombre de missions référencées (automatique)',
+  TRAININGS: 'Nombre de formations réalisées (automatique)',
+};
+
+/** Étiquette courte d'une valeur calculée, pour la liste. */
+export const SOURCE_BADGES: Partial<Record<KeyFigureSource, string>> = {
+  MISSIONS: 'Automatique : missions',
+  TRAININGS: 'Automatique : formations',
+};
+
+/** Nombres actuels des sources calculées en direct (`GET /admin/key-figures/counts`). */
+export interface LiveCounts {
+  missions: number;
+  trainings: number;
+}
+
 /** Chiffre clé tel que renvoyé par `GET /admin/key-figures`. */
 export interface KeyFigure {
   id: string;
+  source: KeyFigureSource;
   value: number;
   sinceYear: number | null;
   suffixFr: string | null;
@@ -20,14 +51,6 @@ export interface KeyFigure {
   updatedAt: string;
 }
 
-/** Valeur fixe, ou nombre d'années écoulées depuis une année de départ. */
-export type ValueMode = 'fixed' | 'years';
-
-export const VALUE_MODE_LABELS: Record<ValueMode, string> = {
-  fixed: 'Valeur fixe',
-  years: 'Années écoulées depuis…',
-};
-
 const MAX_VALUE = 1_000_000;
 const currentYear = () => new Date().getFullYear();
 
@@ -37,7 +60,7 @@ const currentYear = () => new Date().getFullYear();
  */
 export const figureSchema = z
   .object({
-    mode: z.enum(['fixed', 'years']),
+    source: z.enum(['FIXED', 'YEARS_SINCE', 'MISSIONS', 'TRAININGS']),
     value: z.string().trim(),
     sinceYear: z.string().trim(),
     suffixFr: z.string().trim().max(20, '20 caractères au plus.'),
@@ -53,7 +76,7 @@ export const figureSchema = z
     isVisible: z.boolean(),
   })
   .superRefine((v, ctx) => {
-    if (v.mode === 'fixed') {
+    if (v.source === 'FIXED') {
       const n = Number(v.value);
       if (!/^\d+$/.test(v.value) || n > MAX_VALUE) {
         ctx.addIssue({
@@ -62,7 +85,7 @@ export const figureSchema = z
           message: `Un nombre entier de 0 à ${MAX_VALUE.toLocaleString('fr')}.`,
         });
       }
-    } else {
+    } else if (v.source === 'YEARS_SINCE') {
       const year = Number(v.sinceYear);
       if (!/^\d{4}$/.test(v.sinceYear) || year < 1900 || year > currentYear()) {
         ctx.addIssue({
@@ -77,7 +100,7 @@ export const figureSchema = z
 export type FigureFormValues = z.infer<typeof figureSchema>;
 
 export const EMPTY_FIGURE: FigureFormValues = {
-  mode: 'fixed',
+  source: 'FIXED',
   value: '',
   sinceYear: '',
   suffixFr: '',
@@ -91,7 +114,7 @@ export const EMPTY_FIGURE: FigureFormValues = {
 
 export function toFormValues(f: KeyFigure): FigureFormValues {
   return {
-    mode: f.sinceYear !== null ? 'years' : 'fixed',
+    source: f.source,
     value: String(f.value),
     sinceYear: f.sinceYear !== null ? String(f.sinceYear) : '',
     suffixFr: f.suffixFr ?? '',
@@ -108,13 +131,14 @@ const orNull = (value: string) => (value === '' ? null : value);
 
 /**
  * Corps JSON. Un champ facultatif vidé part en `null` (l'API l'efface, le site
- * retombe sur le français) ; passer en « années écoulées » envoie l'année de
- * départ, repasser en valeur fixe l'efface (`null`).
+ * retombe sur le français). Seule la source « nombre saisi » lit `value`, et
+ * seule « années écoulées » lit l'année de départ (effacée pour les autres).
  */
 export function toPayload(v: FigureFormValues) {
   return {
-    value: v.mode === 'fixed' ? Number(v.value) : Number(v.value) || 0,
-    sinceYear: v.mode === 'years' ? Number(v.sinceYear) : null,
+    source: v.source,
+    value: v.source === 'FIXED' ? Number(v.value) : 0,
+    sinceYear: v.source === 'YEARS_SINCE' ? Number(v.sinceYear) : null,
     suffixFr: orNull(v.suffixFr),
     suffixEn: orNull(v.suffixEn),
     labelFr: v.labelFr,

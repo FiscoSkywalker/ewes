@@ -32,7 +32,8 @@ export async function getKeyFigures(
     const res = await fetch(`${API_URL}/key-figures`, {
       next: {
         revalidate: KEY_FIGURES_REVALIDATE_SECONDS,
-        tags: [KEY_FIGURES_TAG],
+        // Les valeurs « missions » et « formations » suivent les réalisations publiées.
+        tags: [KEY_FIGURES_TAG, 'realisations'],
       },
     });
     if (!res.ok) return null;
