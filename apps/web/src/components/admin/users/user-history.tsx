@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { History, SearchX } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, History, SearchX } from 'lucide-react';
 import { backendJson, type Paginated } from '@/lib/api/backend';
 import { cx } from '@/lib/admin/cx';
 import { relativeTime } from '@/lib/admin/format';
@@ -50,7 +51,14 @@ const dayOffset = (days: number) =>
  * filtre par action et par période, pagination — tout se fait côté API, la
  * page affichée est la seule chargée. Les filtres remettent la page à 1.
  */
-export function UserHistory({ userId }: { userId: string }) {
+export function UserHistory({
+  userId,
+  name,
+}: {
+  userId: string;
+  /** Nom du compte, repris par le journal complet pour nommer le filtre. */
+  name: string;
+}) {
   const [search, setSearch] = useState('');
   const [action, setAction] = useState('');
   const [period, setPeriod] = useState<Period>('all');
@@ -100,6 +108,15 @@ export function UserHistory({ userId }: { userId: string }) {
       title="Historique"
       description="Les actions enregistrées sur ce compte, de la plus récente à la plus ancienne."
       padding="none"
+      actions={
+        <Link
+          href={`/admin/audit?entityType=User&entityId=${userId}&label=${encodeURIComponent(name)}`}
+          className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline"
+        >
+          Journal complet
+          <ArrowRight size={13} aria-hidden="true" />
+        </Link>
+      }
     >
       <div className="grid grid-cols-2 gap-2.5 border-b border-line p-4 sm:px-5">
         <SearchInput

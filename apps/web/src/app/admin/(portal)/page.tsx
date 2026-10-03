@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { backendJson, type Paginated } from '@/lib/api/backend';
+import { actionLabel } from '@/lib/admin/audit';
 import { formatLongDate, plural, relativeTime } from '@/lib/admin/format';
 import {
   firstNameOf,
@@ -457,62 +458,6 @@ interface AuditRow {
   /** `null` : action du système, ou compte supprimé depuis (acteur anonymisé). */
   actor: { id: string; fullName: string } | null;
   createdAt: string;
-}
-
-const ACTION_LABELS: Record<string, string> = {
-  ACCESS_GRANTED: 'Droit d’accès attribué',
-  ACCESS_REVOKED: 'Droit d’accès révoqué',
-  CONTACT_STATUS_CHANGED: 'Statut d’un message modifié',
-  DOCUMENT_UPLOADED: 'Document privé téléversé',
-  DOCUMENT_UPDATED: 'Document privé modifié',
-  DOCUMENT_DELETED: 'Document privé supprimé',
-  DOCUMENT_DOWNLOADED: 'Document privé téléchargé',
-  DOCUMENT_ARCHIVED: 'Document privé archivé',
-  DOCUMENT_RESTORED: 'Document privé restauré',
-  DOCUMENT_ACCESS_DENIED: 'Accès refusé à un document',
-  FOLDER_ACCESS_DENIED: 'Accès refusé à un dossier',
-  FOLDER_CREATED: 'Dossier créé',
-  FOLDER_UPDATED: 'Dossier modifié',
-  FOLDER_DELETED: 'Dossier supprimé',
-  PUBLIC_DOCUMENT_PUBLISHED: 'Document public publié',
-  PUBLIC_DOCUMENT_UNPUBLISHED: 'Document public dépublié',
-  PUBLIC_DOCUMENT_ARCHIVED: 'Document public archivé',
-  PUBLIC_DOCUMENT_DELETED: 'Document public supprimé',
-  REALISATION_PUBLISHED: 'Réalisation publiée',
-  REALISATION_UNPUBLISHED: 'Réalisation dépubliée',
-  REALISATION_ARCHIVED: 'Réalisation archivée',
-  REALISATION_DELETED: 'Réalisation supprimée',
-  REALISATION_PARTNER_RENAMED: 'Partenaire renommé',
-  REALISATION_PARTNER_REMOVED: 'Partenaire retiré des réalisations',
-  ARTICLE_PUBLISHED: 'Article publié',
-  ARTICLE_UNPUBLISHED: 'Article dépublié',
-  ARTICLE_ARCHIVED: 'Article archivé',
-  ARTICLE_DELETED: 'Article supprimé',
-  MEDIA_DELETED: 'Image supprimée de la médiathèque',
-  PAGE_PUBLISHED: 'Page du site publiée',
-  PAGE_UNPUBLISHED: 'Page du site dépubliée',
-  SERVICE_PUBLISHED: 'Pôle publié',
-  SERVICE_UNPUBLISHED: 'Pôle dépublié',
-  SERVICE_OFFERING_REMOVED: 'Prestation retirée',
-  EXPERT_PUBLISHED: 'Expert publié',
-  EXPERT_UNPUBLISHED: 'Expert dépublié',
-  EXPERT_DELETED: 'Expert supprimé',
-  KEY_FIGURE_CREATED: 'Chiffre clé ajouté',
-  KEY_FIGURE_UPDATED: 'Chiffre clé modifié',
-  KEY_FIGURE_DELETED: 'Chiffre clé retiré',
-  USER_INVITED: 'Utilisateur invité',
-  USER_INVITATION_RESENT: 'Invitation renvoyée',
-  USER_INVITATION_REVOKED: 'Invitation retirée',
-  USER_INVITATION_ACCEPTED: 'Compte activé',
-  USER_ROLE_CHANGED: 'Rôle d’un compte modifié',
-  USER_DEACTIVATED: 'Compte désactivé',
-  USER_REACTIVATED: 'Compte réactivé',
-};
-
-function actionLabel(action: string): string {
-  if (ACTION_LABELS[action]) return ACTION_LABELS[action];
-  const text = action.toLowerCase().replace(/_/g, ' ');
-  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function RecentActivity() {

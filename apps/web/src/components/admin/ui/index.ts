@@ -6,6 +6,7 @@ export { Badge, StatusChip, type BadgeTone, type StatusKind } from './badge';
 export { BilingualField, type ContentLocale } from './bilingual-field';
 export { Button, ButtonLink, IconButton, type ButtonVariant } from './button';
 export { Card } from './card';
+export { CardList } from './card-list';
 export {
   DataTable,
   type Column,

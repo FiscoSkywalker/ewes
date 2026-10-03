@@ -235,7 +235,7 @@ function Detail({ user }: { user: UserDetail }) {
               )}
           </Card>
 
-          <UserHistory userId={user.id} />
+          <UserHistory userId={user.id} name={user.fullName} />
         </div>
 
         <aside className="space-y-6" aria-label="Compte">
