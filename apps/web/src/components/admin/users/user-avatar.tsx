@@ -6,7 +6,7 @@ import { initialsOf } from '../session';
 const SIZES = {
   sm: 'size-9 text-xs',
   md: 'size-10 text-[13px]',
-  lg: 'size-16 text-xl',
+  lg: 'size-14 text-lg sm:size-16 sm:text-xl',
 } as const;
 
 /**
