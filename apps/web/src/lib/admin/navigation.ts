@@ -10,6 +10,7 @@ import {
   Layers,
   LayoutDashboard,
   LifeBuoy,
+  Hash,
   Library,
   MailCheck,
   Newspaper,
@@ -109,6 +110,20 @@ export const NAV_GROUPS: NavGroup[] = [
           'Modifier le titre et l’introduction FR/EN de chaque page',
           'Description pour les moteurs de recherche, avec aperçu',
           'Publier ou dépublier (le site retrouve le texte d’origine)',
+        ],
+      },
+      {
+        id: 'key-figures',
+        label: 'Chiffres clés',
+        href: '/admin/chiffres-cles',
+        icon: Hash,
+        tone: 'brand',
+        description:
+          'Les chiffres de la bande affichée sur la page À propos, en français et en anglais.',
+        keywords: ['statistiques', 'indicateurs', 'compteurs', 'à propos', 'nombres'],
+        features: [
+          'Valeur fixe ou années écoulées depuis une année',
+          'Libellé et précision FR/EN, ordre, affichage',
         ],
       },
       {

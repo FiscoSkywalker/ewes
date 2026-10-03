@@ -3,6 +3,9 @@ import Image from 'next/image';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ArrowRight, Building2, MapPin, Phone } from 'lucide-react';
 import type { ImpactMetric } from '@/data/metrics';
+import { getKeyFigures } from '@/lib/api/public-key-figures';
+import type { LocalizedFigure } from '@/lib/key-figures';
+import { KeyFiguresStrip } from '@/components/public/key-figures-strip';
 import type { Expert } from '@/data/experts';
 import { EWES_CONTACT } from '@/data/contact';
 import { ExpertsGallery } from '@/components/public/experts-gallery';
@@ -47,7 +50,14 @@ export default async function AboutPage({
   const tExpertises = await getTranslations('Expertises');
   const tResearch = await getTranslations('Research');
   const tMetrics = await getTranslations('Metrics');
-  const metrics = tMetrics.raw('items') as ImpactMetric[];
+  // Chiffres clés pilotés par le portail ; repli sur les messages si l'API est
+  // injoignable (une liste vide, elle, est respectée : tout est masqué).
+  const figures: LocalizedFigure[] =
+    (await getKeyFigures(locale)) ??
+    (tMetrics.raw('items') as ImpactMetric[]).map((metric) => ({
+      ...metric,
+      suffix: metric.suffix.trim(),
+    }));
   const values = t.raw('values') as { title: string; text: string }[];
   const clients = t.raw('clients') as string[];
   const expertises = tExpertises.raw('items') as {
@@ -133,28 +143,11 @@ export default async function AboutPage({
             </div>
           </div>
 
-          <dl
-            className="mt-16 grid overflow-hidden rounded-sheet border border-border bg-surface-elevated sm:grid-cols-2 lg:grid-cols-4"
-            data-stagger
-          >
-            {metrics.map((metric, index) => (
-              <div
-                key={metric.label}
-                className={`flex flex-col p-7 sm:p-8 ${index > 0 ? 'border-t border-border sm:border-t-0' : ''} ${index % 2 === 1 ? 'sm:border-l' : ''} ${index >= 2 ? 'sm:border-t lg:border-t-0' : ''} ${index > 0 ? 'lg:border-l' : ''}`}
-              >
-                <dt className="order-2 mt-3 font-heading text-base font-semibold leading-tight">
-                  {metric.label}
-                </dt>
-                <dd className="order-1 flex items-baseline gap-1 font-heading text-5xl font-bold tracking-tight text-sand">
-                  {metric.value}
-                  <span className="text-xl text-primary">{metric.suffix}</span>
-                </dd>
-                <dd className="order-3 mt-2 text-xs leading-5 text-sand/55">
-                  {metric.subtext}
-                </dd>
-              </div>
-            ))}
-          </dl>
+          <KeyFiguresStrip
+            figures={figures}
+            locale={locale}
+            className="mt-16"
+          />
         </div>
       </section>
 

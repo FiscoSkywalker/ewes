@@ -15,6 +15,7 @@ export function invalidatePortalData(queryClient: QueryClient) {
       'articles',
       'pages',
       'services',
+      'key-figures',
       'media',
       'signals',
       'dashboard',
