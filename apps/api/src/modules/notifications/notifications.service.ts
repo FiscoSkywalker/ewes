@@ -1,9 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Notification, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import {
@@ -23,16 +18,26 @@ export interface NotificationRequest {
   replyTo?: string;
   /** Un même événement (ex. `contact:<id>:team`) ne produit jamais deux notifications. */
   idempotencyKey: string;
+  /**
+   * Le texte porte un secret (lien à usage unique) : il est effacé de la base
+   * dès que l'e-mail est parti ; il n'en reste que le sujet.
+   */
+  sensitive?: boolean;
 }
 
 interface StoredMail {
   subject: string;
   text: string;
   replyTo?: string;
+  sensitive?: boolean;
 }
 
+const REDACTED_TEXT = '[Contenu masqué : il contenait un lien à usage unique.]';
+
 const sleep = (ms: number) =>
-  ms > 0 ? new Promise<void>((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
+  ms > 0
+    ? new Promise<void>((resolve) => setTimeout(resolve, ms))
+    : Promise.resolve();
 
 /**
  * E-mails transactionnels (blueprint/13_Notification_System.md) : chaque envoi
@@ -60,6 +65,7 @@ export class NotificationsService {
       subject: request.subject,
       text: request.text,
       replyTo: request.replyTo,
+      ...(request.sensitive && { sensitive: true }),
     };
     let notification: Notification;
     try {
@@ -98,7 +104,9 @@ export class NotificationsService {
 
   /** Tente l'envoi (jusqu'à `delaysMs.length` fois) et consigne le résultat. */
   async deliver(id: string): Promise<Notification> {
-    const notification = await this.prisma.notification.findUnique({ where: { id } });
+    const notification = await this.prisma.notification.findUnique({
+      where: { id },
+    });
     if (!notification) throw this.notFound();
     if (notification.sentAt) return notification;
 
@@ -118,7 +126,18 @@ export class NotificationsService {
         });
         return this.prisma.notification.update({
           where: { id },
-          data: { sentAt: new Date(), failedAt: null, lastError: null, attempts },
+          data: {
+            sentAt: new Date(),
+            failedAt: null,
+            lastError: null,
+            attempts,
+            ...(stored.sensitive && {
+              payload: {
+                ...stored,
+                text: REDACTED_TEXT,
+              } as unknown as Prisma.InputJsonObject,
+            }),
+          },
         });
       } catch (error) {
         lastError = error instanceof Error ? error.message : String(error);
@@ -132,13 +151,19 @@ export class NotificationsService {
     );
     return this.prisma.notification.update({
       where: { id },
-      data: { failedAt: new Date(), lastError: lastError.slice(0, 500), attempts },
+      data: {
+        failedAt: new Date(),
+        lastError: lastError.slice(0, 500),
+        attempts,
+      },
     });
   }
 
   /** Rejoue un envoi non abouti (Administrateur). */
   async retryNotification(id: string): Promise<Notification> {
-    const notification = await this.prisma.notification.findUnique({ where: { id } });
+    const notification = await this.prisma.notification.findUnique({
+      where: { id },
+    });
     if (!notification) throw this.notFound();
     return this.deliver(id);
   }
@@ -152,7 +177,10 @@ export class NotificationsService {
     const where: Prisma.NotificationWhereInput = {
       ...(query.type && { type: query.type }),
       ...(query.status === 'sent' && { sentAt: { not: null } }),
-      ...(query.status === 'failed' && { sentAt: null, failedAt: { not: null } }),
+      ...(query.status === 'failed' && {
+        sentAt: null,
+        failedAt: { not: null },
+      }),
       ...(query.status === 'pending' && { sentAt: null, failedAt: null }),
     };
     const [rows, total] = await Promise.all([

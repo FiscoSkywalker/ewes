@@ -45,6 +45,7 @@ const PAGE_SIZE = 20;
 const TYPE_LABELS: Record<string, string> = {
   CONTACT_RECEIVED: 'Alerte équipe — nouveau message',
   CONTACT_ACKNOWLEDGEMENT: 'Accusé de réception — visiteur',
+  USER_INVITATION: 'Invitation au portail',
 };
 
 function typeLabel(type: string): string {

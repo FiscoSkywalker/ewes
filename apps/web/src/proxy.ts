@@ -6,6 +6,8 @@ import { REFRESH_TOKEN_COOKIE } from './lib/auth/cookie-names';
 
 const intlMiddleware = createMiddleware(routing);
 const ADMIN_LOGIN_PATH = '/admin/login';
+/** Pages publiques du portail : connexion et activation d'un compte invité (le lien de l'e-mail tient lieu de preuve). */
+const ADMIN_PUBLIC_PATHS = new Set([ADMIN_LOGIN_PATH, '/admin/invitation']);
 
 /**
  * Point d'entrée unique du proxy Next.js (une seule instance autorisée —
@@ -30,7 +32,7 @@ export default function proxy(request: NextRequest) {
 }
 
 function adminSessionGuard(request: NextRequest) {
-  if (request.nextUrl.pathname === ADMIN_LOGIN_PATH) {
+  if (ADMIN_PUBLIC_PATHS.has(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 

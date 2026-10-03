@@ -31,3 +31,5 @@ Un événement dupliqué (ex. double soumission du formulaire de contact) ne pro
 # 6. Références
 
 `04_User_Flows.md`, `07_Database_Design.md`, `10_Security.md`.
+
+> Note (2026-10-03) — **Invitation à un compte** : type `USER_INVITATION`, texte brut en français, adressé à la personne invitée (nom, rôle et portée du rôle, lien d'activation valable 7 jours, expiration datée). Le lien porte le jeton dans le **fragment** (`/admin/invitation#<jeton>`) : le navigateur ne l'envoie jamais au serveur ni dans un Referer. Comme le texte contient un secret, la notification est marquée `sensitive` : **dès l'envoi réussi, le texte est effacé de la base** (il ne reste que le sujet) ; tant qu'elle n'est pas partie, il est conservé pour permettre le rejeu. Un renvoi crée une nouvelle notification (nouveau jeton, nouvelle clé d'idempotence). L'échec d'envoi n'annule pas l'invitation : il est visible dans le suivi des e-mails, et l'administrateur dispose du lien pour le transmettre lui-même.
