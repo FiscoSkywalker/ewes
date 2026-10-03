@@ -82,6 +82,7 @@ model User {
   folderAccessGrants   FolderAccessGrant[]
   documentAccessGrants DocumentAccessGrant[]
   auditLogs            AuditLog[]            @relation("AuditActor")
+  invitationsSent      UserInvitation[]      @relation("InvitationSender")
   notifications        Notification[]
   mediaUploads         Media[]
   privateUploads       PrivateDocument[]
@@ -114,6 +115,31 @@ model PasswordResetToken {
   createdAt DateTime  @default(now())
 
   @@map("password_reset_tokens")
+}
+
+/// Invitation à créer un compte. Le compte n'existe qu'à l'acceptation (aucun
+/// mot de passe factice en base) ; le jeton envoyé par e-mail n'est conservé
+/// que haché. « En attente » = ni acceptée, ni révoquée ; « expirée » = en attente
+/// dont `expiresAt` est passé.
+model UserInvitation {
+  id          String    @id @default(uuid())
+  /// Adresse normalisée (minuscules).
+  email       String
+  fullName    String
+  role        Role
+  tokenHash   String    @unique
+  invitedById String?
+  invitedBy   User?     @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: SetNull)
+  expiresAt   DateTime
+  /// Dernier envoi de l'e-mail (limite le renvoi en rafale).
+  lastSentAt  DateTime  @default(now())
+  acceptedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([email])
+  @@index([acceptedAt, revokedAt, expiresAt])
+  @@map("user_invitations")
 }
 
 // --- Contenu institutionnel ---

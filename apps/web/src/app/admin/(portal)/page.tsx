@@ -500,6 +500,13 @@ const ACTION_LABELS: Record<string, string> = {
   KEY_FIGURE_CREATED: 'Chiffre clé ajouté',
   KEY_FIGURE_UPDATED: 'Chiffre clé modifié',
   KEY_FIGURE_DELETED: 'Chiffre clé retiré',
+  USER_INVITED: 'Utilisateur invité',
+  USER_INVITATION_RESENT: 'Invitation renvoyée',
+  USER_INVITATION_REVOKED: 'Invitation retirée',
+  USER_INVITATION_ACCEPTED: 'Compte activé',
+  USER_ROLE_CHANGED: 'Rôle d’un compte modifié',
+  USER_DEACTIVATED: 'Compte désactivé',
+  USER_REACTIVATED: 'Compte réactivé',
 };
 
 function actionLabel(action: string): string {

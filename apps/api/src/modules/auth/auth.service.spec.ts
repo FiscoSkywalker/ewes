@@ -77,6 +77,9 @@ describe('AuthService', () => {
       prisma as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       usersService as any,
+      // Les invitations ne sont pas exercées ici : voir test/users.e2e-spec.ts.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {} as any,
       new JwtService({}),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       makeConfigService() as any,
@@ -120,7 +123,11 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(user);
       vi.mocked(argon2.verify).mockResolvedValue(true);
 
-      const result = await service.login('admin@ewes.example', 'correct-password', CTX);
+      const result = await service.login(
+        'admin@ewes.example',
+        'correct-password',
+        CTX,
+      );
 
       expect(result.accessToken).toEqual(expect.any(String));
       expect(result.refreshToken).toEqual(expect.any(String));
@@ -215,9 +222,9 @@ describe('AuthService', () => {
     });
 
     it('rejects a malformed/garbage refresh token', async () => {
-      await expect(
-        service.refresh('not-a-jwt', CTX),
-      ).rejects.toMatchObject({ response: { code: 'TOKEN_INVALID' } });
+      await expect(service.refresh('not-a-jwt', CTX)).rejects.toMatchObject({
+        response: { code: 'TOKEN_INVALID' },
+      });
     });
   });
 

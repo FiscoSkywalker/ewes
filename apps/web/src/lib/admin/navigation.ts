@@ -453,7 +453,7 @@ export const NAV_GROUPS: NavGroup[] = [
         href: '/admin/utilisateurs',
         icon: Users,
         tone: 'brand',
-        description: 'Comptes, rôles et activation.',
+        description: 'Comptes, invitations, rôles et activation.',
         children: [
           {
             id: 'users-list',
@@ -463,7 +463,7 @@ export const NAV_GROUPS: NavGroup[] = [
             keywords: ['comptes', 'équipe', 'rôles', 'permissions'],
             features: [
               'Changer le rôle d’un compte (avec confirmation, audité)',
-              'Désactiver ou supprimer un compte',
+              'Désactiver ou réactiver un compte',
               'Voir les droits documentaires d’un utilisateur',
             ],
           },
@@ -472,7 +472,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: 'Inviter un utilisateur',
             href: '/admin/utilisateurs/nouveau',
             description:
-              'Créer un compte ; l’utilisateur définit son mot de passe par e-mail.',
+              'Inviter une personne par e-mail ; elle choisit elle-même son mot de passe.',
             keywords: ['ajouter', 'créer', 'compte', 'invitation'],
             quickAction: true,
             features: [

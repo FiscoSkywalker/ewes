@@ -5,6 +5,7 @@ import { Role } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { createHash, randomUUID } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { InvitationsService } from '../users/invitations.service.js';
 import { UsersService } from '../users/users.service.js';
 import { parseDurationToSeconds } from '../../common/utils/duration.js';
 import type {
@@ -40,6 +41,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
+    private readonly invitations: InvitationsService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
   ) {}
@@ -50,10 +52,12 @@ export class AuthService {
     if (!user || !user.isActive || user.deletedAt) {
       // Coût constant approximatif : on vérifie quand même un hash factice
       // pour ne pas laisser fuiter l'existence du compte par timing.
-      await argon2.verify(
-        '$argon2id$v=19$m=65536,t=3,p=4$c29tZXNhbHQ$UwaAxfLzJ0MPYVR1cKvqjA',
-        password,
-      ).catch(() => false);
+      await argon2
+        .verify(
+          '$argon2id$v=19$m=65536,t=3,p=4$c29tZXNhbHQ$UwaAxfLzJ0MPYVR1cKvqjA',
+          password,
+        )
+        .catch(() => false);
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
@@ -72,6 +76,22 @@ export class AuthService {
         role: user.role,
       },
     };
+  }
+
+  /** Aperçu d'une invitation pour la page d'activation (jeton lu dans le lien de l'e-mail). */
+  inspectInvitation(token: string) {
+    return this.invitations.inspect(token);
+  }
+
+  /**
+   * Active le compte invité avec le mot de passe choisi, puis ouvre sa
+   * session : celui qui détient le lien secret vient de prouver sa
+   * possession de la boîte e-mail, comme pour une connexion.
+   */
+  async acceptInvitation(token: string, password: string, ctx: RequestContext) {
+    const { user } = await this.invitations.accept(token, password);
+    const tokens = await this.issueTokens(user.id, user.role, ctx);
+    return { ...tokens, user };
   }
 
   async refresh(
