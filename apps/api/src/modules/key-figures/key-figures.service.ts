@@ -4,13 +4,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { KeyFigure } from '@prisma/client';
+import { ContentStatus, KeyFigureSource, type KeyFigure } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import type { CreateKeyFigureDto } from './dto/create-key-figure.dto.js';
 import type { UpdateKeyFigureDto } from './dto/update-key-figure.dto.js';
+import {
+  displayedValue,
+  type KeyFigureWithValue,
+  type LiveCounts,
+} from './key-figure-views.js';
 
 /** Tag de cache du site public. */
 export const KEY_FIGURES_TAG = 'key-figures';
@@ -35,15 +40,56 @@ export class KeyFiguresService {
   ) {}
 
   /** Lecture publique : seuls les chiffres visibles, dans l'ordre choisi. */
-  listVisible() {
-    return this.prisma.keyFigure.findMany({
-      where: { isVisible: true },
-      orderBy: [...ORDER],
-    });
+  async listVisible() {
+    return this.withValues(
+      await this.prisma.keyFigure.findMany({
+        where: { isVisible: true },
+        orderBy: [...ORDER],
+      }),
+    );
   }
 
-  list() {
-    return this.prisma.keyFigure.findMany({ orderBy: [...ORDER] });
+  async list() {
+    return this.withValues(
+      await this.prisma.keyFigure.findMany({ orderBy: [...ORDER] }),
+    );
+  }
+
+  /**
+   * Ajoute à chaque chiffre sa valeur affichée. Les comptes de réalisations
+   * ne sont demandés à la base que si un chiffre en dépend, et avec les
+   * mêmes règles que la lecture publique des réalisations (publiées, non
+   * supprimées, date de publication atteinte).
+   */
+  async withValues(figures: KeyFigure[]): Promise<KeyFigureWithValue[]> {
+    const needsCounts = figures.some(
+      (figure) =>
+        figure.source === KeyFigureSource.MISSIONS ||
+        figure.source === KeyFigureSource.TRAININGS,
+    );
+    const counts: LiveCounts = needsCounts
+      ? await this.liveCounts()
+      : { missions: 0, trainings: 0 };
+    return figures.map((figure) => ({
+      ...figure,
+      displayedValue: displayedValue(figure, counts),
+    }));
+  }
+
+  /** Comptes actuels des réalisations publiées (missions, dont formations), tels que les chiffres calculés les affichent. */
+  async liveCounts(): Promise<LiveCounts> {
+    const published = {
+      status: ContentStatus.PUBLISHED,
+      deletedAt: null,
+      publishedAt: { lte: new Date() },
+    };
+    const [missions, trainings] = await Promise.all([
+      this.prisma.realisation.count({ where: published }),
+      this.prisma.realisation.count({
+        where: { ...published, projectType: 'FORMATION' },
+      }),
+    ]);
+    return { missions, trainings };
   }
 
   async findById(id: string) {
@@ -53,7 +99,8 @@ export class KeyFiguresService {
   }
 
   async create(actor: AuthenticatedUser, dto: CreateKeyFigureDto) {
-    this.assertYear(dto.sinceYear);
+    const source = dto.source ?? KeyFigureSource.FIXED;
+    const sinceYear = this.resolveYear(source, dto.sinceYear);
     const [count, last] = await Promise.all([
       this.prisma.keyFigure.count(),
       this.prisma.keyFigure.aggregate({ _max: { sortOrder: true } }),
@@ -67,8 +114,9 @@ export class KeyFiguresService {
     }
     const created = await this.prisma.keyFigure.create({
       data: {
+        source,
         value: dto.value,
-        sinceYear: dto.sinceYear,
+        sinceYear,
         suffixFr: dto.suffixFr,
         suffixEn: dto.suffixEn,
         labelFr: dto.labelFr,
@@ -81,17 +129,23 @@ export class KeyFiguresService {
     });
     await this.record(actor, 'KEY_FIGURE_CREATED', created, null);
     await this.revalidator.revalidate(KEY_FIGURES_TAG);
-    return created;
+    return (await this.withValues([created]))[0];
   }
 
   async update(actor: AuthenticatedUser, id: string, dto: UpdateKeyFigureDto) {
     const current = await this.findById(id);
-    this.assertYear(dto.sinceYear);
+    // La source et l'année d'arrivée se jugent ensemble : changer l'une sans l'autre doit rester cohérent.
+    const source = dto.source ?? current.source;
+    const sinceYear = this.resolveYear(
+      source,
+      dto.sinceYear !== undefined ? dto.sinceYear : current.sinceYear,
+    );
     const updated = await this.prisma.keyFigure.update({
       where: { id },
       data: {
+        source,
         value: dto.value,
-        sinceYear: dto.sinceYear,
+        sinceYear,
         suffixFr: dto.suffixFr,
         suffixEn: dto.suffixEn,
         labelFr: dto.labelFr,
@@ -103,7 +157,7 @@ export class KeyFiguresService {
     });
     await this.record(actor, 'KEY_FIGURE_UPDATED', updated, current);
     await this.revalidator.revalidate(KEY_FIGURES_TAG);
-    return updated;
+    return (await this.withValues([updated]))[0];
   }
 
   async remove(actor: AuthenticatedUser, id: string) {
@@ -142,15 +196,31 @@ export class KeyFiguresService {
     return this.list();
   }
 
-  /** Une année de départ dans le futur donnerait un nombre d'années négatif. */
-  private assertYear(sinceYear: number | null | undefined) {
-    if (sinceYear != null && sinceYear > new Date().getFullYear()) {
+  /**
+   * Année de départ à enregistrer : obligatoire (et pas dans le futur, qui
+   * donnerait un nombre d'années négatif) pour « années écoulées », sinon
+   * effacée — une année orpheline n'a pas de sens pour les autres sources.
+   */
+  private resolveYear(
+    source: KeyFigureSource,
+    sinceYear: number | null | undefined,
+  ) {
+    if (source !== KeyFigureSource.YEARS_SINCE) return null;
+    if (sinceYear == null) {
+      throw new BadRequestException({
+        code: 'KEY_FIGURE_YEAR_REQUIRED',
+        message: 'Renseignez l’année de départ.',
+        details: ['sinceYear'],
+      });
+    }
+    if (sinceYear > new Date().getFullYear()) {
       throw new BadRequestException({
         code: 'KEY_FIGURE_YEAR_IN_FUTURE',
         message: 'L’année de départ ne peut pas être dans le futur.',
         details: ['sinceYear'],
       });
     }
+    return sinceYear;
   }
 
   /**
@@ -165,6 +235,7 @@ export class KeyFiguresService {
   ) {
     const summary = (figure: KeyFigure) => ({
       labelFr: figure.labelFr,
+      source: figure.source,
       value: figure.value,
       sinceYear: figure.sinceYear,
       isVisible: figure.isVisible,

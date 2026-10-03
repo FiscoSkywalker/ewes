@@ -6,12 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { applyApiErrors } from '@/lib/admin/form-errors';
 import {
   EMPTY_FIGURE,
-  VALUE_MODE_LABELS,
+  SOURCES,
+  SOURCE_LABELS,
   figureSchema,
   toFormValues,
   type FigureFormValues,
   type KeyFigure,
-  type ValueMode,
+  type LiveCounts,
 } from '@/lib/admin/key-figures';
 import {
   BilingualField,
@@ -20,6 +21,7 @@ import {
   Field,
   Input,
   SegmentedControl,
+  Select,
   Switch,
 } from '../ui';
 import { FormAlert } from '../content/form-parts';
@@ -27,24 +29,31 @@ import { FigureTile } from './figures-preview';
 
 type Locale = 'fr' | 'en';
 
-/** Valeur affichée d'après la saisie en cours (années écoulées recalculées comme l'API). */
-function shownValue(values: FigureFormValues) {
-  if (values.mode === 'years') {
-    const year = Number(values.sinceYear);
-    return /^\d{4}$/.test(values.sinceYear)
-      ? Math.max(0, new Date().getFullYear() - year)
-      : 0;
+/** Valeur affichée d'après la saisie en cours (mêmes règles que l'API). */
+function shownValue(values: FigureFormValues, counts?: LiveCounts) {
+  switch (values.source) {
+    case 'YEARS_SINCE':
+      return /^\d{4}$/.test(values.sinceYear)
+        ? Math.max(0, new Date().getFullYear() - Number(values.sinceYear))
+        : 0;
+    case 'MISSIONS':
+      return counts?.missions ?? 0;
+    case 'TRAININGS':
+      return counts?.trainings ?? 0;
+    default:
+      return /^\d+$/.test(values.value) ? Number(values.value) : 0;
   }
-  return /^\d+$/.test(values.value) ? Number(values.value) : 0;
 }
 
 function FigureForm({
   formId,
   figure,
+  counts,
   onSubmit,
 }: {
   formId: string;
   figure: KeyFigure | null;
+  counts?: LiveCounts;
   onSubmit: (values: FigureFormValues) => Promise<unknown>;
 }) {
   const defaults = figure ? toFormValues(figure) : EMPTY_FIGURE;
@@ -52,7 +61,6 @@ function FigureForm({
     register,
     handleSubmit,
     control,
-    setValue,
     setError,
     formState: { errors },
   } = useForm<FigureFormValues>({
@@ -73,7 +81,10 @@ function FigureForm({
         applyApiErrors(error, {
           setError,
           fields: Object.keys(defaults),
-          codes: { KEY_FIGURE_YEAR_IN_FUTURE: 'sinceYear' },
+          codes: {
+            KEY_FIGURE_YEAR_IN_FUTURE: 'sinceYear',
+            KEY_FIGURE_YEAR_REQUIRED: 'sinceYear',
+          },
         }),
       );
     }
@@ -81,7 +92,7 @@ function FigureForm({
 
   const english = previewLocale === 'en';
   const previewFigure = {
-    value: shownValue(values),
+    value: shownValue(values, counts),
     suffix: ((english && values.suffixEn) || values.suffixFr).trim(),
     label:
       (english && values.labelEn) || values.labelFr || 'Libellé du chiffre',
@@ -102,20 +113,20 @@ function FigureForm({
           <legend className="mb-1.5 text-[13px] font-medium text-ink">
             Valeur
           </legend>
-          <SegmentedControl<ValueMode>
-            label="Type de valeur"
-            value={values.mode}
-            onChange={(mode) =>
-              setValue('mode', mode, {
-                shouldDirty: true,
-                shouldValidate: true,
-              })
-            }
-            options={(Object.keys(VALUE_MODE_LABELS) as ValueMode[]).map(
-              (mode) => ({ value: mode, label: VALUE_MODE_LABELS[mode] }),
-            )}
-          />
-          {values.mode === 'fixed' ? (
+          <Field
+            label="Origine de la valeur"
+            required
+            hint="Les valeurs automatiques se mettent à jour toutes seules : inutile de les ressaisir."
+          >
+            <Select {...register('source')}>
+              {SOURCES.map((source) => (
+                <option key={source} value={source}>
+                  {SOURCE_LABELS[source]}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          {values.source === 'FIXED' && (
             <Field
               label="Nombre"
               required
@@ -130,12 +141,13 @@ function FigureForm({
                 {...register('value')}
               />
             </Field>
-          ) : (
+          )}
+          {values.source === 'YEARS_SINCE' && (
             <Field
               label="Année de départ"
               required
               error={errors.sinceYear?.message}
-              hint={`Le site affiche le nombre d’années écoulées depuis cette année (${shownValue(values)} aujourd’hui) et le met à jour tout seul chaque 1er janvier.`}
+              hint={`Le site affiche le nombre d’années écoulées depuis cette année (${shownValue(values, counts)} aujourd’hui) et le met à jour tout seul chaque 1er janvier.`}
             >
               <Input
                 inputMode="numeric"
@@ -145,6 +157,26 @@ function FigureForm({
                 {...register('sinceYear')}
               />
             </Field>
+          )}
+          {(values.source === 'MISSIONS' || values.source === 'TRAININGS') && (
+            <p className="rounded-lg bg-sunken px-3.5 py-2.5 text-[13px] leading-relaxed text-ink-muted">
+              {values.source === 'MISSIONS'
+                ? 'Compte les réalisations publiées'
+                : 'Compte les réalisations publiées de type Formation'}
+              {counts ? (
+                <>
+                  {' '}
+                  :{' '}
+                  <strong className="font-semibold text-ink">
+                    {shownValue(values, counts)} aujourd’hui
+                  </strong>
+                  .
+                </>
+              ) : (
+                '.'
+              )}{' '}
+              Publier ou dépublier une réalisation met ce chiffre à jour.
+            </p>
           )}
         </fieldset>
 
@@ -261,12 +293,15 @@ export function FigureDialog({
   open,
   onClose,
   figure,
+  counts,
   onSubmit,
 }: {
   open: boolean;
   onClose: () => void;
   /** Chiffre à modifier ; `null` : nouveau chiffre. */
   figure: KeyFigure | null;
+  /** Nombres actuels des valeurs automatiques (missions, formations). */
+  counts?: LiveCounts;
   /** Enregistre ; rejette avec l'erreur de l'API. La fenêtre se ferme au succès. */
   onSubmit: (values: FigureFormValues) => Promise<unknown>;
 }) {
@@ -306,7 +341,12 @@ export function FigureDialog({
         </>
       }
     >
-      <FigureForm formId={formId} figure={figure} onSubmit={save} />
+      <FigureForm
+        formId={formId}
+        figure={figure}
+        counts={counts}
+        onSubmit={save}
+      />
     </Dialog>
   );
 }

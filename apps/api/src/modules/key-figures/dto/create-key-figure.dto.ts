@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { KeyFigureSource } from '@prisma/client';
 import {
   IsBoolean,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -14,9 +16,19 @@ import {
 export const MAX_KEY_FIGURE_VALUE = 1_000_000;
 
 export class CreateKeyFigureDto {
+  @ApiPropertyOptional({
+    enum: KeyFigureSource,
+    default: KeyFigureSource.FIXED,
+    description:
+      'D’où vient la valeur : `FIXED` (nombre saisi), `YEARS_SINCE` (années écoulées depuis `sinceYear`), `MISSIONS` (réalisations publiées) ou `TRAININGS` (réalisations publiées de type Formation), ces deux dernières comptées en direct.',
+  })
+  @IsOptional()
+  @IsEnum(KeyFigureSource)
+  source?: KeyFigureSource;
+
   @ApiProperty({
     description:
-      'Valeur affichée. Ignorée quand `sinceYear` est renseignée (valeur calculée).',
+      'Valeur saisie, lue seulement pour la source `FIXED` (0 pour les autres).',
     example: 10,
   })
   @IsInt()
@@ -26,7 +38,7 @@ export class CreateKeyFigureDto {
 
   @ApiPropertyOptional({
     description:
-      'Année de départ : la valeur affichée est alors le nombre d’années écoulées depuis cette année, recalculé à chaque lecture. `null` : valeur fixe.',
+      'Année de départ de la source `YEARS_SINCE` (obligatoire pour elle) ; ignorée pour les autres.',
     example: 2008,
   })
   @IsOptional()
