@@ -28,7 +28,6 @@ import { useSession } from '@/components/admin/session';
 import { ActivationLink } from '@/components/admin/users/activation-link';
 import {
   AccountCard,
-  CardList,
   InvitationCard,
 } from '@/components/admin/users/mobile-cards';
 import { UserAvatar } from '@/components/admin/users/user-avatar';
@@ -36,6 +35,7 @@ import {
   Badge,
   Button,
   ButtonLink,
+  CardList,
   DataTable,
   Dialog,
   EmptyState,

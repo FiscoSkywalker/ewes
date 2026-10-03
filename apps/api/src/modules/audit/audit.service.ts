@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { escapeLike } from '../../common/utils/like.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { auditContextStorage } from './audit-context.js';
+import { entityKey, resolveEntities } from './audit-entities.js';
 
 export interface AuditEntry {
   /** Acteur ; `null` pour une action sans utilisateur (script, système). */
@@ -48,6 +49,7 @@ export class AuditService {
     page: number;
     limit: number;
     actorId?: string;
+    /** Un code d'action, ou plusieurs séparés par des virgules. */
     action?: string;
     entityType?: string;
     entityId?: string;
@@ -60,7 +62,11 @@ export class AuditService {
     const search = query.q?.trim() ? escapeLike(query.q.trim()) : undefined;
     const where: Prisma.AuditLogWhereInput = {
       ...(query.actorId && { actorId: query.actorId }),
-      ...(query.action && { action: query.action }),
+      ...(query.action && {
+        action: query.action.includes(',')
+          ? { in: query.action.split(',') }
+          : query.action,
+      }),
       ...(query.entityType && { entityType: query.entityType }),
       ...(query.entityId && { entityId: query.entityId }),
       ...((query.from || query.to) && {
@@ -107,6 +113,89 @@ export class AuditService {
       }),
       this.prisma.auditLog.count({ where }),
     ]);
-    return { data, meta: { page: query.page, limit: query.limit, total } };
+    const entities = await resolveEntities(this.prisma, data);
+    // Bénéficiaire d'un droit (ACCESS_*) : l'utilisateur cité dans les valeurs avant/après.
+    const subjectIds = [
+      ...new Set(
+        data
+          .map(
+            (row) => subjectIdOf(row.beforeData) ?? subjectIdOf(row.afterData),
+          )
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+    const subjects = new Map(
+      (
+        await this.prisma.user.findMany({
+          where: { id: { in: subjectIds } },
+          select: { id: true, fullName: true },
+        })
+      ).map((user) => [user.id, user]),
+    );
+    return {
+      data: data.map((row) => {
+        const subjectId =
+          subjectIdOf(row.beforeData) ?? subjectIdOf(row.afterData);
+        return {
+          ...row,
+          entity: row.entityId
+            ? (entities.get(entityKey(row.entityType, row.entityId)) ?? null)
+            : null,
+          subject: subjectId ? (subjects.get(subjectId) ?? null) : null,
+        };
+      }),
+      meta: { page: query.page, limit: query.limit, total },
+    };
   }
+
+  /**
+   * De quoi remplir les filtres de l'écran : les actions et types d'éléments
+   * réellement présents (avec leur effectif) et les personnes qui ont agi.
+   */
+  async facets() {
+    const [actions, entityTypes, actorGroups] = await Promise.all([
+      this.prisma.auditLog.groupBy({
+        by: ['action'],
+        _count: { _all: true },
+        orderBy: { action: 'asc' },
+      }),
+      this.prisma.auditLog.groupBy({
+        by: ['entityType'],
+        _count: { _all: true },
+        orderBy: { entityType: 'asc' },
+      }),
+      this.prisma.auditLog.groupBy({
+        by: ['actorId'],
+        where: { actorId: { not: null } },
+        _count: { _all: true },
+      }),
+    ]);
+    const actors = await this.prisma.user.findMany({
+      where: {
+        id: { in: actorGroups.map((group) => group.actorId as string) },
+      },
+      select: { id: true, fullName: true },
+      orderBy: { fullName: 'asc' },
+    });
+    return {
+      actions: actions.map((row) => ({
+        action: row.action,
+        count: row._count._all,
+      })),
+      entityTypes: entityTypes.map((row) => ({
+        entityType: row.entityType,
+        count: row._count._all,
+      })),
+      actors,
+    };
+  }
+}
+
+/** `userId` consigné dans les valeurs avant/après d'un droit d'accès. */
+function subjectIdOf(data: Prisma.JsonValue | null): string | null {
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    const value = data.userId;
+    if (typeof value === 'string') return value;
+  }
+  return null;
 }

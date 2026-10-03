@@ -33,10 +33,13 @@ export class ListAuditLogsDto {
   @IsUUID()
   actorId?: string;
 
-  @ApiPropertyOptional({ example: 'DOCUMENT_DOWNLOADED' })
+  @ApiPropertyOptional({
+    example: 'DOCUMENT_DOWNLOADED',
+    description: 'Un code d’action, ou jusqu’à 40 séparés par des virgules.',
+  })
   @IsOptional()
   @IsString()
-  @Matches(/^[A-Z_]{1,60}$/)
+  @Matches(/^[A-Z_]{1,60}(,[A-Z_]{1,60}){0,39}$/)
   action?: string;
 
   @ApiPropertyOptional({ example: 'PrivateDocument' })

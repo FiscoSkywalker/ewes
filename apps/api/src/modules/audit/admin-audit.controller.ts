@@ -16,6 +16,15 @@ import { ListAuditLogsDto } from './dto/list-audit-logs.dto.js';
 export class AdminAuditController {
   constructor(private readonly auditService: AuditService) {}
 
+  @Get('facets')
+  @ApiOperation({
+    summary:
+      'Actions, types d’éléments et auteurs présents dans le journal (filtres)',
+  })
+  facets() {
+    return this.auditService.facets();
+  }
+
   @Get()
   @ApiOperation({ summary: 'Journal d’audit (Administrateur uniquement)' })
   list(@Query() query: ListAuditLogsDto) {
