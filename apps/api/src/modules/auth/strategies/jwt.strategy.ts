@@ -33,6 +33,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: payload.sub,
       role: payload.role,
+      sessionId: typeof payload.sid === 'string' ? payload.sid : undefined,
       // email/fullName ne sont pas portés par le jeton d'accès (minimisation) ;
       // `GET /me` reste la source de vérité pour l'affichage du profil.
       email: '',

@@ -67,15 +67,19 @@ enum ContactMessageStatus {
 // --- Identité (blueprint/07_Database_Design.md §2 "Identité") ---
 
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
-  passwordHash String
-  fullName     String
-  role         Role
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
+  id                String    @id @default(uuid())
+  email             String    @unique
+  passwordHash      String
+  fullName          String
+  role              Role
+  isActive          Boolean   @default(true)
+  /// Nom du fichier de la photo de profil (sous `PRIVATE_STORAGE_PATH/avatars`) ; `null` : monogramme.
+  avatarName        String?
+  /// Dernier changement de mot de passe par la personne ; `null` : jamais (mot de passe d'activation).
+  passwordChangedAt DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
 
   sessions             Session[]
   passwordResetTokens  PasswordResetToken[]

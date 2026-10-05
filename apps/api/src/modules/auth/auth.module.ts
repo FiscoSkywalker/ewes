@@ -5,7 +5,6 @@ import { PassportModule } from '@nestjs/passport';
 import { parseDurationToSeconds } from '../../common/utils/duration.js';
 import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './auth.controller.js';
-import { MeController } from './me.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 
@@ -29,7 +28,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
       }),
     }),
   ],
-  controllers: [AuthController, MeController],
+  controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })

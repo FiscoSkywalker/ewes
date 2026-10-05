@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type QueryClient } from '@tanstack/react-query';
 import { adminFetch } from '@/lib/api/admin-fetch';
 import { isRole, type Role } from '@/lib/admin/roles';
 
@@ -10,6 +10,8 @@ export interface Session {
   email: string;
   fullName: string;
   role: Role;
+  /** Identifiant de la photo de profil ; `null` : monogramme. */
+  avatarVersion: string | null;
 }
 
 export const SessionContext = createContext<Session | null>(null);
@@ -40,6 +42,25 @@ export function useMeQuery() {
     },
     staleTime: 5 * 60_000,
   });
+}
+
+/**
+ * Après une modification du profil (nom, photo) : la coquille du portail et
+ * tous les endroits qui affichent la personne reçoivent la réponse du serveur.
+ */
+export function applyProfile(
+  queryClient: QueryClient,
+  profile: Pick<Session, 'fullName' | 'avatarVersion'>,
+) {
+  queryClient.setQueryData<Session>(
+    ['me'],
+    (current) =>
+      current && {
+        ...current,
+        fullName: profile.fullName,
+        avatarVersion: profile.avatarVersion,
+      },
+  );
 }
 
 export function initialsOf(fullName: string): string {

@@ -4,6 +4,12 @@ import { Role } from '@prisma/client';
 export interface AccessTokenPayload {
   sub: string;
   role: Role;
+  /**
+   * Session (ligne `Session`) à laquelle ce jeton appartient : sert à dire
+   * « cet appareil » dans le profil et à ne pas se déconnecter soi-même en
+   * fermant les autres sessions. Absent des jetons émis avant son ajout.
+   */
+  sid?: string;
 }
 
 /**

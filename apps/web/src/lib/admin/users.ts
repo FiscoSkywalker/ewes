@@ -178,6 +178,12 @@ export const USER_ACTION_LABELS: Record<string, string> = {
   USER_REACTIVATED: 'Compte réactivé',
   USER_UNLOCKED: 'Compte déverrouillé',
   AUTH_ACCOUNT_LOCKED: 'Compte verrouillé (échecs répétés)',
+  USER_PROFILE_UPDATED: 'Nom modifié',
+  USER_PASSWORD_CHANGED: 'Mot de passe modifié',
+  AUTH_PASSWORD_CHANGE_FAILED: 'Échec de changement de mot de passe',
+  USER_AVATAR_CHANGED: 'Photo de profil modifiée',
+  USER_AVATAR_REMOVED: 'Photo de profil retirée',
+  USER_SESSIONS_CLOSED: 'Appareils déconnectés',
 };
 
 /** Ligne de journal d'audit (`GET /admin/audit-logs`). */
@@ -203,6 +209,19 @@ export function auditDetail(entry: AuditEntry): string | null {
     const before = roleLabel(entry.beforeData?.role);
     const after = roleLabel(entry.afterData?.role);
     if (before && after) return `${before} → ${after}`;
+  }
+  if (entry.action === 'USER_PROFILE_UPDATED') {
+    const { fullName: before } = entry.beforeData ?? {};
+    const { fullName: after } = entry.afterData ?? {};
+    if (typeof before === 'string' && typeof after === 'string') {
+      return `${before} → ${after}`;
+    }
+  }
+  if (entry.action === 'USER_SESSIONS_CLOSED') {
+    const count = entry.afterData?.count;
+    if (typeof count === 'number') {
+      return `${count} appareil${count > 1 ? 's' : ''}`;
+    }
   }
   if (
     entry.action === 'USER_INVITED' ||

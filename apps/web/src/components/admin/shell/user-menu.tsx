@@ -14,7 +14,8 @@ import {
 import { ROLE_LABELS } from '@/lib/admin/roles';
 import { StatusChip } from '../ui';
 import type { ThemePreference } from '@/lib/admin/theme';
-import { initialsOf, type Session } from '../session';
+import { PersonAvatar, useAvatarSrc } from '../avatar';
+import type { Session } from '../session';
 import { useTheme } from '../theme-provider';
 import { usePopover } from '../use-popover';
 
@@ -35,15 +36,13 @@ export function Avatar({
   session: Session;
   size?: 'md' | 'lg';
 }) {
+  const src = useAvatarSrc(session.avatarVersion);
   return (
-    <span
-      aria-hidden="true"
-      className={`grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand via-[#2f7f86] to-env font-semibold text-white ring-2 ring-panel ${
-        size === 'lg' ? 'size-10 text-sm' : 'size-8 text-xs'
-      }`}
-    >
-      {initialsOf(session.fullName)}
-    </span>
+    <PersonAvatar
+      name={session.fullName}
+      src={src}
+      size={size === 'lg' ? 'md' : 'sm'}
+    />
   );
 }
 

@@ -6,4 +6,6 @@ export interface AuthenticatedUser {
   email: string;
   fullName: string;
   role: Role;
+  /** Session du jeton d'accès (absente des jetons émis avant son ajout). */
+  sessionId?: string;
 }

@@ -83,6 +83,12 @@ export const ACTION_LABELS: Record<string, string> = {
   AUTH_LOGIN_FAILED: 'Échec de connexion',
   AUTH_ACCOUNT_LOCKED: 'Compte verrouillé (échecs répétés)',
   USER_UNLOCKED: 'Compte déverrouillé',
+  USER_PROFILE_UPDATED: 'Nom du compte modifié',
+  USER_PASSWORD_CHANGED: 'Mot de passe modifié',
+  AUTH_PASSWORD_CHANGE_FAILED: 'Échec de changement de mot de passe',
+  USER_AVATAR_CHANGED: 'Photo de profil modifiée',
+  USER_AVATAR_REMOVED: 'Photo de profil retirée',
+  USER_SESSIONS_CLOSED: 'Appareils déconnectés',
   AUTH_TOKEN_REUSE_DETECTED: 'Jeton de session rejoué (session fermée)',
 };
 
@@ -157,7 +163,8 @@ export function actionTone(action: string): ActionTone {
   if (
     action === 'AUTH_LOGIN_FAILED' ||
     action === 'AUTH_TOKEN_REUSE_DETECTED' ||
-    action === 'AUTH_ACCOUNT_LOCKED'
+    action === 'AUTH_ACCOUNT_LOCKED' ||
+    action === 'AUTH_PASSWORD_CHANGE_FAILED'
   ) {
     return 'bad';
   }

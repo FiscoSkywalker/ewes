@@ -297,7 +297,11 @@ export class AuthService {
       this.config.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),
     );
 
-    const accessPayload: AccessTokenPayload = { sub: userId, role };
+    const accessPayload: AccessTokenPayload = {
+      sub: userId,
+      role,
+      sid: sessionId,
+    };
     const accessToken = this.jwtService.sign(accessPayload, {
       secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
       expiresIn: accessExpiresInSeconds,

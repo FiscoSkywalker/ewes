@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { ProfileModule } from './modules/profile/profile.module.js';
 import { PagesModule } from './modules/pages/pages.module.js';
 import { ServicesModule } from './modules/services/services.module.js';
 import { KeyFiguresModule } from './modules/key-figures/key-figures.module.js';
@@ -37,6 +38,7 @@ import { HealthModule } from './modules/health/health.module.js';
     PrismaModule,
     AuthModule,
     UsersModule,
+    ProfileModule,
     PagesModule,
     ServicesModule,
     KeyFiguresModule,
