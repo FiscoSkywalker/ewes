@@ -101,7 +101,7 @@ export function Menu({
           aria-label={label}
           onKeyDown={onKeyDown}
           className={cx(
-            'animate-pop-in absolute top-full z-20 mt-1.5 min-w-52 rounded-xl border border-line bg-raised p-1.5 shadow-pop',
+            'animate-pop-in absolute top-full z-30 mt-1.5 min-w-52 rounded-xl border border-line bg-raised p-1.5 shadow-pop',
             align === 'end' ? 'right-0' : 'left-0 origin-top-left',
           )}
         >

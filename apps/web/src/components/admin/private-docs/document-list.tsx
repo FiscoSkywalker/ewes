@@ -265,7 +265,8 @@ export function DocumentList({
                   <Download size={18} aria-hidden="true" />
                 )}
               </button>
-              <span className="relative z-10 hidden sm:block">
+              {/* Pas de z-index ici : il enfermerait le panneau du menu sous les boutons de la ligne suivante. */}
+              <span className="relative hidden sm:block">
                 <Menu
                   label={`Actions sur ${document.name}`}
                   items={menuFor(document)}

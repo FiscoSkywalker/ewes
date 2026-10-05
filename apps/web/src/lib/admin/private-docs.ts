@@ -276,13 +276,20 @@ export function deepDocumentCount(index: FolderIndex, id: string): number {
 
 /** « Administratif · Fiscalité · 2024 » : le classement d'un dossier, en une ligne. */
 export function classificationOf(folder: PrivateFolder): string[] {
+  const seen = new Set<string>();
   return [
     folder.category,
     folder.subCategory,
     folder.department,
     folder.projectRef,
     folder.year?.toString(),
-  ].filter((part): part is string => Boolean(part));
+  ].filter((part): part is string => {
+    // Une même valeur à deux niveaux (catégorie et département « Finance ») ne s'affiche qu'une fois.
+    const key = part?.trim().toLowerCase();
+    if (!part || !key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /** Adresse de l'explorateur ouvert sur un dossier. */

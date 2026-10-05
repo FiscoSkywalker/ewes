@@ -684,7 +684,7 @@ function FolderView({
         </ol>
       </nav>
 
-      <header className="animate-rise-in rounded-2xl border border-line bg-panel p-4 sm:p-5">
+      <header className="animate-rise-in relative z-20 rounded-2xl border border-line bg-panel p-4 sm:p-5">
         <div className="flex items-start gap-4">
           <span className="hidden sm:block">
             <FolderIcon confidentiality={folder.confidentiality} size="lg" />
