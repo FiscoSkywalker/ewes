@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
@@ -49,6 +50,12 @@ const documentNotFound = () =>
     message: 'Document introuvable.',
     details: [],
   });
+
+/** Ce qu'une vue de document lit en plus de la ligne : son dossier et l'auteur du dépôt. */
+export const DOCUMENT_INCLUDE = {
+  folder: { select: { id: true, name: true } },
+  uploadedBy: { select: { fullName: true } },
+} satisfies Prisma.PrivateDocumentInclude;
 
 /**
  * Applique la politique d'accès (`access-policy.ts`) aux requêtes. Un
@@ -142,7 +149,7 @@ export class PrivateAccessService {
   async readableDocument(scope: AccessScope, id: string) {
     const document = await this.prisma.privateDocument.findFirst({
       where: { id, deletedAt: null },
-      include: { folder: { select: { id: true, name: true } } },
+      include: DOCUMENT_INCLUDE,
     });
     if (!document) {
       if (scope.isAdmin) throw documentNotFound();

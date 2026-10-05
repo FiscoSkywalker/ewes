@@ -461,6 +461,13 @@ describe('Documents privés (e2e)', () => {
     const viaDescription = (await get(tUser1, '/documents-prives/search?q=strat%C3%A9gique').expect(200)).body.data;
     expect(viaDescription.map((d: { id: string }) => d.id)).toContain(visible.body.id);
 
+    // Fragment de mot (pluriel, début de mot) : nom du dossier et description compris.
+    const viaFolderName = (await get(tUser1, `/documents-prives/search?q=${encodeURIComponent(`${tag} Racin`)}`).expect(200)).body.data;
+    expect(viaFolderName.map((d: { id: string }) => d.id)).toContain(visible.body.id);
+    const viaFragment = (await get(tUser1, '/documents-prives/search?q=strat%C3%A9g').expect(200)).body.data;
+    expect(viaFragment.map((d: { id: string }) => d.id)).toContain(visible.body.id);
+    expect((await get(tUser2, '/documents-prives/search?q=strat%C3%A9g').expect(200)).body.data).toEqual([]);
+
     // L'Administrateur voit tout le périmètre.
     const adminFound = (await get(tAdmin, `/documents-prives/search?q=${marker}`).expect(200)).body.data;
     expect(adminFound.map((d: { id: string }) => d.id).sort((a: string, b: string) => a.localeCompare(b))).toEqual([visible.body.id, hidden.body.id].sort((a: string, b: string) => a.localeCompare(b)));
@@ -472,6 +479,86 @@ describe('Documents privés (e2e)', () => {
     expect(await prisma.privateDocument.count()).toBeGreaterThan(0);
     await get(tUser1, '/documents-prives/search').expect(400);
     await revokeFolder(grant);
+  });
+
+  it('counts, sorts and filters without ever widening the scope', async () => {
+    const marker = `quartz${stamp}`;
+    const folder = (
+      await send('post', tAdmin, '/documents-prives/folders', {
+        name: `${tag} Écrans`,
+        category: `Technique-${stamp}`,
+        year: 2024,
+        parentId: ids.other,
+      }).expect(201)
+    ).body.id as string;
+    const names = ['b', 'a', 'c'].map((letter) => `${tag} ${marker} ${letter}`);
+    const docs: string[] = [];
+    for (const name of names) {
+      docs.push((await upload(tAdmin, folder, pdf(name), { name }).expect(201)).body.id);
+    }
+    const sheet = (
+      await upload(tAdmin, folder, ooxml('xl/'), { name: `${tag} ${marker} tableur` }, 'budget.xlsx').expect(201)
+    ).body.id as string;
+    const secret = (
+      await upload(tAdmin, folder, pdf('secret'), { name: `${tag} ${marker} secret`, confidentiality: 'CONFIDENTIEL' }).expect(201)
+    ).body.id as string;
+    await send('post', tAdmin, `/documents-prives/files/${docs[2]}/archive`).expect(200);
+
+    try {
+      // Sans droit sur le dossier : un droit isolé ne révèle ni le dossier ni son compte.
+      const isolatedGrant = await grantDocument(secret, ids.user2);
+      const isolated = (await get(tUser2, '/documents-prives/files?scope=isolated').expect(200)).body;
+      expect(isolated.data.map((d: { id: string }) => d.id)).toEqual([secret]);
+      expect(isolated.data[0].folderId).toBeNull();
+      expect(isolated.data[0].uploadedByName).toBe('E2E admin');
+      expect((await get(tUser2, '/documents-prives/folders').expect(200)).body.data).toEqual([]);
+      // Les filtres de classement ne fuient pas le dossier d'un document isolé.
+      expect(
+        (await get(tUser2, `/documents-prives/search?q=${marker}&year=2024`).expect(200)).body.data,
+      ).toEqual([]);
+      expect(
+        (await get(tUser2, `/documents-prives/search?q=${marker}`).expect(200)).body.data.map(
+          (d: { id: string }) => d.id,
+        ),
+      ).toEqual([secret]);
+      await revokeDocument(isolatedGrant);
+
+      // Droit de dossier : le compte ignore l'archivé et le document plus confidentiel.
+      const grant = await grantFolder(folder, ids.user1);
+      const listed = (await get(tUser1, '/documents-prives/folders').expect(200)).body.data;
+      expect(listed.map((f: { id: string; documentCount: number }) => [f.id, f.documentCount])).toEqual([[folder, 3]]);
+      const adminView = (await get(tAdmin, '/documents-prives/folders').expect(200)).body.data.find(
+        (f: { id: string }) => f.id === folder,
+      );
+      expect(adminView.documentCount).toBe(4);
+      // Un dossier ouvert n'a rien d'« isolé ».
+      expect((await get(tUser1, '/documents-prives/files?scope=isolated').expect(200)).body.data).toEqual([]);
+
+      const sorted = (
+        await get(tUser1, `/documents-prives/files?folderId=${folder}&status=ACTIVE&sort=name&order=asc`).expect(200)
+      ).body.data;
+      expect(sorted.map((d: { id: string }) => d.id)).toEqual([docs[1], docs[0], sheet]);
+      await get(tUser1, '/documents-prives/files?sort=storedName').expect(400);
+      await get(tUser1, '/documents-prives/files?scope=all').expect(400);
+
+      const idsOf = async (params: string) =>
+        (await get(tUser1, `/documents-prives/search?q=${marker}&${params}`).expect(200)).body.data
+          .map((d: { id: string }) => d.id)
+          .sort((a: string, b: string) => a.localeCompare(b));
+      const sortIds = (list: string[]) => [...list].sort((a, b) => a.localeCompare(b));
+      expect(await idsOf('status=ARCHIVED')).toEqual([docs[2]]);
+      expect(await idsOf('type=excel')).toEqual([sheet]);
+      expect(await idsOf('type=pdf&status=ACTIVE')).toEqual(sortIds([docs[0], docs[1]]));
+      expect(await idsOf(`category=${encodeURIComponent(`Technique-${stamp}`)}&year=2024`)).toEqual(
+        sortIds([docs[0], docs[1], docs[2], sheet]),
+      );
+      expect(await idsOf('year=1999')).toEqual([]);
+      await get(tUser1, `/documents-prives/search?q=${marker}&type=exe`).expect(400);
+      await revokeFolder(grant);
+    } finally {
+      await prisma.privateDocument.deleteMany({ where: { folderId: folder } });
+      await prisma.folder.deleteMany({ where: { id: folder } });
+    }
   });
 
   it('restricts grants to the administrator, to real non-admin accounts, without duplicates', async () => {

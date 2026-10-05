@@ -21,6 +21,18 @@ const USER_VIEW = {
   select: { id: true, email: true, fullName: true, role: true },
 } satisfies Prisma.UserDefaultArgs;
 
+/** Document d'un droit isolé, avec de quoi le situer (dossier, confidentialité, état). */
+const DOCUMENT_VIEW = {
+  select: {
+    id: true,
+    name: true,
+    fileType: true,
+    status: true,
+    confidentiality: true,
+    folder: { select: { id: true, name: true, confidentiality: true } },
+  },
+} satisfies Prisma.PrivateDocumentDefaultArgs;
+
 /**
  * Gouvernance des droits documentaires (blueprint/09 §5) : seul
  * l'Administrateur (contrôleur) crée ou révoque un droit, toujours nominatif
@@ -122,11 +134,10 @@ export class AccessGrantsService {
       where: {
         ...(query.documentId && { privateDocumentId: query.documentId }),
         ...(query.userId && { userId: query.userId }),
+        // Un document supprimé n'est plus atteignable : son droit n'a plus d'objet.
+        privateDocument: { deletedAt: null },
       },
-      include: {
-        user: USER_VIEW,
-        privateDocument: { select: { id: true, name: true } },
-      },
+      include: { user: USER_VIEW, privateDocument: DOCUMENT_VIEW },
       orderBy: { createdAt: 'desc' },
     });
     return { data };
@@ -153,10 +164,7 @@ export class AccessGrantsService {
     try {
       grant = await this.prisma.documentAccessGrant.create({
         data: { privateDocumentId: documentId, userId, grantedById: actor.id },
-        include: {
-          user: USER_VIEW,
-          privateDocument: { select: { id: true, name: true } },
-        },
+        include: { user: USER_VIEW, privateDocument: DOCUMENT_VIEW },
       });
     } catch (error) {
       throw this.translateDuplicate(error);

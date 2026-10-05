@@ -3,6 +3,7 @@ import { ConfidentialityLevel, DocumentLifecycleStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -12,6 +13,14 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+
+/** Tris proposés par la liste (colonne Prisma). */
+export const DOCUMENT_SORT_FIELDS = ['createdAt', 'updatedAt', 'name', 'fileSizeBytes'] as const;
+export type DocumentSortField = (typeof DOCUMENT_SORT_FIELDS)[number];
+
+/** Familles de fichiers proposées en filtre de recherche. */
+export const DOCUMENT_TYPE_FAMILIES = ['pdf', 'image', 'word', 'excel', 'powerpoint'] as const;
+export type DocumentTypeFamily = (typeof DOCUMENT_TYPE_FAMILIES)[number];
 
 /** Champs du formulaire multipart de téléversement (le fichier est le champ `file`). */
 export class UploadPrivateDocumentDto {
@@ -98,6 +107,25 @@ export class ListPrivateDocumentsDto {
   @IsOptional()
   @IsEnum(DocumentLifecycleStatus)
   status?: DocumentLifecycleStatus;
+
+  @ApiPropertyOptional({
+    enum: ['isolated'],
+    description:
+      '`isolated` : uniquement les documents partagés un par un, dont le dossier ne vous est pas ouvert.',
+  })
+  @IsOptional()
+  @IsIn(['isolated'])
+  scope?: 'isolated';
+
+  @ApiPropertyOptional({ enum: DOCUMENT_SORT_FIELDS, default: 'createdAt' })
+  @IsOptional()
+  @IsIn(DOCUMENT_SORT_FIELDS)
+  sort: DocumentSortField = 'createdAt';
+
+  @ApiPropertyOptional({ enum: ['asc', 'desc'], default: 'desc' })
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  order: 'asc' | 'desc' = 'desc';
 }
 
 export class SearchPrivateDocumentsDto {
@@ -121,4 +149,28 @@ export class SearchPrivateDocumentsDto {
   @Min(1)
   @Max(100)
   limit: number = 20;
+
+  @ApiPropertyOptional({ enum: DocumentLifecycleStatus })
+  @IsOptional()
+  @IsEnum(DocumentLifecycleStatus)
+  status?: DocumentLifecycleStatus;
+
+  @ApiPropertyOptional({ enum: DOCUMENT_TYPE_FAMILIES })
+  @IsOptional()
+  @IsIn(DOCUMENT_TYPE_FAMILIES)
+  type?: DocumentTypeFamily;
+
+  @ApiPropertyOptional({ description: 'Catégorie du dossier (valeur exacte).' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  category?: string;
+
+  @ApiPropertyOptional({ description: 'Année du dossier.' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1900)
+  @Max(2100)
+  year?: number;
 }

@@ -4,13 +4,19 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { ConfidentialityLevel, Folder, Prisma } from '@prisma/client';
+import {
+  ConfidentialityLevel,
+  DocumentLifecycleStatus,
+  Folder,
+  Prisma,
+} from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import {
   canReadFolder,
   canWriteFolder,
+  readableDocumentWhere,
   visibleParentId,
   type AccessScope,
 } from './access-policy.js';
@@ -43,7 +49,7 @@ export class PrivateFoldersService {
   ) {}
 
   /** Vue d'un dossier : le parent n'est révélé que s'il est lui-même lisible. */
-  private view(scope: AccessScope, folder: Folder) {
+  private view(scope: AccessScope, folder: Folder, documentCount = 0) {
     return {
       id: folder.id,
       name: folder.name,
@@ -55,9 +61,32 @@ export class PrivateFoldersService {
       confidentiality: folder.confidentiality,
       parentId: visibleParentId(scope, folder.parentId),
       canWrite: canWriteFolder(scope, folder.id),
+      documentCount,
       createdAt: folder.createdAt,
       updatedAt: folder.updatedAt,
     };
+  }
+
+  /**
+   * Nombre de documents actifs par dossier, limité à ceux que l'utilisateur
+   * peut lire : un document plus confidentiel que son dossier n'est pas compté
+   * pour qui ne le verrait pas.
+   */
+  private async documentCounts(scope: AccessScope, folderIds?: string[]) {
+    const rows = await this.prisma.privateDocument.groupBy({
+      by: ['folderId'],
+      where: {
+        AND: [
+          readableDocumentWhere(scope),
+          {
+            status: DocumentLifecycleStatus.ACTIVE,
+            ...(folderIds && { folderId: { in: folderIds } }),
+          },
+        ],
+      },
+      _count: { _all: true },
+    });
+    return new Map(rows.map((row) => [row.folderId, row._count._all]));
   }
 
   /** Arborescence à plat : uniquement les nœuds auxquels l'utilisateur a droit. */
@@ -69,7 +98,12 @@ export class PrivateFoldersService {
         : { id: { in: [...scope.readableFolderIds] } },
       orderBy: [{ category: 'asc' }, { name: 'asc' }],
     });
-    return { data: folders.map((f) => this.view(scope, f)) };
+    const counts = await this.documentCounts(scope);
+    // Un document partagé isolément ne doit pas trahir son dossier : seuls les
+    // dossiers de la liste (donc lisibles) reçoivent un compte.
+    return {
+      data: folders.map((f) => this.view(scope, f, counts.get(f.id) ?? 0)),
+    };
   }
 
   /** Un dossier lisible, avec ses sous-dossiers lisibles. */
@@ -84,9 +118,13 @@ export class PrivateFoldersService {
       },
       orderBy: { name: 'asc' },
     });
+    const counts = await this.documentCounts(scope, [
+      id,
+      ...children.map((c) => c.id),
+    ]);
     return {
-      ...this.view(scope, folder),
-      children: children.map((c) => this.view(scope, c)),
+      ...this.view(scope, folder, counts.get(id) ?? 0),
+      children: children.map((c) => this.view(scope, c, counts.get(c.id) ?? 0)),
     };
   }
 
@@ -166,7 +204,8 @@ export class PrivateFoldersService {
         after: changed as Prisma.InputJsonObject,
       });
     }
-    return this.view(scope, folder);
+    const counts = await this.documentCounts(scope, [id]);
+    return this.view(scope, folder, counts.get(id) ?? 0);
   }
 
   /** Suppression réservée à l'Administrateur ; refusée tant que le dossier n'est pas vide. */

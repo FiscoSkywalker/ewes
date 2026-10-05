@@ -20,12 +20,13 @@ import {
   type AccessScope,
 } from './access-policy.js';
 import type {
+  DocumentTypeFamily,
   ListPrivateDocumentsDto,
   SearchPrivateDocumentsDto,
   UpdatePrivateDocumentDto,
   UploadPrivateDocumentDto,
 } from './dto/private-document.dto.js';
-import { PrivateAccessService } from './private-access.service.js';
+import { DOCUMENT_INCLUDE, PrivateAccessService } from './private-access.service.js';
 import {
   PrivateStorageService,
   type UploadedPrivateFile,
@@ -36,6 +37,18 @@ const SEARCH_CANDIDATE_LIMIT = 500;
 
 type DocumentWithFolder = PrivateDocument & {
   folder: { id: string; name: string };
+  uploadedBy: { fullName: string } | null;
+};
+
+/** Types MIME (détectés au téléversement) de chaque famille du filtre de recherche. */
+const TYPE_FAMILY_MIMES: Record<DocumentTypeFamily, string[]> = {
+  pdf: ['application/pdf'],
+  image: ['image/jpeg', 'image/png', 'image/webp'],
+  word: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  excel: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  powerpoint: [
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  ],
 };
 
 const adminOnly = (message: string) =>
@@ -77,6 +90,7 @@ export class PrivateDocumentsService {
       confidentiality: document.confidentiality ?? folderLevel ?? null,
       confidentialityOverride: document.confidentiality,
       status: document.status,
+      uploadedByName: document.uploadedBy?.fullName ?? null,
       canWrite: canWriteDocument(scope, document),
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
@@ -92,13 +106,22 @@ export class PrivateDocumentsService {
           ...(query.folderId && { folderId: query.folderId }),
           ...(query.status && { status: query.status }),
         },
+        // Partagés un par un : le droit porte sur le document, pas sur son dossier.
+        ...(query.scope === 'isolated'
+          ? [
+              {
+                id: { in: [...scope.grantedDocumentIds] },
+                folderId: { notIn: [...scope.readableFolderIds] },
+              },
+            ]
+          : []),
       ],
     };
     const [documents, total] = await Promise.all([
       this.prisma.privateDocument.findMany({
         where,
-        include: { folder: { select: { id: true, name: true } } },
-        orderBy: { createdAt: 'desc' },
+        include: DOCUMENT_INCLUDE,
+        orderBy: [{ [query.sort]: query.order }, { id: 'asc' }],
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
@@ -152,7 +175,7 @@ export class PrivateDocumentsService {
           confidentiality: dto.confidentiality,
           uploadedById: user.id,
         },
-        include: { folder: { select: { id: true, name: true } } },
+        include: DOCUMENT_INCLUDE,
       });
       await this.audit.record({
         actorId: user.id,
@@ -211,7 +234,7 @@ export class PrivateDocumentsService {
         confidentiality: dto.confidentiality,
         folderId: dto.folderId,
       },
-      include: { folder: { select: { id: true, name: true } } },
+      include: DOCUMENT_INCLUDE,
     });
 
     const before: Record<string, unknown> = {};
@@ -248,7 +271,7 @@ export class PrivateDocumentsService {
     const updated = await this.prisma.privateDocument.update({
       where: { id },
       data: { status },
-      include: { folder: { select: { id: true, name: true } } },
+      include: DOCUMENT_INCLUDE,
     });
     await this.audit.record({
       actorId: user.id,
@@ -320,7 +343,9 @@ export class PrivateDocumentsService {
 
   /**
    * Recherche plein texte PostgreSQL (nom, description, catégorie, projet,
-   * département) restreinte au périmètre de l'utilisateur. Étape 1 : SQL
+   * département) restreinte au périmètre de l'utilisateur. Le plein texte
+   * (`simple`, sans lemmatisation) est doublé d'une recherche par fragment :
+   * « rapport » retrouve « Rapports », « fisc » retrouve « Fiscalité ». Étape 1 : SQL
    * paramétré renvoyant des identifiants candidats classés par pertinence ;
    * étape 2 : lecture Prisma avec le filtre de droits appliqué EN BASE — un
    * candidat hors périmètre n'en ressort jamais.
@@ -343,7 +368,12 @@ export class PrivateDocumentsService {
             coalesce(f.department, ''))
           @@ websearch_to_tsquery('simple', ${term})
           OR d.name ILIKE ${like}
+          OR d.description ILIKE ${like}
+          OR f.name ILIKE ${like}
+          OR f.category ILIKE ${like}
+          OR f."subCategory" ILIKE ${like}
           OR f."projectRef" ILIKE ${like}
+          OR f.department ILIKE ${like}
         )
       ORDER BY ts_rank(
           to_tsvector('simple', coalesce(d.name, '') || ' ' || coalesce(d.description, '')),
@@ -358,9 +388,28 @@ export class PrivateDocumentsService {
         AND: [
           readableDocumentWhere(scope),
           { id: { in: candidates.map((c) => c.id) } },
+          {
+            ...(query.status && { status: query.status }),
+            ...(query.type && { fileType: { in: TYPE_FAMILY_MIMES[query.type] } }),
+          },
+          // Classement du dossier : sans effet sur un document partagé isolément
+          // (son dossier n'est pas révélé, on ne filtre donc pas dessus).
+          ...(query.category || query.year
+            ? [
+                {
+                  ...(!scope.isAdmin && {
+                    folderId: { in: [...scope.readableFolderIds] },
+                  }),
+                  folder: {
+                    ...(query.category && { category: query.category }),
+                    ...(query.year && { year: query.year }),
+                  },
+                },
+              ]
+            : []),
         ],
       },
-      include: { folder: { select: { id: true, name: true } } },
+      include: DOCUMENT_INCLUDE,
     });
     readable.sort((a, b) => rank.get(a.id)! - rank.get(b.id)!);
 
