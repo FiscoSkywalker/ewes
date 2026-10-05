@@ -30,7 +30,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { MAX_IMAGE_BYTES } from '../media/image-signature.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
-import type { UploadedAvatar } from './avatar-storage.service.js';
+import type { UploadedAvatar } from '../users/avatar-storage.service.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { ProfileService } from './profile.service.js';

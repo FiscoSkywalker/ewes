@@ -15,6 +15,8 @@ export interface UserSummary {
   lastActiveAt: string | null;
   /** Fin du verrouillage après échecs de connexion répétés ; `null` si le compte n'est pas verrouillé. */
   lockedUntil: string | null;
+  /** Identifiant de la photo de profil, `null` sans photo. */
+  avatarVersion: string | null;
 }
 
 /** `GET /admin/users/:id`. */

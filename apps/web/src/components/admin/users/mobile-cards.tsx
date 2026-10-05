@@ -31,6 +31,8 @@ export function AccountCard({
       )}
     >
       <UserAvatar
+        userId={user.id}
+        avatarVersion={user.avatarVersion}
         name={user.fullName}
         role={user.role}
         inactive={!user.isActive}

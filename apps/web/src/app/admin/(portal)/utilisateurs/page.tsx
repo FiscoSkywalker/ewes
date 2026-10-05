@@ -212,6 +212,8 @@ export default function UsersPage() {
       cell: (user) => (
         <span className="flex items-center gap-3">
           <UserAvatar
+            userId={user.id}
+            avatarVersion={user.avatarVersion}
             name={user.fullName}
             role={user.role}
             inactive={!user.isActive}

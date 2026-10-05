@@ -9,10 +9,13 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Res,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import type { Response } from 'express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
@@ -81,6 +84,26 @@ export class AdminUsersController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     await this.invitations.revoke(actor, id);
+  }
+
+  @Get(':id/avatar')
+  @ApiOperation({
+    summary: 'Photo de profil d’un compte (Administrateur seul)',
+  })
+  async avatar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { stream, size } = await this.usersService.openAvatar(id);
+    res.set({
+      'Cache-Control': 'private, max-age=3600',
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Length': String(size),
+    });
+    return new StreamableFile(stream, {
+      type: 'image/webp',
+      disposition: 'inline',
+    });
   }
 
   @Get(':id')

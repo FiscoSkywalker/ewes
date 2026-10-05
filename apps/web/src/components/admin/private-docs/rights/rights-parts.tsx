@@ -76,7 +76,12 @@ export function PersonRow({
   return (
     <li className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <UserAvatar name={user.fullName} role={user.role} />
+        <UserAvatar
+          userId={user.id}
+          avatarVersion={user.avatarVersion}
+          name={user.fullName}
+          role={user.role}
+        />
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link

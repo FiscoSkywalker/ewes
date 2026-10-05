@@ -540,4 +540,56 @@ describe('Profil (e2e)', () => {
       expect(await auditOf(user.id, 'USER_SESSIONS_CLOSED')).toHaveLength(2);
     });
   });
+
+  describe('photo vue par l’administrateur', () => {
+    it('la lit chez n’importe quel compte, jamais pour un autre rôle, sans exposer le nom du fichier', async () => {
+      const admin = await makeUser('viewer-admin', Role.ADMINISTRATEUR);
+      const gest = await makeUser('viewer-gest', Role.GESTIONNAIRE);
+      const target = await makeUser('viewer-target');
+      const bare = await makeUser('viewer-bare');
+      const adminToken = (await open(admin.email)).accessToken;
+      const gestToken = (await open(gest.email)).accessToken;
+      const targetToken = (await open(target.email)).accessToken;
+      const set = await as(targetToken)
+        .put('/me/avatar')
+        .attach('file', await png(200, 200), 'p.png')
+        .expect(200);
+
+      const image = await as(adminToken)
+        .get(`/admin/users/${target.id}/avatar`)
+        .buffer(true)
+        .parse((res, done) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => done(null, Buffer.concat(chunks)));
+        })
+        .expect(200);
+      expect(image.headers['content-type']).toContain('image/webp');
+      expect(image.headers['cache-control']).toContain('private');
+      expect((await sharp(image.body as Buffer).metadata()).format).toBe(
+        'webp',
+      );
+
+      await http().get(`/api/v1/admin/users/${target.id}/avatar`).expect(401);
+      await as(gestToken).get(`/admin/users/${target.id}/avatar`).expect(403);
+      await as(targetToken).get(`/admin/users/${target.id}/avatar`).expect(403);
+      await as(adminToken).get(`/admin/users/${bare.id}/avatar`).expect(404);
+      await as(adminToken)
+        .get('/admin/users/00000000-0000-4000-8000-000000000000/avatar')
+        .expect(404);
+
+      const list = await as(adminToken).get('/admin/users').expect(200);
+      const row = list.body.find((u: { id: string }) => u.id === target.id);
+      expect(row.avatarVersion).toBe(set.body.avatarVersion);
+      expect(
+        list.body.find((u: { id: string }) => u.id === bare.id).avatarVersion,
+      ).toBeNull();
+      expect(JSON.stringify(list.body)).not.toContain('avatarName');
+      const detail = await as(adminToken)
+        .get(`/admin/users/${target.id}`)
+        .expect(200);
+      expect(detail.body.avatarVersion).toBe(set.body.avatarVersion);
+      expect(JSON.stringify(detail.body)).not.toContain('.webp');
+    });
+  });
 });

@@ -209,6 +209,8 @@ function GrantForm({
                     className="sr-only"
                   />
                   <UserAvatar
+                    userId={user.id}
+                    avatarVersion={user.avatarVersion}
                     name={user.fullName}
                     role={user.role}
                     inactive={already}

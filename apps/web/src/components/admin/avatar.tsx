@@ -11,16 +11,26 @@ import { initialsOf } from './session';
  * Une adresse d'objet par version de photo, gardée pour la visite : quelques
  * dizaines de Ko, et la photo ne se relit que quand `version` change.
  * Sans photo, ou si la lecture échoue : `null`, et le monogramme s'affiche.
+ *
+ * `userId` : la photo d'un autre compte, lue par la route réservée à
+ * l'Administrateur (l'API refuse tout autre rôle) ; absent, c'est la sienne.
  */
-export function useAvatarSrc(version: string | null | undefined) {
+export function useAvatarSrc(
+  version: string | null | undefined,
+  userId?: string,
+) {
   const { data } = useQuery({
-    queryKey: ['profile', 'avatar', version],
+    queryKey: ['profile', 'avatar', userId ?? 'me', version],
     enabled: Boolean(version),
     staleTime: Infinity,
     gcTime: Infinity,
     retry: false,
     queryFn: async () => {
-      const response = await adminFetch('/api/backend/me/avatar');
+      const response = await adminFetch(
+        userId
+          ? `/api/backend/admin/users/${userId}/avatar`
+          : '/api/backend/me/avatar',
+      );
       if (!response.ok) throw new Error('AVATAR_UNAVAILABLE');
       return URL.createObjectURL(await response.blob());
     },

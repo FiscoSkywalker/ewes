@@ -7,6 +7,7 @@ import {
 import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
+import { avatarVersionOf } from '../users/user-views.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import type { ListGrantsDto } from './dto/access-grant.dto.js';
 
@@ -18,8 +19,25 @@ const grantNotFound = () =>
   });
 
 const USER_VIEW = {
-  select: { id: true, email: true, fullName: true, role: true },
+  select: {
+    id: true,
+    email: true,
+    fullName: true,
+    role: true,
+    avatarName: true,
+  },
 } satisfies Prisma.UserDefaultArgs;
+
+/** Droit renvoyé au portail : la personne avec l'identifiant public de sa photo, jamais le nom du fichier. */
+const withAvatarVersion = <T extends { user: { avatarName: string | null } }>(
+  grant: T,
+) => {
+  const { avatarName, ...user } = grant.user;
+  return {
+    ...grant,
+    user: { ...user, avatarVersion: avatarVersionOf(avatarName) },
+  };
+};
 
 /** Document d'un droit isolé, avec de quoi le situer (dossier, confidentialité, état). */
 const DOCUMENT_VIEW = {
@@ -74,10 +92,13 @@ export class AccessGrantsService {
         ...(query.folderId && { folderId: query.folderId }),
         ...(query.userId && { userId: query.userId }),
       },
-      include: { user: USER_VIEW, folder: { select: { id: true, name: true } } },
+      include: {
+        user: USER_VIEW,
+        folder: { select: { id: true, name: true } },
+      },
       orderBy: { createdAt: 'desc' },
     });
-    return { data };
+    return { data: data.map(withAvatarVersion) };
   }
 
   async createFolderGrant(
@@ -101,7 +122,10 @@ export class AccessGrantsService {
     try {
       grant = await this.prisma.folderAccessGrant.create({
         data: { folderId, userId, grantedById: actor.id },
-        include: { user: USER_VIEW, folder: { select: { id: true, name: true } } },
+        include: {
+          user: USER_VIEW,
+          folder: { select: { id: true, name: true } },
+        },
       });
     } catch (error) {
       throw this.translateDuplicate(error);
@@ -113,11 +137,13 @@ export class AccessGrantsService {
       entityId: folderId,
       after: { userId, folderId, scope: 'folder' },
     });
-    return grant;
+    return withAvatarVersion(grant);
   }
 
   async revokeFolderGrant(actor: AuthenticatedUser, id: string) {
-    const grant = await this.prisma.folderAccessGrant.findUnique({ where: { id } });
+    const grant = await this.prisma.folderAccessGrant.findUnique({
+      where: { id },
+    });
     if (!grant) throw grantNotFound();
     await this.prisma.folderAccessGrant.delete({ where: { id } });
     await this.audit.record({
@@ -125,7 +151,11 @@ export class AccessGrantsService {
       action: 'ACCESS_REVOKED',
       entityType: 'Folder',
       entityId: grant.folderId,
-      before: { userId: grant.userId, folderId: grant.folderId, scope: 'folder' },
+      before: {
+        userId: grant.userId,
+        folderId: grant.folderId,
+        scope: 'folder',
+      },
     });
   }
 
@@ -140,7 +170,7 @@ export class AccessGrantsService {
       include: { user: USER_VIEW, privateDocument: DOCUMENT_VIEW },
       orderBy: { createdAt: 'desc' },
     });
-    return { data };
+    return { data: data.map(withAvatarVersion) };
   }
 
   async createDocumentGrant(
@@ -176,11 +206,13 @@ export class AccessGrantsService {
       entityId: documentId,
       after: { userId, documentId, scope: 'document' },
     });
-    return grant;
+    return withAvatarVersion(grant);
   }
 
   async revokeDocumentGrant(actor: AuthenticatedUser, id: string) {
-    const grant = await this.prisma.documentAccessGrant.findUnique({ where: { id } });
+    const grant = await this.prisma.documentAccessGrant.findUnique({
+      where: { id },
+    });
     if (!grant) throw grantNotFound();
     await this.prisma.documentAccessGrant.delete({ where: { id } });
     await this.audit.record({

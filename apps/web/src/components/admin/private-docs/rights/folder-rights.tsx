@@ -552,7 +552,12 @@ function Overview({
             className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-start"
           >
             <div className="flex min-w-0 items-center gap-3 sm:w-64 sm:shrink-0">
-              <UserAvatar name={user.fullName} role={user.role} />
+              <UserAvatar
+                userId={user.id}
+                avatarVersion={user.avatarVersion}
+                name={user.fullName}
+                role={user.role}
+              />
               <div className="min-w-0">
                 <Link
                   href={`/admin/utilisateurs/${user.id}`}

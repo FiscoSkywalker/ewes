@@ -66,6 +66,8 @@ describe('UsersService — dernier administrateur', () => {
         recentFailures: vi.fn(async () => 0),
         clear: vi.fn(),
       } as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {} as any,
     );
   });
 

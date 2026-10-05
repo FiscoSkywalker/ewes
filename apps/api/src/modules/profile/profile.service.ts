@@ -14,10 +14,11 @@ import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { LoginLockoutService } from '../users/login-lockout.service.js';
+import { avatarVersionOf } from '../users/user-views.js';
 import {
   AvatarStorageService,
   type UploadedAvatar,
-} from './avatar-storage.service.js';
+} from '../users/avatar-storage.service.js';
 import type { ChangePasswordDto } from './dto/change-password.dto.js';
 import type { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { passwordChangedEmail } from './password-emails.js';
@@ -58,9 +59,7 @@ const toProfileView = (user: User): ProfileView => ({
   email: user.email,
   fullName: user.fullName,
   role: user.role,
-  avatarVersion: user.avatarName
-    ? user.avatarName.replace(/\.webp$/, '')
-    : null,
+  avatarVersion: avatarVersionOf(user.avatarName),
 });
 
 const USER_NOT_FOUND = {

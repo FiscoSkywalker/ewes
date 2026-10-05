@@ -59,6 +59,7 @@ export interface GrantUser {
   email: string;
   fullName: string;
   role: Role;
+  avatarVersion: string | null;
 }
 
 /** `GET /admin/access-grants/folders`. */

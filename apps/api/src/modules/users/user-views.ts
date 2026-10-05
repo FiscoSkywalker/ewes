@@ -12,7 +12,13 @@ export interface UserView {
   lastActiveAt: Date | null;
   /** Fin du verrouillage après échecs de connexion répétés ; `null` si le compte n'est pas verrouillé. */
   lockedUntil: Date | null;
+  /** Identifiant de la photo de profil, `null` sans photo (elle se lit par `GET /admin/users/:id/avatar`). */
+  avatarVersion: string | null;
 }
+
+/** Identifiant public d'une photo : le nom du fichier sans extension, jamais le nom de stockage lui-même. */
+export const avatarVersionOf = (avatarName: string | null) =>
+  avatarName ? avatarName.replace(/\.webp$/, '') : null;
 
 export interface UserDetailView extends UserView {
   /** Sessions de connexion encore valides. */
@@ -36,6 +42,7 @@ export const toUserView = (
   createdAt: user.createdAt,
   lastActiveAt,
   lockedUntil,
+  avatarVersion: avatarVersionOf(user.avatarName),
 });
 
 export type InvitationWithSender = UserInvitation & {

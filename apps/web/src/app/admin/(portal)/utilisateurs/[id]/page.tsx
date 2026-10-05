@@ -178,6 +178,8 @@ function Detail({ user }: { user: UserDetail }) {
     <>
       <div className="animate-rise-in flex items-center gap-4 sm:gap-5">
         <UserAvatar
+          userId={user.id}
+          avatarVersion={user.avatarVersion}
           name={user.fullName}
           role={user.role}
           inactive={!user.isActive}

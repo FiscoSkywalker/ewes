@@ -9,6 +9,7 @@ import { Prisma, Role, User } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
+import { AvatarStorageService } from './avatar-storage.service.js';
 import { LoginLockoutService } from './login-lockout.service.js';
 import {
   toUserView,
@@ -30,6 +31,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly lockout: LoginLockoutService,
+    private readonly avatars: AvatarStorageService,
   ) {}
 
   /** `email` est comparé insensible à la casse : la contrainte unique en base est appliquée sur la valeur normalisée à la création. */
@@ -202,6 +204,23 @@ export class UsersService {
       });
     }
     return this.detail(id);
+  }
+
+  /** Photo d'un compte, pour l'Administrateur (contrôleur) : 404 si le compte n'en a pas. */
+  async openAvatar(id: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, deletedAt: null },
+      select: { avatarName: true },
+    });
+    if (!user) throw new NotFoundException(USER_NOT_FOUND);
+    if (!user.avatarName) {
+      throw new NotFoundException({
+        code: 'AVATAR_NOT_FOUND',
+        message: 'Aucune photo de profil.',
+        details: [],
+      });
+    }
+    return this.avatars.open(user.avatarName);
   }
 
   // --- Internes ---

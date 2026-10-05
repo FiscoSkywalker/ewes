@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { UsersModule } from '../users/users.module.js';
-import { AvatarStorageService } from './avatar-storage.service.js';
 import { MeController } from './me.controller.js';
 import { ProfileService } from './profile.service.js';
 
@@ -9,6 +8,6 @@ import { ProfileService } from './profile.service.js';
 @Module({
   imports: [UsersModule, NotificationsModule],
   controllers: [MeController],
-  providers: [ProfileService, AvatarStorageService],
+  providers: [ProfileService],
 })
 export class ProfileModule {}
