@@ -20,10 +20,12 @@ export {
   type ConfirmOptions,
 } from './dialog';
 export { Checkbox, Field, Input, Select, Switch, Textarea } from './field';
+export { Menu, type MenuItem } from './menu';
 export { NetworkBanner, OfflineNotice, useOnline } from './network-banner';
 export { Pagination } from './pagination';
 export { SearchInput, useDebouncedValue } from './search-input';
 export { SegmentedControl, type SegmentedOption } from './segmented-control';
+export { Sheet } from './sheet';
 export { LoadingRegion, Skeleton, SkeletonText } from './skeleton';
 export { EmptyState, ErrorState } from './state';
 export { ToastProvider, useToast, type ToastTone } from './toast';

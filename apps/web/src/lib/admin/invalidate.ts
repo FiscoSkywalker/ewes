@@ -11,6 +11,7 @@ export function invalidatePortalData(queryClient: QueryClient) {
       'contacts',
       'emails',
       'documents',
+      'private-docs',
       'realisations',
       'articles',
       'pages',

@@ -28,6 +28,8 @@ Les droits sont attribués par dossier (`FolderAccessGrant`) et, exceptionnellem
 
 La recherche s'exécute uniquement sur le périmètre de dossiers/fichiers auquel l'utilisateur courant a droit (filtrage en base, pas en façade). En V1, la recherche s'appuie sur les capacités full-text natives de PostgreSQL (nom de fichier, catégorie, projet, description) — pas de moteur de recherche externe, cohérent avec le budget d'hébergement.
 
+> **Précisions (2026-10-05)** — le plein texte PostgreSQL utilise la configuration `simple` (pas de lemmatisation : « rapport » ne trouvait pas « Rapports ») ; il est donc doublé d'une recherche **par fragment** (`ILIKE`) sur les mêmes champs : nom et description du document, nom, catégorie, sous-catégorie, projet et département du dossier. Filtres facultatifs : état (actif/archivé), famille de fichier, catégorie et année du dossier. Les filtres de classement ne s'appliquent qu'aux dossiers lisibles par l'appelant : un document partagé isolément n'est jamais retrouvé par le classement d'un dossier qui lui est fermé (testé).
+
 # 5. Cycle de vie d'un fichier
 
 Téléversement (validation type/taille) → classement (dossier + confidentialité) → consultation/téléchargement (vérifié à chaque requête) → archivage (statut, reste consultable selon droit) → suppression (réservée à l'Administrateur, tracée en audit, jamais silencieuse).
@@ -40,6 +42,26 @@ Les fichiers sont stockés sur le volume disque du VPS, hors de toute racine ser
 
 Un Utilisateur ne voit dans l'arborescence que les nœuds auxquels il a droit (pas de dossier visible mais grisé qui révélerait son existence). Un lien de téléchargement expiré, révoqué ou hors périmètre renvoie une erreur explicite sans exposer de détail sur le contenu du fichier. Toute attribution/révocation de droit est auditée.
 
-# 8. Références
+# 8. Écrans (livrés le 2026-10-05)
+
+Code : `apps/web/src/components/admin/private-docs/`, pages sous `app/admin/(portal)/documents/`, types et aides dans `lib/admin/private-docs.ts`. Tout écran n'affiche que ce que l'API renvoie ; `canWrite` (dossier, document) vient du serveur et ne sert qu'à proposer ou non une action, que le serveur revérifie.
+
+| Écran | Adresse | Rôles | Contenu |
+|---|---|---|---|
+| Dossiers & fichiers | `/admin/documents`, dossier ouvert `?dossier=<id>` | A, G, U | Accueil : dossiers de premier niveau du périmètre, « Partagés avec vous » (documents isolés, hors Administrateur), « Ajoutés récemment », champ de recherche. Dossier : fil d'Ariane, classement, confidentialité, sous-dossiers, documents triables, téléversement (bouton, glisser-déposer, plusieurs fichiers, avancement réel par fichier), nouveau sous-dossier, modifier/supprimer le dossier |
+| Recherche | `/admin/documents/recherche?q=` | A, G, U | Requête dans l'adresse, filtres état / type / catégorie / année, termes surlignés, emplacement de chaque résultat |
+| Archives | `/admin/documents/archives` | A, G, U | Documents archivés du périmètre, recherche, tri, « Restaurer » pour qui peut écrire |
+| Droits par dossier | `/admin/documents/droits`, `?dossier=<id>` | A | Arborescence avec nombre de droits directs ; par dossier : accès directs (retirables), accès hérités d'un parent (renvoi vers ce parent) ; sans dossier choisi : « qui accède à quoi » par personne |
+| Droits par document | `/admin/documents/droits/documents`, `?document=<id>` | A | Documents partagés isolément, personnes par document, « Partager un document » (recherche puis choix des personnes) |
+
+Décisions d'interface prises (à valider avec EWES) :
+1. **Téléchargement par requête authentifiée puis remise au navigateur** (pas un simple lien) : une session expirée est renouvelée, un droit retiré entre-temps donne un message explicite (critère §7).
+2. **Aperçu** : images uniquement, à la demande (le fichier passe par la route de téléchargement, donc tracé `DOCUMENT_DOWNLOADED`). Pas d'aperçu PDF/Office.
+3. **Suppression** d'un document : confirmation explicite, sans saisie du nom (impraticable sur téléphone) ; elle n'est pas réversible depuis le portail.
+4. **Remplacer un fichier** n'existe pas : on téléverse la nouvelle version et on archive l'ancienne (pas de gestion de versions en V1).
+5. **Déplacer un dossier** n'existe pas (API V1) ; un document se déplace, avec avertissement si sa confidentialité héritée change.
+6. Un document dont le dossier n'est pas lisible apparaît sans emplacement (« Partagé avec vous »).
+
+# 9. Références
 
 `07_Database_Design.md`, `09_Business_Rules.md`, `10_Security.md`, `14_Admin_Backoffice.md`.
