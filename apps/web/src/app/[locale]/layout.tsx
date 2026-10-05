@@ -11,6 +11,7 @@ import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
+import '@/styles/article-prose.css';
 
 /**
  * Identité typographique du site public (blueprint/05_UI_UX_System.md §3) :

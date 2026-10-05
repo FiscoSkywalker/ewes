@@ -1,0 +1,109 @@
+/*
+ * Mise en forme du corps d'un article : la même sur le site public
+ * (`components/public/article-body.tsx`) et dans l'éditeur du portail
+ * (`components/admin/rich-text/`), pour que l'éditeur montre ce que les
+ * visiteurs liront. Ne dépend que de la couleur du texte courant et de
+ * deux variables que chaque contexte redéfinit :
+ *   --prose-link   couleur des liens et des filets de citation
+ *   --prose-muted  texte secondaire des citations
+ */
+.article-prose {
+  line-height: 2rem;
+  overflow-wrap: anywhere;
+}
+
+.article-prose > * + * {
+  margin-top: 1.5rem;
+}
+
+.article-prose h2 {
+  margin-top: 2.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.article-prose h3 {
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+.article-prose h2 + *,
+.article-prose h3 + * {
+  margin-top: 0.75rem;
+}
+
+.article-prose strong {
+  font-weight: 700;
+}
+
+.article-prose a {
+  color: var(--prose-link, currentColor);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.article-prose a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.article-prose ul,
+.article-prose ol {
+  padding-left: 1.5rem;
+}
+
+.article-prose ul {
+  list-style: disc;
+}
+
+.article-prose ol {
+  list-style: decimal;
+}
+
+.article-prose li + li {
+  margin-top: 0.4rem;
+}
+
+/* Dans une liste, le paragraphe ne doit pas ajouter d'espace. */
+.article-prose li > p {
+  margin: 0;
+}
+
+.article-prose li > p + p {
+  margin-top: 0.4rem;
+}
+
+.article-prose blockquote {
+  padding-left: 1.25rem;
+  border-left: 3px solid var(--prose-link, currentColor);
+  font-style: italic;
+  color: var(--prose-muted, inherit);
+}
+
+.article-prose blockquote > p + p {
+  margin-top: 0.75rem;
+}
+
+.article-prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+}
+
+/* Lettrine du site public : seulement si l'article s'ouvre sur un paragraphe. */
+.article-prose--dropcap > p:first-child::first-letter {
+  float: left;
+  margin-right: 0.75rem;
+  font-family: var(--font-heading);
+  font-size: 3.75rem;
+  font-weight: 700;
+  line-height: 0.85;
+  color: var(--color-malachite);
+}

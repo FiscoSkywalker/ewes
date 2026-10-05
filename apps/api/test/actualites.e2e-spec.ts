@@ -107,7 +107,9 @@ describe('Articles (e2e)', () => {
   });
 
   it('rejects unauthenticated and under-privileged access to admin routes', async () => {
-    await request(app.getHttpServer()).get('/api/v1/admin/articles').expect(401);
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/articles')
+      .expect(401);
 
     const userToken = await login(userEmail);
     const res = await request(app.getHttpServer())
@@ -116,6 +118,54 @@ describe('Articles (e2e)', () => {
       .send({ slug: `${prefix}-x`, type: 'ACTUALITE', titleFr: 'x' });
     expect(res.status).toBe(403);
     expect(res.body.code).toBe('FORBIDDEN_ROLE');
+  });
+
+  it('cleans the rich text body on write, never trusting the client markup', async () => {
+    const dirty =
+      '<h2>Titre</h2><p onclick="x()">Texte <strong>fort</strong><script>alert(1)</script></p>' +
+      '<p><a href="javascript:alert(1)">piège</a></p><img src="https://evil.example/p.png">';
+    const id = await create('riche', {
+      contentFr: dirty,
+      contentEn: '<p></p>',
+    });
+
+    const draft = await request(app.getHttpServer())
+      .get(`/api/v1/admin/articles/${id}`)
+      .set(auth)
+      .expect(200);
+    expect(draft.body.contentFr).toBe(
+      '<h2>Titre</h2><p>Texte <strong>fort</strong></p><p><a>piège</a></p>',
+    );
+    // Un éditeur vidé n'est pas un contenu anglais.
+    expect(draft.body.contentEn).toBeNull();
+
+    // Modification : même nettoyage ; `null` efface la version anglaise.
+    const updated = await request(app.getHttpServer())
+      .patch(`/api/v1/admin/articles/${id}`)
+      .set(auth)
+      .send({
+        contentFr: '<p>Ok</p><iframe src="https://evil.example"></iframe>',
+        contentEn: '<p>Hello <b>you</b></p>',
+      })
+      .expect(200);
+    expect(updated.body.contentFr).toBe('<p>Ok</p>');
+    expect(updated.body.contentEn).toBe('<p>Hello <strong>you</strong></p>');
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/articles/${id}`)
+      .set(auth)
+      .send({ contentEn: null })
+      .expect(200);
+
+    // Un corps « vide » ne permet pas de publier un article sans résumé.
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/articles/${id}`)
+      .set(auth)
+      .send({ contentFr: '<p> </p>' })
+      .expect(200);
+    const incomplete = await publish(id);
+    expect(incomplete.status).toBe(422);
+    expect(incomplete.body.details).toEqual(['excerptFr']);
   });
 
   it('requires a title and a summary or content to publish, and keeps drafts and archives hidden', async () => {
@@ -178,7 +228,10 @@ describe('Articles (e2e)', () => {
       titleFr: `Alpha ${needle}`,
       excerptFr: 'Resume',
     });
-    await create(`${needle}-b`, { titleFr: `Bravo ${needle}`, contextFr: `Lieu-${needle}` });
+    await create(`${needle}-b`, {
+      titleFr: `Bravo ${needle}`,
+      contextFr: `Lieu-${needle}`,
+    });
     await create(`${needle}-c`, {
       titleFr: `Charlie ${needle}`,
       excerptFr: 'Remise de 100%_exacte demandee.',
@@ -187,7 +240,9 @@ describe('Articles (e2e)', () => {
     await publish(a).expect(200);
 
     const get = (query: string) =>
-      request(app.getHttpServer()).get(`/api/v1/admin/articles?${query}`).set(auth);
+      request(app.getHttpServer())
+        .get(`/api/v1/admin/articles?${query}`)
+        .set(auth);
     const letters = (res: request.Response) =>
       (res.body.data as { slug: string }[]).map((d) => d.slug.slice(-1));
 
@@ -210,9 +265,15 @@ describe('Articles (e2e)', () => {
     const literal = await get('q=%25').expect(200);
     expect(
       (literal.body.data as Record<string, string | null>[]).every((d) =>
-        ['titleFr', 'titleEn', 'slug', 'excerptFr', 'excerptEn', 'contextFr', 'contextEn'].some((f) =>
-          d[f]?.includes('%'),
-        ),
+        [
+          'titleFr',
+          'titleEn',
+          'slug',
+          'excerptFr',
+          'excerptEn',
+          'contextFr',
+          'contextEn',
+        ].some((f) => d[f]?.includes('%')),
       ),
     ).toBe(true);
     expect(letters(literal)).toContain('c');
@@ -233,11 +294,24 @@ describe('Articles (e2e)', () => {
 
     // Tri + pagination : chaque ligne apparaît une fois.
     const page = async (n: number) =>
-      letters(await get(`q=${needle}&sort=titleFr&order=asc&limit=1&page=${n}`).expect(200));
-    expect([await page(1), await page(2), await page(3)]).toEqual([['a'], ['b'], ['c']]);
+      letters(
+        await get(
+          `q=${needle}&sort=titleFr&order=asc&limit=1&page=${n}`,
+        ).expect(200),
+      );
+    expect([await page(1), await page(2), await page(3)]).toEqual([
+      ['a'],
+      ['b'],
+      ['c'],
+    ]);
 
     // Paramètres refusés avec le champ fautif ; aucune injection par le champ de tri.
-    for (const bad of ['sort=slug', 'sort=type;drop', 'order=up', `q=${'x'.repeat(101)}`]) {
+    for (const bad of [
+      'sort=slug',
+      'sort=type;drop',
+      'order=up',
+      `q=${'x'.repeat(101)}`,
+    ]) {
       const res = await get(bad).expect(400);
       expect(JSON.stringify(res.body)).toContain(bad.split('=')[0]);
     }
@@ -246,7 +320,10 @@ describe('Articles (e2e)', () => {
   it('deletes logically and audits every publication change, including the chosen date', async () => {
     const id = await create('trail', { excerptFr: 'Resume' });
     const post = (action: string, body: Record<string, unknown> = {}) =>
-      request(app.getHttpServer()).post(`/api/v1/admin/articles/${id}/${action}`).set(auth).send(body);
+      request(app.getHttpServer())
+        .post(`/api/v1/admin/articles/${id}/${action}`)
+        .set(auth)
+        .send(body);
 
     await publish(id, { publishedAt: '2024-05-01T08:00:00.000Z' }).expect(200);
     await publish(id).expect(200); // déjà publié : aucun changement, aucune trace
@@ -260,16 +337,31 @@ describe('Articles (e2e)', () => {
       .delete(`/api/v1/admin/articles/${id}`)
       .set({ Authorization: `Bearer ${userToken}` })
       .expect(403);
-    await request(app.getHttpServer()).delete(`/api/v1/admin/articles/${id}`).expect(401);
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/articles/${id}`)
+      .expect(401);
 
     await publish(id).expect(200);
-    await request(app.getHttpServer()).get(`/api/v1/articles/${prefix}-trail`).expect(200);
-    await request(app.getHttpServer()).delete(`/api/v1/admin/articles/${id}`).set(auth).expect(204);
+    await request(app.getHttpServer())
+      .get(`/api/v1/articles/${prefix}-trail`)
+      .expect(200);
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/articles/${id}`)
+      .set(auth)
+      .expect(204);
 
     // Disparu partout : site, fiche d'administration, liste ; la ligne reste en base.
-    await request(app.getHttpServer()).get(`/api/v1/articles/${prefix}-trail`).expect(404);
-    await request(app.getHttpServer()).get(`/api/v1/admin/articles/${id}`).set(auth).expect(404);
-    await request(app.getHttpServer()).delete(`/api/v1/admin/articles/${id}`).set(auth).expect(404);
+    await request(app.getHttpServer())
+      .get(`/api/v1/articles/${prefix}-trail`)
+      .expect(404);
+    await request(app.getHttpServer())
+      .get(`/api/v1/admin/articles/${id}`)
+      .set(auth)
+      .expect(404);
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/articles/${id}`)
+      .set(auth)
+      .expect(404);
     const row = await prisma.article.findUniqueOrThrow({ where: { id } });
     expect(row.deletedAt).not.toBeNull();
 
@@ -287,7 +379,10 @@ describe('Articles (e2e)', () => {
     expect(trail.every((e) => e.actorId !== null)).toBe(true);
     expect(trail[0]).toMatchObject({
       beforeData: { status: 'DRAFT', slug: `${prefix}-trail` },
-      afterData: { status: 'PUBLISHED', publishedAt: '2024-05-01T08:00:00.000Z' },
+      afterData: {
+        status: 'PUBLISHED',
+        publishedAt: '2024-05-01T08:00:00.000Z',
+      },
     });
     expect(trail[4].afterData).toEqual({ deleted: true });
   });
@@ -295,7 +390,10 @@ describe('Articles (e2e)', () => {
   it('publishes now an article whose scheduled release was cancelled, and keeps the first real publication date', async () => {
     const id = await create('rescheduled', { excerptFr: 'Resume' });
     const post = (action: string) =>
-      request(app.getHttpServer()).post(`/api/v1/admin/articles/${id}/${action}`).set(auth).send({});
+      request(app.getHttpServer())
+        .post(`/api/v1/admin/articles/${id}/${action}`)
+        .set(auth)
+        .send({});
 
     // Parution programmée dans le futur, puis annulée avant d'avoir eu lieu.
     const future = new Date(Date.now() + 3 * 86_400_000).toISOString();
@@ -305,10 +403,14 @@ describe('Articles (e2e)', () => {
     // Republié sans date : il paraît maintenant, pas à l'ancienne date future.
     const now = Date.now();
     const republished = await publish(id).expect(200);
-    const releasedAt = new Date(republished.body.publishedAt as string).getTime();
+    const releasedAt = new Date(
+      republished.body.publishedAt as string,
+    ).getTime();
     expect(releasedAt).toBeLessThanOrEqual(Date.now());
     expect(releasedAt).toBeGreaterThanOrEqual(now - 1000);
-    await request(app.getHttpServer()).get(`/api/v1/articles/${prefix}-rescheduled`).expect(200);
+    await request(app.getHttpServer())
+      .get(`/api/v1/articles/${prefix}-rescheduled`)
+      .expect(200);
 
     // Une vraie première publication, elle, est conservée après dépublication.
     await post('unpublish').expect(200);
@@ -325,10 +427,20 @@ describe('Articles (e2e)', () => {
       .get(`/api/v1/articles/${prefix}-future`)
       .expect(404);
 
-    const older = await create('older', { excerptFr: 'Ancien', type: 'ENQUETE' });
-    const newer = await create('newer', { excerptFr: 'Récent', type: 'ENQUETE' });
-    await publish(older, { publishedAt: '1990-05-01T00:00:00.000Z' }).expect(200);
-    await publish(newer, { publishedAt: '1995-05-01T00:00:00.000Z' }).expect(200);
+    const older = await create('older', {
+      excerptFr: 'Ancien',
+      type: 'ENQUETE',
+    });
+    const newer = await create('newer', {
+      excerptFr: 'Récent',
+      type: 'ENQUETE',
+    });
+    await publish(older, { publishedAt: '1990-05-01T00:00:00.000Z' }).expect(
+      200,
+    );
+    await publish(newer, { publishedAt: '1995-05-01T00:00:00.000Z' }).expect(
+      200,
+    );
 
     const list = await request(app.getHttpServer())
       .get('/api/v1/articles?type=ENQUETE&limit=100')
@@ -355,11 +467,18 @@ describe('Articles (e2e)', () => {
     expect(before.body.meta.total).toBe(countBefore);
 
     const first = await create('com-a', { excerptFr: 'A', type: 'COMMUNIQUE' });
-    const second = await create('com-b', { excerptFr: 'B', type: 'COMMUNIQUE' });
+    const second = await create('com-b', {
+      excerptFr: 'B',
+      type: 'COMMUNIQUE',
+    });
     // Brouillon : ne doit compter ni dans le total ni dans la rubrique.
     await create('com-draft', { excerptFr: 'C', type: 'COMMUNIQUE' });
-    await publish(first, { publishedAt: '1980-01-01T00:00:00.000Z' }).expect(200);
-    await publish(second, { publishedAt: '1980-02-01T00:00:00.000Z' }).expect(200);
+    await publish(first, { publishedAt: '1980-01-01T00:00:00.000Z' }).expect(
+      200,
+    );
+    await publish(second, { publishedAt: '1980-02-01T00:00:00.000Z' }).expect(
+      200,
+    );
 
     const all = await listCommuniques();
     expect(all.body.meta.types.COMMUNIQUE).toBe(countBefore + 2);

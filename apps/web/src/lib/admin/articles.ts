@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { toRichHtml } from '../rich-text';
 import type { ContentStatus } from './public-documents';
 
 /** Rubriques d'actualité (`ArticleType`), alignées sur le site public. */
@@ -116,8 +117,9 @@ export function toFormValues(a: Article): ArticleFormValues {
     excerptEn: a.excerptEn ?? '',
     contextFr: a.contextFr ?? '',
     contextEn: a.contextEn ?? '',
-    contentFr: a.contentFr,
-    contentEn: a.contentEn ?? '',
+    // Un article d'avant l'éditeur (texte brut) s'ouvre en paragraphes.
+    contentFr: toRichHtml(a.contentFr),
+    contentEn: toRichHtml(a.contentEn ?? ''),
     datePrecision: a.datePrecision,
   };
 }

@@ -8,6 +8,7 @@ import { ArticleType, ContentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FrontendRevalidator } from '../../common/revalidation/frontend-revalidator.service.js';
 import { escapeLike } from '../../common/utils/like.js';
+import { normalizeRichText } from '../../common/utils/rich-text.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { MediaService, mediaUrl } from '../media/media.service.js';
@@ -112,7 +113,15 @@ export class ActualitesService {
       ...(query.type && { type: query.type }),
       ...(search && {
         OR: (
-          ['titleFr', 'titleEn', 'slug', 'excerptFr', 'excerptEn', 'contextFr', 'contextEn'] as const
+          [
+            'titleFr',
+            'titleEn',
+            'slug',
+            'excerptFr',
+            'excerptEn',
+            'contextFr',
+            'contextEn',
+          ] as const
         ).map((field) => ({
           [field]: { contains: search, mode: 'insensitive' as const },
         })),
@@ -182,8 +191,8 @@ export class ActualitesService {
           excerptEn: dto.excerptEn,
           contextFr: dto.contextFr,
           contextEn: dto.contextEn,
-          contentFr: dto.contentFr ?? '',
-          contentEn: dto.contentEn,
+          contentFr: normalizeRichText(dto.contentFr ?? ''),
+          contentEn: normalizeRichText(dto.contentEn ?? '') || undefined,
           datePrecision: dto.datePrecision,
         },
         include: WITH_COVER,
@@ -209,11 +218,22 @@ export class ActualitesService {
       });
     }
 
+    // Le corps est nettoyé ici, jamais enregistré tel que reçu du navigateur.
+    const { contentFr, contentEn, ...fields } = dto;
     let updated;
     try {
       updated = await this.prisma.article.update({
         where: { id },
-        data: dto,
+        data: {
+          ...fields,
+          ...(contentFr !== undefined && {
+            contentFr: normalizeRichText(contentFr),
+          }),
+          // `null` efface la version anglaise ; un éditeur vidé (`<p></p>`) revient au même.
+          ...(contentEn !== undefined && {
+            contentEn: normalizeRichText(contentEn ?? '') || null,
+          }),
+        },
         include: WITH_COVER,
       });
     } catch (error) {
@@ -305,12 +325,22 @@ export class ActualitesService {
 
   /** Retire immédiatement l'article du site public (retour en brouillon). */
   unpublish(actor: AuthenticatedUser, id: string) {
-    return this.setStatus(actor, id, ContentStatus.DRAFT, 'ARTICLE_UNPUBLISHED');
+    return this.setStatus(
+      actor,
+      id,
+      ContentStatus.DRAFT,
+      'ARTICLE_UNPUBLISHED',
+    );
   }
 
   /** Dépublie en conservant l'article pour l'historique interne. */
   archive(actor: AuthenticatedUser, id: string) {
-    return this.setStatus(actor, id, ContentStatus.ARCHIVED, 'ARTICLE_ARCHIVED');
+    return this.setStatus(
+      actor,
+      id,
+      ContentStatus.ARCHIVED,
+      'ARTICLE_ARCHIVED',
+    );
   }
 
   private async setStatus(
@@ -341,7 +371,9 @@ export class ActualitesService {
       where: { id },
       data: { deletedAt: new Date() },
     });
-    await this.record(actor, 'ARTICLE_DELETED', current, current.status, { deleted: true });
+    await this.record(actor, 'ARTICLE_DELETED', current, current.status, {
+      deleted: true,
+    });
     await this.revalidate(current.slug);
   }
 

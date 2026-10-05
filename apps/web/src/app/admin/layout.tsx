@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './admin.css';
+import '@/styles/article-prose.css';
 import { themeBootScript } from '@/lib/admin/theme';
 import { AdminProviders } from './providers';
 

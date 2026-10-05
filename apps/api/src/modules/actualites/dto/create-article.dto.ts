@@ -61,12 +61,15 @@ export class CreateArticleDto {
   @MaxLength(200)
   contextEn?: string;
 
-  @ApiPropertyOptional({ description: 'Corps ; paragraphes séparés par une ligne vide.' })
+  @ApiPropertyOptional({
+    description:
+      'Corps en HTML restreint (titres h2/h3, gras, italique, listes, citation, liens, images /uploads/*), nettoyé à l’enregistrement. Un texte brut (paragraphes séparés par une ligne vide) est converti en paragraphes.',
+  })
   @IsOptional()
   @IsString()
   contentFr?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Même format que `contentFr`.' })
   @IsOptional()
   @IsString()
   contentEn?: string;

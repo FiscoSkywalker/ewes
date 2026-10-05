@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getNewsListing, getPublishedNews } from '@/lib/api/public-articles';
+import { countWords } from '@/lib/rich-text';
 import {
   NEWS_CATEGORIES,
   NEWS_FALLBACK_IMAGE,
@@ -175,9 +176,12 @@ export function parsePage(value: unknown) {
 
 /** Temps de lecture estimé (≈ 200 mots/minute), si l'article a un corps. */
 export function readingMinutes(item: NewsItem) {
-  if (!item.body?.length) return null;
-  const words = item.body.join(' ').split(/\s+/).length;
-  return Math.max(1, Math.round(words / 200));
+  const words = item.bodyHtml
+    ? countWords(item.bodyHtml)
+    : item.body?.length
+      ? item.body.join(' ').split(/\s+/).length
+      : 0;
+  return words > 0 ? Math.max(1, Math.round(words / 200)) : null;
 }
 
 /** Actualités affichées dans le carnet de bord de l'Accueil. */

@@ -28,8 +28,10 @@ export interface NewsItem {
   imageAlt: string;
   /** Fourni par l'API ; sinon `NEWS_IMAGES`, puis visuel générique. */
   image?: string;
-  /** Corps de l'article, en paragraphes. Absent : l'extrait fait office de texte. */
+  /** Corps de l'article, en paragraphes (textes de repli et articles d'avant l'éditeur). */
   body?: string[];
+  /** Corps rédigé dans le portail : HTML nettoyé par l'API. Absent : `body`, puis l'extrait. */
+  bodyHtml?: string;
 }
 
 /** Visuel de chaque actualité (placeholders générés, voir ATTRIBUTIONS.md). */

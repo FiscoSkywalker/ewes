@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server';
 import { ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react';
+import { ArticleBody } from '@/components/public/article-body';
 import { NewsCard, NewsMeta } from '@/components/public/news-card';
 import { ShareLinks } from '@/components/public/share-links';
 import { formatNewsDate } from '@/data/news';
@@ -145,12 +146,8 @@ export default async function NewsArticlePage({
 
         <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-20">
           <div className="max-w-[68ch]">
-            {item.body?.length ? (
-              <div className="space-y-6 text-base leading-8 text-sand/85 first-letter:float-left first-letter:mr-3 first-letter:font-heading first-letter:text-6xl first-letter:font-bold first-letter:leading-[0.85] first-letter:text-malachite">
-                {item.body.map((paragraph) => (
-                  <p key={paragraph.slice(0, 32)}>{paragraph}</p>
-                ))}
-              </div>
+            {item.bodyHtml || item.body?.length ? (
+              <ArticleBody html={item.bodyHtml} paragraphs={item.body} />
             ) : (
               <div className="rounded-sheet border border-border-subtle bg-surface-elevated p-8">
                 <p className="text-sm leading-7 text-sand/75">

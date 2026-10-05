@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import dynamic from 'next/dynamic';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { applyApiErrors } from '@/lib/admin/form-errors';
+import { countWords } from '@/lib/rich-text';
 import {
   ARTICLE_TYPES,
   DATE_PRECISIONS,
@@ -20,6 +22,7 @@ import {
   Field,
   Input,
   Select,
+  Skeleton,
   Textarea,
 } from '../ui';
 import { FormAlert, SlugCard, useAutoSlug } from '../content/form-parts';
@@ -40,13 +43,18 @@ const API_CODES = {
   ARTICLE_SLUG_LOCKED: 'slug',
 } as const;
 
-/** Nombre de paragraphes (séparés par une ligne vide) et de mots d'un texte. */
-function readingStats(text: string) {
-  const trimmed = text.trim();
-  if (!trimmed) return null;
-  const paragraphs = trimmed.split(/\n\s*\n/).filter(Boolean).length;
-  const words = trimmed.split(/\s+/).length;
-  return `${paragraphs} paragraphe${paragraphs > 1 ? 's' : ''} · ${words} mot${words > 1 ? 's' : ''}`;
+// L'éditeur (Tiptap) pèse lourd et ne sert qu'ici : chargé à l'ouverture de l'écran, hors du reste du portail.
+const RichTextEditor = dynamic(
+  () => import('../rich-text/rich-text-editor').then((m) => m.RichTextEditor),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[26rem] w-full rounded-lg" />,
+  },
+);
+
+function wordCount(html: string) {
+  const words = countWords(html);
+  return words > 0 ? `${words} mot${words > 1 ? 's' : ''}` : null;
 }
 
 /**
@@ -176,10 +184,11 @@ export function ArticleForm({
             requiredLocales={[]}
             hint={
               <>
-                Séparez les paragraphes par une ligne vide.
-                {readingStats(watched.contentFr ?? '') && (
+                Titres, gras, listes, liens et images de la médiathèque : la
+                mise en page est celle du site.
+                {wordCount(watched.contentFr ?? '') && (
                   <span className="ml-2 text-ink-muted">
-                    FR : {readingStats(watched.contentFr ?? '')}
+                    FR : {wordCount(watched.contentFr ?? '')}
                   </span>
                 )}
               </>
@@ -194,10 +203,17 @@ export function ArticleForm({
             }}
           >
             {(locale) => (
-              <Textarea
-                rows={16}
-                className="leading-7"
-                {...register(locale === 'fr' ? 'contentFr' : 'contentEn')}
+              <Controller
+                control={control}
+                name={locale === 'fr' ? 'contentFr' : 'contentEn'}
+                render={({ field }) => (
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    label={`Contenu (${locale === 'fr' ? 'français' : 'anglais'})`}
+                  />
+                )}
               />
             )}
           </BilingualField>

@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import type { NewsCategory, NewsItem } from '@/data/news';
+import { isRichHtml, plainTextParagraphs } from '@/lib/rich-text';
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
@@ -186,7 +187,11 @@ async function toNewsItems(
           ? pick(article.image.altFr, article.image.altEn) || title
           : title,
         image: article.image?.url,
-        body: content ? content.split(/\n{2,}/) : undefined,
+        ...(isRichHtml(content)
+          ? { bodyHtml: content }
+          : content
+            ? { body: plainTextParagraphs(content) }
+            : {}),
       },
     ];
   });
