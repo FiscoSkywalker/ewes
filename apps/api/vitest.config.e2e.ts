@@ -11,5 +11,8 @@ export default defineConfig({
     // défaut (5 s) fait échouer, par simple charge, les scénarios à nombreuses requêtes.
     testTimeout: 30_000,
     hookTimeout: 30_000,
+    // Pas de minuteur de parution programmée dans les suites : celle qui le teste
+    // appelle `tick()` elle-même, à l'heure qu'elle choisit.
+    env: { PUBLICATION_WATCH_INTERVAL_SECONDS: '0' },
   },
 });

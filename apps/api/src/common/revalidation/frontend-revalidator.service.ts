@@ -15,14 +15,27 @@ export class FrontendRevalidator {
 
   constructor(private readonly config: ConfigService) {}
 
-  async revalidate(tag: string): Promise<void> {
+  /** Le site public peut-il être joint ? (`WEB_REVALIDATE_URL` et `REVALIDATE_SECRET` définis.) */
+  get configured(): boolean {
+    return Boolean(
+      this.config.get<string>('WEB_REVALIDATE_URL') &&
+      this.config.get<string>('REVALIDATE_SECRET'),
+    );
+  }
+
+  /**
+   * `true` si le site a accepté la demande. Les mutations ignorent le résultat
+   * (best-effort) ; la surveillance des parutions programmées s'en sert pour
+   * réessayer ce qui a échoué.
+   */
+  async revalidate(tag: string): Promise<boolean> {
     const baseUrl = this.config.get<string>('WEB_REVALIDATE_URL');
     const secret = this.config.get<string>('REVALIDATE_SECRET');
     if (!baseUrl || !secret) {
       this.logger.warn(
         'WEB_REVALIDATE_URL/REVALIDATE_SECRET non définis : revalidation du site public ignorée.',
       );
-      return;
+      return false;
     }
 
     try {
@@ -38,10 +51,12 @@ export class FrontendRevalidator {
       if (!res.ok) {
         this.logger.warn(`Revalidation de ${tag} refusée (${res.status}).`);
       }
+      return res.ok;
     } catch (error) {
       this.logger.warn(
         `Revalidation de ${tag} impossible : ${error instanceof Error ? error.message : 'erreur inconnue'}`,
       );
+      return false;
     }
   }
 }
