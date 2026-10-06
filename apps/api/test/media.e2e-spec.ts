@@ -451,6 +451,101 @@ describe('Media (e2e)', () => {
       expect(trail[0].actorId).not.toBeNull();
     });
 
+    it('keeps a default alt text per image, audited, only for editorial staff', async () => {
+      const created = await upload(PNG_1X1, `${tag}-alt.png`).expect(201);
+      const id = created.body.id as string;
+      expect(created.body).toMatchObject({ altFr: null, altEn: null });
+      const patch = (body: object, headers: Record<string, string> = auth) =>
+        request(app.getHttpServer())
+          .patch(`/api/v1/admin/media/${id}`)
+          .set(headers)
+          .send(body);
+      const trail = () =>
+        prisma.auditLog.findMany({
+          where: { entityType: 'Media', entityId: id, action: 'MEDIA_UPDATED' },
+          orderBy: { createdAt: 'asc' },
+        });
+
+      // Réservé au personnel éditorial, et refusé sans compte.
+      await request(app.getHttpServer())
+        .patch(`/api/v1/admin/media/${id}`)
+        .send({ altFr: 'x' })
+        .expect(401);
+      const userToken = await login(userEmail);
+      await patch(
+        { altFr: 'x' },
+        { Authorization: `Bearer ${userToken}` },
+      ).expect(403);
+
+      // Saisie des deux langues : bords nettoyés, rendu dans la médiathèque.
+      const set = await patch({
+        altFr: '  Vue aérienne du site  ',
+        altEn: 'Aerial view of the site',
+      }).expect(200);
+      expect(set.body).toMatchObject({
+        id,
+        altFr: 'Vue aérienne du site',
+        altEn: 'Aerial view of the site',
+      });
+      const listed = await request(app.getHttpServer())
+        .get('/api/v1/admin/media')
+        .query({ q: `${tag}-alt` })
+        .set(auth)
+        .expect(200);
+      expect(listed.body.data[0]).toMatchObject({
+        altFr: 'Vue aérienne du site',
+        altEn: 'Aerial view of the site',
+      });
+
+      // Un seul champ : l'autre reste tel quel, et seul le champ modifié est audité.
+      await patch({ altEn: 'Aerial view' }).expect(200);
+      const rows = await trail();
+      expect(rows).toHaveLength(2);
+      expect(rows[0]).toMatchObject({
+        beforeData: { altFr: null, altEn: null },
+        afterData: {
+          altFr: 'Vue aérienne du site',
+          altEn: 'Aerial view of the site',
+        },
+      });
+      expect(rows[1]).toMatchObject({
+        beforeData: { altEn: 'Aerial view of the site' },
+        afterData: { altEn: 'Aerial view' },
+      });
+      expect(rows[1].actorId).not.toBeNull();
+      const kept = await prisma.media.findUniqueOrThrow({ where: { id } });
+      expect(kept.altFr).toBe('Vue aérienne du site');
+
+      // Une modification sans effet (même valeur, ou rien) n'écrit rien.
+      await patch({ altEn: ' Aerial view ' }).expect(200);
+      await patch({}).expect(200);
+      expect(await trail()).toHaveLength(2);
+
+      // Vide ou null efface ; au-delà de 300 caractères ou autre type : refusé.
+      const cleared = await patch({ altFr: '   ', altEn: null }).expect(200);
+      expect(cleared.body).toMatchObject({ altFr: null, altEn: null });
+      expect(await trail()).toHaveLength(3);
+      await patch({ altFr: 'x'.repeat(301) }).expect(400);
+      await patch({ altFr: 12 }).expect(400);
+      await patch({ mimeType: 'text/html' }).expect(400);
+      await request(app.getHttpServer())
+        .patch('/api/v1/admin/media/pas-un-uuid')
+        .set(auth)
+        .send({ altFr: 'x' })
+        .expect(400);
+      await request(app.getHttpServer())
+        .patch('/api/v1/admin/media/00000000-0000-4000-8000-000000000000')
+        .set(auth)
+        .send({ altFr: 'x' })
+        .expect(404);
+
+      // Le test suivant attend une médiathèque vide : on ne laisse rien derrière soi.
+      await request(app.getHttpServer())
+        .delete(`/api/v1/admin/media/${id}`)
+        .set(auth)
+        .expect(204);
+    });
+
     it('frees an image once the only content using it is deleted', async () => {
       await request(app.getHttpServer())
         .delete(`/api/v1/admin/articles/${articleId}`)

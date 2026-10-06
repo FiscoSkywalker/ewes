@@ -16,6 +16,9 @@ export interface MediaItem {
   mimeType: string;
   sizeBytes: number;
   originalName: string | null;
+  /** Texte alternatif par défaut : pré-remplit celui d'un contenu qui choisit l'image. */
+  altFr: string | null;
+  altEn: string | null;
   createdAt: string;
   uploadedByName: string | null;
   usages: MediaUsage[];
@@ -67,6 +70,9 @@ export const usageHref = (usage: MediaUsage) =>
  */
 export const thumbOf = (url: string) =>
   url.startsWith('/uploads/') ? `${url}?size=thumb` : url;
+
+/** Plafond d'un texte alternatif (`MAX_ALT_LENGTH` de l'API). */
+export const MAX_ALT_LENGTH = 300;
 
 /** Nom affichable : le nom d'origine, s'il a été conservé. */
 export const mediaName = (media: Pick<MediaItem, 'originalName'>) =>

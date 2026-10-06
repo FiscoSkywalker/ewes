@@ -22,6 +22,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import type { ListMediaDto } from './dto/list-media.dto.js';
+import type { UpdateMediaDto } from './dto/update-media.dto.js';
 import { detectImage } from './image-signature.js';
 
 /** Fichier reçu de multer (stockage mémoire) — seuls les champs utilisés. */
@@ -56,6 +57,9 @@ const NAME_COLLATOR = new Intl.Collator('fr', {
 /** Vignette servie par la même route que l'original (`?size=thumb`). */
 export const thumbUrl = (storedName: string) =>
   `${mediaUrl(storedName)}?size=thumb`;
+
+/** Texte alternatif saisi : espaces de bord retirés, vide = aucun. */
+const cleanAlt = (value: string | null) => value?.trim() || null;
 
 const URL_PREFIX = '/uploads/';
 const storedNameOf = (url: string) =>
@@ -400,6 +404,41 @@ export class MediaService {
     return media;
   }
 
+  /**
+   * Texte alternatif par défaut d'une image. Une valeur absente laisse le champ
+   * tel quel, vide ou `null` l'efface ; un changement est audité (avant/après
+   * des seuls champs modifiés), une modification sans effet n'écrit rien.
+   */
+  async update(id: string, dto: UpdateMediaDto, actor: AuthenticatedUser) {
+    const media = await this.findById(id);
+    const next = {
+      altFr: dto.altFr === undefined ? media.altFr : cleanAlt(dto.altFr),
+      altEn: dto.altEn === undefined ? media.altEn : cleanAlt(dto.altEn),
+    };
+    const changed = (['altFr', 'altEn'] as const).filter(
+      (field) => next[field] !== media[field],
+    );
+
+    if (changed.length > 0) {
+      await this.audit.record({
+        actorId: actor.id,
+        action: 'MEDIA_UPDATED',
+        entityType: 'Media',
+        entityId: id,
+        before: Object.fromEntries(changed.map((f) => [f, media[f]])),
+        after: Object.fromEntries(changed.map((f) => [f, next[f]])),
+      });
+      await this.prisma.media.update({ where: { id }, data: next });
+    }
+
+    const row = await this.prisma.media.findUniqueOrThrow({
+      where: { id },
+      include: WITH_UPLOADER,
+    });
+    const usages = await this.usageByStoredName([row.storedName]);
+    return this.toView(row, usages.get(row.storedName) ?? []);
+  }
+
   /** Supprime un média, sauf s'il illustre encore un contenu. */
   async remove(id: string, actor: AuthenticatedUser) {
     const media = await this.findById(id);
@@ -493,6 +532,8 @@ export class MediaService {
       mimeType: media.mimeType,
       sizeBytes: media.sizeBytes,
       originalName: media.originalName,
+      altFr: media.altFr,
+      altEn: media.altEn,
       createdAt: media.createdAt,
       // Nom seul : de quoi afficher « par … » sans exposer l'e-mail.
       uploadedByName: media.uploadedBy?.fullName ?? null,

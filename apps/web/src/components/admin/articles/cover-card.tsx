@@ -184,6 +184,9 @@ export function CoverCard({
         onClose={() => setPicking(false)}
         onConfirm={([media]) => {
           setChosen(media);
+          // Le texte alternatif par défaut de l'image, modifiable pour cet article.
+          setAltFr(media.altFr ?? '');
+          setAltEn(media.altEn ?? '');
           setError(null);
         }}
         title="Choisir la couverture"

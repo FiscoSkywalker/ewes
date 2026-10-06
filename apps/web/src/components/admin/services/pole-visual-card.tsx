@@ -82,9 +82,9 @@ export function PoleVisualCard({
     setDraft((d) => ({
       url: media.url,
       thumbUrl: media.thumbUrl,
-      // Une autre image : l'ancienne description ne vaut plus.
-      altFr: media.url === d.url ? d.altFr : '',
-      altEn: media.url === d.url ? d.altEn : '',
+      // Une autre image : l'ancienne description ne vaut plus, on part de celle de l'image.
+      altFr: media.url === d.url ? d.altFr : (media.altFr ?? ''),
+      altEn: media.url === d.url ? d.altEn : (media.altEn ?? ''),
     }));
     setError(null);
   }

@@ -658,6 +658,9 @@ model Media {
   mimeType     String
   sizeBytes    Int
   originalName String?
+  // Texte alternatif par défaut : pré-remplit celui d'un contenu qui choisit l'image.
+  altFr        String?
+  altEn        String?
   uploadedById String?
   uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
   createdAt    DateTime @default(now())

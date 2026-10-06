@@ -15,11 +15,14 @@ import {
   UserRound,
   Hammer,
 } from 'lucide-react';
-import { backendJson } from '@/lib/api/backend';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ApiError, backendJson } from '@/lib/api/backend';
 import { cx, focusRing } from '@/lib/admin/cx';
 import { formatLongDate } from '@/lib/admin/format';
+import { invalidatePortalData } from '@/lib/admin/invalidate';
 import { formatBytes } from '@/lib/admin/public-documents';
 import {
+  MAX_ALT_LENGTH,
   USAGE_TYPE_LABELS,
   absoluteUrl,
   formatLabel,
@@ -27,7 +30,15 @@ import {
   usageHref,
   type MediaItem,
 } from '@/lib/admin/media';
-import { Button, Dialog, IconButton, useConfirm, useToast } from '../ui';
+import {
+  Button,
+  Dialog,
+  Field,
+  IconButton,
+  Input,
+  useConfirm,
+  useToast,
+} from '../ui';
 
 /** Pictogramme du type de contenu qui utilise l'image. */
 const USAGE_ICONS = {
@@ -36,6 +47,96 @@ const USAGE_ICONS = {
   SERVICE: Layers,
   EXPERT: UserRound,
 } as const;
+
+/**
+ * Texte alternatif par défaut de l'image. Il pré-remplit celui d'un contenu
+ * qui choisit l'image ; les contenus qui l'utilisent déjà gardent le leur.
+ * Remonté par `key` à chaque image : les champs repartent de la valeur
+ * enregistrée quand on passe à l'image voisine.
+ */
+function DefaultAltForm({ media }: { media: MediaItem }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const [altFr, setAltFr] = useState(media.altFr ?? '');
+  const [altEn, setAltEn] = useState(media.altEn ?? '');
+  const [error, setError] = useState<string | null>(null);
+
+  const dirty =
+    altFr.trim() !== (media.altFr ?? '') ||
+    altEn.trim() !== (media.altEn ?? '');
+
+  const save = useMutation({
+    mutationFn: () =>
+      backendJson<MediaItem>(`admin/media/${media.id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ altFr: altFr.trim(), altEn: altEn.trim() }),
+      }),
+    onSuccess: async (saved) => {
+      setAltFr(saved.altFr ?? '');
+      setAltEn(saved.altEn ?? '');
+      setError(null);
+      await invalidatePortalData(queryClient);
+      toast.success('Texte alternatif enregistré');
+    },
+    onError: (caught) =>
+      setError(
+        caught instanceof ApiError
+          ? caught.message
+          : 'Le texte alternatif n’a pas pu être enregistré. Réessayez.',
+      ),
+  });
+
+  return (
+    <form
+      aria-labelledby="media-alt"
+      className="space-y-3"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (dirty && !save.isPending) save.mutate();
+      }}
+    >
+      <div>
+        <h3 id="media-alt" className="text-[13px] font-semibold text-ink">
+          Texte alternatif par défaut
+        </h3>
+        <p className="mt-1 text-xs leading-relaxed text-ink-subtle">
+          Décrit l’image pour les personnes qui ne la voient pas. Il est proposé
+          quand l’image est choisie dans un article, une réalisation ou un pôle
+          ; chaque contenu peut ensuite l’adapter. Les contenus qui l’utilisent
+          déjà ne changent pas.
+        </p>
+      </div>
+      <Field label="Français">
+        <Input
+          maxLength={MAX_ALT_LENGTH}
+          value={altFr}
+          onChange={(event) => setAltFr(event.target.value)}
+        />
+      </Field>
+      <Field label="Anglais">
+        <Input
+          maxLength={MAX_ALT_LENGTH}
+          value={altEn}
+          onChange={(event) => setAltEn(event.target.value)}
+        />
+      </Field>
+      {error && (
+        <p role="alert" className="text-xs font-medium text-bad">
+          {error}
+        </p>
+      )}
+      <Button
+        type="submit"
+        size="sm"
+        disabled={!dirty}
+        loading={save.isPending}
+      >
+        Enregistrer
+      </Button>
+    </form>
+  );
+}
 
 /**
  * Fiche d'une image : aperçu en grand, informations, contenus où elle est
@@ -193,6 +294,8 @@ export function MediaDetail({
               <dt className="text-ink-subtle">Nom d’origine</dt>
               <dd className="break-all text-ink">{mediaName(media)}</dd>
             </dl>
+
+            <DefaultAltForm key={media.id} media={media} />
 
             <div className="flex flex-wrap gap-2">
               <Button

@@ -94,8 +94,9 @@ export function GalleryCard({
       .map<DraftImage>((m) => ({
         url: m.url,
         thumbUrl: m.thumbUrl,
-        altFr: '',
-        altEn: '',
+        // Le texte alternatif par défaut de l'image, modifiable pour cette fiche.
+        altFr: m.altFr ?? '',
+        altEn: m.altEn ?? '',
       }));
     setImages((list) => [...list, ...fresh].slice(0, MAX_REALISATION_IMAGES));
     // La première nouvelle image est ouverte : on y décrit tout de suite l'image.

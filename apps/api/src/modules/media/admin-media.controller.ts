@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UploadedFile,
@@ -31,6 +32,7 @@ import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js
 import { MAX_IMAGE_BYTES } from './image-signature.js';
 import { DeleteManyMediaDto } from './dto/delete-many-media.dto.js';
 import { ListMediaDto } from './dto/list-media.dto.js';
+import { UpdateMediaDto } from './dto/update-media.dto.js';
 import { MediaService, type UploadedImage } from './media.service.js';
 
 @ApiTags('admin/media')
@@ -89,6 +91,19 @@ export class AdminMediaController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.mediaService.removeMany(dto.ids, user);
+  }
+
+  @Patch(':id')
+  @ApiOperation({
+    summary:
+      'Texte alternatif par défaut d’une image (FR/EN) : pré-remplit celui des contenus qui la choisissent',
+  })
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateMediaDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.mediaService.update(id, dto, user);
   }
 
   @Delete(':id')
