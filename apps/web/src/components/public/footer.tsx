@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { ArrowUp, Lock } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { getPoleServices } from '@/lib/api/public-services';
 import { getSiteSettings } from '@/lib/api/public-site-settings';
@@ -120,38 +120,32 @@ export async function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 pt-6 font-mono text-[11px] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 pt-6 font-mono text-[11px] sm:flex-row sm:items-center sm:justify-between">
         <div>
           © {new Date().getFullYear()} EWES S.A.R.L. {t('rights')}
         </div>
-        <nav
-          aria-label={tLegal('nav')}
-          className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:order-last sm:basis-full sm:border-t sm:border-on-night/12 sm:pt-4"
-        >
-          {LEGAL_SLUGS.map((slug) => (
-            <Link
-              key={slug}
-              href={`/${slug}`}
-              className="transition-colors hover:text-on-night"
-            >
-              {legalNames[slug]}
-            </Link>
-          ))}
-        </nav>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <Link
-            href="/documents"
-            className="flex items-center gap-1.5 transition-colors hover:text-malachite-bright"
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <nav
+            aria-label={tLegal('nav')}
+            className="flex flex-wrap items-center gap-x-5 gap-y-2"
           >
-            <Lock size={11} className="text-malachite-bright" />
-            {t('privateSpaceLink')}
-          </Link>
-          <span>{t('tagline')}</span>
+            {LEGAL_SLUGS.map((slug) => (
+              <Link
+                key={slug}
+                href={`/${slug}`}
+                className="transition-colors hover:text-on-night"
+              >
+                {legalNames[slug]}
+              </Link>
+            ))}
+          </nav>
           <a
             href="#"
-            className="flex items-center gap-1.5 transition-colors hover:text-on-night"
+            aria-label={t('backToTop')}
+            title={t('backToTop')}
+            className="grid size-8 flex-none place-items-center rounded-full border border-on-night/20 transition-colors hover:border-malachite-bright hover:text-malachite-bright"
           >
-            {t('backToTop')} <ArrowUp size={11} />
+            <ArrowUp size={14} aria-hidden="true" />
           </a>
         </div>
       </div>
