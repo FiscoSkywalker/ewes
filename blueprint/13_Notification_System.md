@@ -8,7 +8,7 @@
 
 E-mail transactionnel uniquement en V1 (SMTP, fournisseur à confirmer par EWES avant l'étape 04 du planning). Pas de push mobile (pas d'application mobile), pas de SMS. Un centre de notifications in-app côté portail d'administration peut être ajouté ultérieurement (voir `20_Project_Roadmap.md`) sans faire partie du périmètre initial.
 
-> **Panneau de notifications du portail (2026-10-02)** — la cloche de la barre supérieure n'est pas (encore) un centre de notifications serveur : elle reflète en direct, toutes les 60 s, les éléments qui attendent une action — nouveaux messages de contact (Administrateur, Gestionnaire) et e-mails en échec définitif (Administrateur), lus dans `GET /admin/contacts?status=NOUVEAU` et `GET /admin/notifications?status=failed`. Seul l'état « lu » est local au navigateur (horodatage par compte) ; l'information reste toujours retrouvable dans l'écran concerné (§5).
+> **Panneau de notifications du portail (2026-10-02)** — la cloche de la barre supérieure n'est pas (encore) un centre de notifications serveur : elle reflète en direct, toutes les 60 s, les éléments qui attendent une action — nouveaux messages de contact (Administrateur, Gestionnaire) et e-mails en échec définitif (Administrateur), lus dans `GET /admin/contacts?status=NOUVEAU` et `GET /admin/notifications?status=failed`. Seul l'état « lu » est mémorisé, **côté serveur et par compte** (`users.notificationsSeenAt`, `GET|PUT /me/notifications-seen`, depuis le 2026-10-07) : lu sur un appareil, il l'est sur les autres au prochain rafraîchissement (≤ 1 min) ; l'information reste toujours retrouvable dans l'écran concerné (§5).
 
 # 2. Catalogue d'événements
 

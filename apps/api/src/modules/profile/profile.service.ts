@@ -112,6 +112,43 @@ export class ProfileService {
     return toProfileView(await this.requireActive(id));
   }
 
+  /** Repère « tout lu jusqu'ici » de la cloche, commun à tous les appareils de la personne. */
+  async notificationsSeen(
+    actor: AuthenticatedUser,
+  ): Promise<{ seenAt: Date | null }> {
+    const user = await this.requireActive(actor.id);
+    return { seenAt: user.notificationsSeenAt };
+  }
+
+  /**
+   * Avance le repère jusqu'à `requested` (absent : maintenant). Ce n'est qu'un
+   * état d'affichage de la personne : jamais d'audit, jamais de droit. Il
+   * n'avance que vers l'avenir (une requête tardive d'un autre appareil ne
+   * défait pas ce qui a déjà été lu) et ne dépasse jamais l'instant présent.
+   */
+  async markNotificationsSeen(
+    actor: AuthenticatedUser,
+    requested?: string,
+  ): Promise<{ seenAt: Date | null }> {
+    const user = await this.requireActive(actor.id);
+    const now = new Date();
+    const asked = requested ? new Date(requested) : now;
+    const target = asked.getTime() > now.getTime() ? now : asked;
+    if (!user.notificationsSeenAt || user.notificationsSeenAt < target) {
+      await this.prisma.user.updateMany({
+        where: {
+          id: user.id,
+          OR: [
+            { notificationsSeenAt: null },
+            { notificationsSeenAt: { lt: target } },
+          ],
+        },
+        data: { notificationsSeenAt: target },
+      });
+    }
+    return this.notificationsSeen(actor);
+  }
+
   async account(actor: AuthenticatedUser): Promise<AccountView> {
     const user = await this.requireActive(actor.id);
     const sessions = await this.prisma.session.findMany({

@@ -77,6 +77,8 @@ model User {
   avatarName        String?
   /// Dernier changement de mot de passe par la personne ; `null` : jamais (mot de passe d'activation).
   passwordChangedAt DateTime?
+  /// « Tout lu jusqu'ici » de la cloche du portail, partagé entre les appareils de la personne ; `null` : rien de lu.
+  notificationsSeenAt DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?

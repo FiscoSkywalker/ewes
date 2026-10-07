@@ -123,7 +123,7 @@ function PortalFrame({
   const groups = navigationFor(session.role);
   const route = allowed ? resolveRoute(pathname) : null;
   const signals = usePortalSignals(session.role);
-  const { seenAt, markAllSeen } = useSeenAt(session.id);
+  const { seenAt, markAllSeen } = useSeenAt(session.role !== 'UTILISATEUR');
 
   // Changement de page : le tiroir mobile se referme (ajustement pendant le
   // rendu plutôt qu'un effet) et le contenu repart en haut.
@@ -218,7 +218,10 @@ function PortalFrame({
                   hiddenCount={signals.hiddenCount}
                   isAdmin={session.role === 'ADMINISTRATEUR'}
                   seenAt={seenAt}
-                  onMarkAllSeen={markAllSeen}
+                  onMarkAllSeen={() => {
+                    const newest = signals.signals[0]?.at;
+                    if (newest) markAllSeen(newest);
+                  }}
                   isLoading={signals.isLoading}
                   isError={signals.isError}
                   onRetry={signals.refetch}

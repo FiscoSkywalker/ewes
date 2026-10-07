@@ -32,6 +32,7 @@ import { MAX_IMAGE_BYTES } from '../media/image-signature.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import type { UploadedAvatar } from '../users/avatar-storage.service.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { MarkNotificationsSeenDto } from './dto/mark-notifications-seen.dto.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { ProfileService } from './profile.service.js';
 
@@ -69,6 +70,27 @@ export class MeController {
   })
   account(@CurrentUser() actor: AuthenticatedUser) {
     return this.profile.account(actor);
+  }
+
+  @Get('notifications-seen')
+  @ApiOperation({
+    summary:
+      'Repère « tout lu jusqu’ici » de la cloche, partagé entre ses appareils',
+  })
+  notificationsSeen(@CurrentUser() actor: AuthenticatedUser) {
+    return this.profile.notificationsSeen(actor);
+  }
+
+  @Put('notifications-seen')
+  @ApiOperation({
+    summary:
+      'Marquer la cloche comme lue jusqu’à un instant (le repère n’avance que vers l’avenir)',
+  })
+  markNotificationsSeen(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Body() dto: MarkNotificationsSeenDto,
+  ) {
+    return this.profile.markNotificationsSeen(actor, dto.seenAt);
   }
 
   @Post('password')

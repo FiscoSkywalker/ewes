@@ -53,11 +53,12 @@ describe('Profil (e2e)', () => {
         .set('X-Forwarded-For', ip())
         .set('Authorization', `Bearer ${token}`)
         .send(body),
-    put: (url: string) =>
+    put: (url: string, body?: object) =>
       http()
         .put(`/api/v1${url}`)
         .set('X-Forwarded-For', ip())
-        .set('Authorization', `Bearer ${token}`),
+        .set('Authorization', `Bearer ${token}`)
+        .send(body),
     delete: (url: string) =>
       http()
         .delete(`/api/v1${url}`)
@@ -355,6 +356,79 @@ describe('Profil (e2e)', () => {
       expect(locked.body.code).toBe('LOGIN_LOCKED');
       expect((await login(user.email)).status).toBe(429);
       expect(await auditOf(user.id, 'AUTH_ACCOUNT_LOCKED')).toHaveLength(1);
+    });
+  });
+
+  describe('cloche : repère « lu » partagé entre appareils', () => {
+    const seen = async (token: string) =>
+      (await as(token).get('/me/notifications-seen').expect(200)).body as {
+        seenAt: string | null;
+      };
+
+    it('part de « rien de lu », puis se lit depuis n’importe quel appareil de la personne', async () => {
+      const user = await makeUser('bell1');
+      const pc = (await open(user.email)).accessToken;
+      const phone = (await open(user.email)).accessToken;
+      expect((await seen(pc)).seenAt).toBeNull();
+
+      const before = Date.now();
+      const marked = await as(pc).put('/me/notifications-seen', {}).expect(200);
+      const after = Date.now();
+      const at = new Date(marked.body.seenAt as string).getTime();
+      expect(at).toBeGreaterThanOrEqual(before);
+      expect(at).toBeLessThanOrEqual(after);
+      // Le téléphone voit la même chose, et l'inverse aussi.
+      expect((await seen(phone)).seenAt).toBe(marked.body.seenAt);
+    });
+
+    it('avance jusqu’à l’horodatage demandé, ne recule jamais et ne dépasse pas maintenant', async () => {
+      const user = await makeUser('bell2');
+      const { accessToken } = await open(user.email);
+      const put = (seenAt: string) =>
+        as(accessToken).put('/me/notifications-seen', { seenAt });
+
+      const early = new Date(Date.now() - 3_600_000).toISOString();
+      const later = new Date(Date.now() - 60_000).toISOString();
+      expect((await put(early).expect(200)).body.seenAt).toBe(early);
+      expect((await put(later).expect(200)).body.seenAt).toBe(later);
+      // Un appareil en retard n'efface pas une lecture plus récente.
+      expect((await put(early).expect(200)).body.seenAt).toBe(later);
+
+      // Un horodatage futur est ramené à maintenant : impossible de « tout lire d'avance ».
+      const future = new Date(Date.now() + 86_400_000).toISOString();
+      const clamped = (await put(future).expect(200)).body.seenAt as string;
+      expect(new Date(clamped).getTime()).toBeLessThanOrEqual(Date.now());
+      expect(new Date(clamped).getTime()).toBeGreaterThan(Date.now() - 60_000);
+    });
+
+    it('refuse un horodatage mal formé et une clé inconnue', async () => {
+      const user = await makeUser('bell3');
+      const { accessToken } = await open(user.email);
+      await as(accessToken)
+        .put('/me/notifications-seen', { seenAt: 'hier' })
+        .expect(400);
+      await as(accessToken)
+        .put('/me/notifications-seen', { userId: user.id })
+        .expect(400);
+      expect((await seen(accessToken)).seenAt).toBeNull();
+    });
+
+    it('reste propre à la personne : jamais celui d’une autre, et sans jeton rien', async () => {
+      const a = await makeUser('bell4a');
+      const b = await makeUser('bell4b');
+      const tokenA = (await open(a.email)).accessToken;
+      const tokenB = (await open(b.email)).accessToken;
+      await as(tokenA).put('/me/notifications-seen', {}).expect(200);
+      expect((await seen(tokenB)).seenAt).toBeNull();
+      await http().get('/api/v1/me/notifications-seen').expect(401);
+      await http().put('/api/v1/me/notifications-seen').expect(401);
+    });
+
+    it('ne laisse aucune trace d’audit (simple état d’affichage)', async () => {
+      const user = await makeUser('bell5');
+      const { accessToken } = await open(user.email);
+      await as(accessToken).put('/me/notifications-seen', {}).expect(200);
+      expect(await prisma.auditLog.count({ where: { entityId: user.id, action: { contains: 'NOTIFICATION' } } })).toBe(0);
     });
   });
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { backendJson, type Paginated } from '@/lib/api/backend';
 import type { NavBadge } from '@/lib/admin/navigation';
 import type { Role } from '@/lib/admin/roles';
@@ -49,8 +49,9 @@ const SIGNAL_LIMIT = 10;
  *
  * Il n'existe pas (encore) de centre de notifications côté serveur
  * (blueprint/13_Notification_System.md §1) : ce panneau n'invente rien, il
- * reflète l'état réel des données. Seul l'état « lu » est local au
- * navigateur — un simple confort d'affichage.
+ * reflète l'état réel des données. Seul l'état « lu » est mémorisé, côté
+ * serveur et par compte (`useSeenAt`), pour être le même sur tous les
+ * appareils de la personne.
  */
 export function usePortalSignals(role: Role) {
   const isStaff = role === 'ADMINISTRATEUR' || role === 'GESTIONNAIRE';
@@ -136,29 +137,59 @@ export function usePortalSignals(role: Role) {
   };
 }
 
-function seenKey(userId: string) {
-  return `ewes.admin.notifications.seen.${userId}`;
+const SEEN_KEY = ['signals', 'seen'] as const;
+
+interface SeenState {
+  seenAt: string | null;
 }
 
-/** Horodatage « tout lu jusqu'ici », mémorisé par navigateur et par compte. */
-export function useSeenAt(userId: string) {
-  const [seenAt, setSeenAt] = useState<string>(() => {
-    try {
-      return localStorage.getItem(seenKey(userId)) ?? '';
-    } catch {
-      return '';
-    }
+/**
+ * Repère « tout lu jusqu'ici » de la cloche, mémorisé par le serveur pour la
+ * personne : lire sur le PC marque aussi lu sur le téléphone (au prochain
+ * rafraîchissement, au plus une minute, ou au retour sur l'onglet).
+ *
+ * `markAllSeen(upTo)` envoie l'horodatage du dernier élément réellement
+ * affiché, pas « maintenant » : un message arrivé après le dernier
+ * rafraîchissement mais avant le clic reste non lu. Le serveur ne fait jamais
+ * reculer le repère.
+ */
+export function useSeenAt(enabled: boolean) {
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: SEEN_KEY,
+    queryFn: () => backendJson<SeenState>('me/notifications-seen'),
+    enabled,
+    refetchInterval: POLL_MS,
+    refetchOnWindowFocus: true,
+    staleTime: 30_000,
   });
 
-  const markAllSeen = useCallback(() => {
-    const now = new Date().toISOString();
-    setSeenAt(now);
-    try {
-      localStorage.setItem(seenKey(userId), now);
-    } catch {
-      // Non mémorisé : l'état « lu » vaut pour cette visite seulement.
-    }
-  }, [userId]);
+  const mark = useMutation({
+    mutationFn: (upTo: string) =>
+      backendJson<SeenState>('me/notifications-seen', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ seenAt: upTo }),
+      }),
+    onMutate: async (upTo) => {
+      await queryClient.cancelQueries({ queryKey: SEEN_KEY });
+      const previous = queryClient.getQueryData<SeenState>(SEEN_KEY);
+      // Affichage immédiat ; le serveur fait foi à sa réponse.
+      queryClient.setQueryData<SeenState>(SEEN_KEY, {
+        seenAt:
+          previous?.seenAt && previous.seenAt > upTo ? previous.seenAt : upTo,
+      });
+      return { previous };
+    },
+    onSuccess: (saved) => queryClient.setQueryData(SEEN_KEY, saved),
+    onError: (_error, _upTo, context) => {
+      queryClient.setQueryData(SEEN_KEY, context?.previous);
+    },
+  });
 
-  return { seenAt, markAllSeen };
+  return {
+    /** `''` tant que le serveur n'a pas répondu ou que rien n'est lu : tout paraît non lu. */
+    seenAt: query.data?.seenAt ?? '',
+    markAllSeen: (upTo: string) => mark.mutate(upTo),
+  };
 }
