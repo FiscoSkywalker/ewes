@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowUpRight,
   BriefcaseBusiness,
@@ -44,16 +44,23 @@ const TONE: Record<Tone, { tile: string; glow: string }> = {
   bad: { tile: 'bg-bad-soft text-bad', glow: 'from-bad/12' },
 };
 
+/** Réponse de `GET /admin/dashboard` : un compteur par carte (`emails` : Administrateur seul). */
+interface PendingCounts {
+  contacts: number;
+  realisations: number;
+  articles: number;
+  documents: number;
+  emails: number | null;
+}
+
 interface Pending {
-  id: string;
+  id: keyof PendingCounts;
   label: string;
   caption: string;
   doneCaption: string;
   href: string;
   icon: LucideIcon;
   tone: Tone;
-  /** Chemin d'API renvoyant une liste paginée ; seul `meta.total` est lu. */
-  source: string;
   adminOnly?: boolean;
 }
 
@@ -71,7 +78,6 @@ const PENDING: Pending[] = [
     href: '/admin/contacts',
     icon: Inbox,
     tone: 'brand',
-    source: 'admin/contacts?status=NOUVEAU&limit=1',
   },
   {
     id: 'realisations',
@@ -81,7 +87,6 @@ const PENDING: Pending[] = [
     href: '/admin/realisations',
     icon: BriefcaseBusiness,
     tone: 'ing',
-    source: 'admin/realisations?status=DRAFT&limit=1',
   },
   {
     id: 'articles',
@@ -91,7 +96,6 @@ const PENDING: Pending[] = [
     href: '/admin/actualites',
     icon: Newspaper,
     tone: 'brand',
-    source: 'admin/articles?status=DRAFT&limit=1',
   },
   {
     id: 'documents',
@@ -101,7 +105,6 @@ const PENDING: Pending[] = [
     href: '/admin/documents-publics',
     icon: Library,
     tone: 'env',
-    source: 'admin/documents-publics?status=DRAFT&limit=1',
   },
   {
     id: 'emails',
@@ -111,7 +114,6 @@ const PENDING: Pending[] = [
     href: '/admin/emails',
     icon: MailWarning,
     tone: 'bad',
-    source: 'admin/notifications?status=failed&limit=1',
     adminOnly: true,
   },
 ];
@@ -184,14 +186,16 @@ export default function AdminDashboardPage() {
   );
 }
 
-function pendingQuery(item: Pending) {
-  return {
-    queryKey: ['dashboard', 'pending', item.id],
-    queryFn: () => backendJson<Paginated<unknown>>(item.source),
-    select: (page: Paginated<unknown>) => page.meta.total,
+/** Un seul appel pour toutes les cartes ; les cartes et la synthèse partagent la même requête. */
+function usePendingCounts() {
+  return useQuery({
+    queryKey: ['dashboard', 'pending'],
+    queryFn: async () =>
+      (await backendJson<{ pending: PendingCounts }>('admin/dashboard'))
+        .pending,
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
-  };
+  });
 }
 
 function Hero({
@@ -243,10 +247,8 @@ function Hero({
 
 /** « 4 éléments attendent votre attention » — somme des compteurs déjà chargés. */
 function PendingSummary({ pending }: { pending: Pending[] }) {
-  const counts = useQueries({ queries: pending.map(pendingQuery) });
-  const loading = counts.some((c) => c.isLoading);
-  const total = counts.reduce((sum, c) => sum + (c.data ?? 0), 0);
-  const failed = counts.some((c) => c.isError);
+  const { data, isLoading: loading, isError: failed } = usePendingCounts();
+  const total = pending.reduce((sum, item) => sum + (data?.[item.id] ?? 0), 0);
 
   let text: string;
   if (loading) text = 'Chargement de votre synthèse…';
@@ -264,7 +266,9 @@ function PendingSummary({ pending }: { pending: Pending[] }) {
 }
 
 function PendingCard({ item, index }: { item: Pending; index: number }) {
-  const { data, isLoading, isError } = useQuery(pendingQuery(item));
+  const counts = usePendingCounts();
+  const { isLoading, isError } = counts;
+  const data = counts.data?.[item.id] ?? undefined;
   const tone = TONE[item.tone];
   const Icon = item.icon;
   const done = data === 0;
