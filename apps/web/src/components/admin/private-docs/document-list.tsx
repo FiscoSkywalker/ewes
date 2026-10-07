@@ -5,6 +5,7 @@ import {
   Archive,
   ArchiveRestore,
   Download,
+  FileUp,
   FolderInput,
   Info,
   Loader2,
@@ -31,7 +32,11 @@ import {
   StatusChip,
   type MenuItem,
 } from '../ui';
-import { DocumentEditDialog, DocumentMoveDialog } from './document-dialogs';
+import {
+  DocumentEditDialog,
+  DocumentMoveDialog,
+  DocumentReplaceDialog,
+} from './document-dialogs';
 import { DocumentSheet } from './document-sheet';
 import { FileIcon } from './file-icon';
 import { useDocumentActions } from './use-document-actions';
@@ -83,6 +88,7 @@ export function DocumentList({
   const [opened, setOpened] = useState<PrivateDocument | null>(null);
   const [editing, setEditing] = useState<PrivateDocument | null>(null);
   const [moving, setMoving] = useState<PrivateDocument | null>(null);
+  const [replacing, setReplacing] = useState<PrivateDocument | null>(null);
 
   const frame = cx('rounded-2xl border border-line bg-panel', className);
 
@@ -125,6 +131,16 @@ export function DocumentList({
             icon: PenLine,
             onSelect: () => setEditing(document),
           },
+          ...(document.status === 'ARCHIVED'
+            ? []
+            : [
+                {
+                  id: 'replace',
+                  label: 'Remplacer le fichier',
+                  icon: FileUp,
+                  onSelect: () => setReplacing(document),
+                },
+              ]),
           {
             id: 'move',
             label: 'Déplacer',
@@ -284,6 +300,7 @@ export function DocumentList({
         onClose={() => setOpened(null)}
         onEdit={setEditing}
         onMove={setMoving}
+        onReplace={setReplacing}
       />
       <DocumentEditDialog
         document={editing}
@@ -294,6 +311,10 @@ export function DocumentList({
         document={moving}
         index={index}
         onClose={() => setMoving(null)}
+      />
+      <DocumentReplaceDialog
+        document={replacing}
+        onClose={() => setReplacing(null)}
       />
     </>
   );

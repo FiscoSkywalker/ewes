@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
-import { FolderInput } from 'lucide-react';
+import { FileUp, FolderInput } from 'lucide-react';
 import { backendJson, describeError } from '@/lib/api/backend';
 import { applyApiErrors } from '@/lib/admin/form-errors';
 import {
@@ -12,12 +12,16 @@ import {
   invalidateDocs,
   isStricter,
   pathTo,
+  privateFileProblem,
+  PRIVATE_FILE_ACCEPT,
+  uploadPrivateFile,
   type Confidentiality,
   type FolderIndex,
   type PrivateDocument,
 } from '@/lib/admin/private-docs';
 import { useSession } from '../session';
 import { Button, Dialog, Field, Input, Textarea, useToast } from '../ui';
+import { FilePicker } from '../content/file-picker';
 import {
   ConfidentialityPicker,
   type ConfidentialityOption,
@@ -50,7 +54,7 @@ export function DocumentEditDialog({
       onClose={onClose}
       size="lg"
       title="Modifier le document"
-      description="Le fichier lui-même ne change pas : pour le remplacer, téléversez la nouvelle version puis archivez l’ancienne."
+      description="Le fichier lui-même ne change pas : pour en déposer une nouvelle version, utilisez « Remplacer le fichier »."
     >
       {document && (
         <EditForm
@@ -322,6 +326,130 @@ function MoveForm({
         </Button>
         <Button onClick={move} loading={saving} disabled={!target}>
           Déplacer ici
+        </Button>
+      </DialogActions>
+    </div>
+  );
+}
+
+// --- Remplacer le fichier ---
+
+/**
+ * Dépose une nouvelle version du fichier **dans le même document** : nom,
+ * dossier, confidentialité et droits restent, seul le contenu change. Le
+ * serveur contrôle le type réel du fichier et le droit d'écriture.
+ */
+export function DocumentReplaceDialog({
+  document,
+  onClose,
+}: {
+  document: PrivateDocument | null;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog
+      open={Boolean(document)}
+      onClose={onClose}
+      size="lg"
+      title="Remplacer le fichier"
+      description={
+        document ? `« ${document.name} » — déposez la nouvelle version.` : ''
+      }
+    >
+      {document && (
+        <ReplaceForm key={document.id} document={document} onClose={onClose} />
+      )}
+    </Dialog>
+  );
+}
+
+function ReplaceForm({
+  document,
+  onClose,
+}: {
+  document: PrivateDocument;
+  onClose: () => void;
+}) {
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const [file, setFile] = useState<File | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const sending = progress !== null;
+
+  function choose(next: File | null) {
+    setFile(next);
+    setProblem(next ? privateFileProblem(next) : null);
+    setFormError(null);
+  }
+
+  async function send() {
+    if (!file || problem) return;
+    setProgress(0);
+    setFormError(null);
+    try {
+      await uploadPrivateFile(
+        () => {
+          const data = new FormData();
+          data.append('file', file);
+          return data;
+        },
+        setProgress,
+        undefined,
+        { method: 'PUT', path: `documents-prives/files/${document.id}/file` },
+      );
+      await invalidateDocs(queryClient);
+      toast.success('Fichier remplacé', { description: document.name });
+      onClose();
+    } catch (error) {
+      setFormError(describeError(error).message);
+      setProgress(null);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <FormAlert message={formError} />
+      <FilePicker
+        file={file}
+        error={problem}
+        onChange={choose}
+        disabled={sending}
+        accept={PRIVATE_FILE_ACCEPT}
+        idleLabel="Choisir le nouveau fichier"
+      />
+      <Note tone="brand" icon={FileUp}>
+        Le document garde son nom, son dossier, sa confidentialité et ses accès
+        : seul le contenu change, pour tout le monde, tout de suite. L’ancien
+        fichier n’est plus accessible depuis le portail ; le remplacement est
+        inscrit au journal d’audit.
+      </Note>
+      {progress !== null && (
+        <div
+          role="progressbar"
+          aria-label="Envoi du fichier"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress * 100)}
+          className="h-1.5 overflow-hidden rounded-full bg-sunken"
+        >
+          <div
+            className="h-full rounded-full bg-brand transition-[width]"
+            style={{ width: `${Math.round(progress * 100)}%` }}
+          />
+        </div>
+      )}
+      <DialogActions>
+        <Button variant="secondary" onClick={onClose} disabled={sending}>
+          Annuler
+        </Button>
+        <Button
+          onClick={send}
+          loading={sending}
+          disabled={!file || Boolean(problem)}
+        >
+          Remplacer le fichier
         </Button>
       </DialogActions>
     </div>

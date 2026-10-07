@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   Res,
   StreamableFile,
@@ -106,6 +107,33 @@ export class PrivateFilesController {
     return this.documents.update(user, id, dto);
   }
 
+  @Put(':id/file')
+  @ApiOperation({
+    summary:
+      'Remplacer le fichier d’un document (même document, mêmes droits ; l’ancien fichier est conservé hors d’atteinte)',
+  })
+  @ApiConsumes('multipart/form-data')
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_PRIVATE_FILE_BYTES, files: 1 },
+    }),
+  )
+  replaceFile(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: UploadedPrivateFile | undefined,
+  ) {
+    if (!file) {
+      throw new BadRequestException({
+        code: 'DOCUMENT_FILE_REQUIRED',
+        message: 'Aucun fichier reçu (champ « file »).',
+        details: ['file'],
+      });
+    }
+    return this.documents.replaceFile(user, id, file);
+  }
+
   @Post(':id/archive')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Archiver (reste consultable selon droit)' })
@@ -140,7 +168,8 @@ export class PrivateFilesController {
 
   @Get(':id/download')
   @ApiOperation({
-    summary: 'Télécharger : droit vérifié à chaque requête, téléchargement audité',
+    summary:
+      'Télécharger : droit vérifié à chaque requête, téléchargement audité',
   })
   async download(
     @CurrentUser() user: AuthenticatedUser,

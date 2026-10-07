@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Download,
   Eye,
+  FileUp,
   FolderInput,
   FolderOpen,
   KeyRound,
@@ -50,6 +51,7 @@ export function DocumentSheet({
   onClose,
   onEdit,
   onMove,
+  onReplace,
 }: {
   document: PrivateDocument | null;
   index: FolderIndex;
@@ -57,6 +59,7 @@ export function DocumentSheet({
   onClose: () => void;
   onEdit: (document: PrivateDocument) => void;
   onMove: (document: PrivateDocument) => void;
+  onReplace: (document: PrivateDocument) => void;
 }) {
   const type = document ? fileTypeOf(document.fileType) : null;
   return (
@@ -103,6 +106,7 @@ export function DocumentSheet({
           onClose={onClose}
           onEdit={onEdit}
           onMove={onMove}
+          onReplace={onReplace}
         />
       )}
     </Sheet>
@@ -116,6 +120,7 @@ function SheetBody({
   onClose,
   onEdit,
   onMove,
+  onReplace,
 }: {
   document: PrivateDocument;
   index: FolderIndex;
@@ -123,6 +128,7 @@ function SheetBody({
   onClose: () => void;
   onEdit: (document: PrivateDocument) => void;
   onMove: (document: PrivateDocument) => void;
+  onReplace: (document: PrivateDocument) => void;
 }) {
   const session = useSession();
   const isAdmin = session.role === 'ADMINISTRATEUR';
@@ -155,6 +161,20 @@ function SheetBody({
           onEdit(document);
         },
       },
+      ...(archived
+        ? []
+        : [
+            {
+              id: 'replace',
+              label: 'Remplacer le fichier',
+              hint: 'Nouvelle version, mêmes accès',
+              icon: FileUp,
+              onSelect: () => {
+                onClose();
+                onReplace(document);
+              },
+            },
+          ]),
       {
         id: 'move',
         label: 'Déplacer',

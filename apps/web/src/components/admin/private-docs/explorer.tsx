@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   ChevronRight,
   Eye,
+  FolderInput,
   FolderOpen,
   FolderPlus,
   FolderSearch,
@@ -62,6 +63,7 @@ import { DocumentList } from './document-list';
 import { FolderIcon } from './file-icon';
 import { FolderCard, folderSummary } from './folder-card';
 import { FolderDialog, type FolderDialogTarget } from './folder-dialog';
+import { FolderMoveDialog } from './folder-move-dialog';
 import { FolderTree } from './folder-tree';
 import { UploadTray } from './upload-tray';
 import { useFolders } from './use-folders';
@@ -95,6 +97,7 @@ export function Explorer() {
   const uploads = usePrivateUpload();
 
   const [dialog, setDialog] = useState<FolderDialogTarget | null>(null);
+  const [moving, setMoving] = useState<PrivateFolder | null>(null);
   const [treeOpen, setTreeOpen] = useState(false);
 
   const folder = folderId ? (index.byId.get(folderId) ?? null) : null;
@@ -187,6 +190,7 @@ export function Explorer() {
         uploads={uploads}
         onBrowse={() => setTreeOpen(true)}
         onDialog={setDialog}
+        onMove={setMoving}
         onDeleted={(parentId) => router.replace(folderHref(parentId))}
       />
     );
@@ -240,6 +244,11 @@ export function Explorer() {
           // Un dossier créé s'ouvre aussitôt : on y dépose ses fichiers dans la foulée.
           if (dialog?.mode === 'create') router.push(folderHref(saved.id));
         }}
+      />
+      <FolderMoveDialog
+        folder={moving}
+        index={index}
+        onClose={() => setMoving(null)}
       />
     </>
   );
@@ -495,6 +504,7 @@ function FolderView({
   uploads,
   onBrowse,
   onDialog,
+  onMove,
   onDeleted,
 }: {
   folder: PrivateFolder;
@@ -503,6 +513,7 @@ function FolderView({
   uploads: Uploads;
   onBrowse: () => void;
   onDialog: (target: FolderDialogTarget) => void;
+  onMove: (folder: PrivateFolder) => void;
   onDeleted: (parentId: string | null) => void;
 }) {
   const toast = useToast();
@@ -605,6 +616,12 @@ function FolderView({
       : []),
     ...(isAdmin
       ? [
+          {
+            id: 'move',
+            label: 'Déplacer le dossier',
+            icon: FolderInput,
+            onSelect: () => onMove(folder),
+          },
           {
             id: 'delete',
             label: 'Supprimer le dossier',

@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ConfidentialityLevel,
@@ -32,6 +33,13 @@ const CLASSIFICATION_FIELDS = [
   'year',
   'department',
 ] as const;
+
+const folderNotFound = () =>
+  new NotFoundException({
+    code: 'FOLDER_NOT_FOUND',
+    message: 'Dossier introuvable.',
+    details: [],
+  });
 
 const adminOnly = (message: string) =>
   new ForbiddenException({
@@ -93,9 +101,7 @@ export class PrivateFoldersService {
   async list(user: AuthenticatedUser) {
     const scope = await this.access.scopeFor(user);
     const folders = await this.prisma.folder.findMany({
-      where: scope.isAdmin
-        ? {}
-        : { id: { in: [...scope.readableFolderIds] } },
+      where: scope.isAdmin ? {} : { id: { in: [...scope.readableFolderIds] } },
       orderBy: [{ category: 'asc' }, { name: 'asc' }],
     });
     const counts = await this.documentCounts(scope);
@@ -110,7 +116,9 @@ export class PrivateFoldersService {
   async get(user: AuthenticatedUser, id: string) {
     const scope = await this.access.scopeFor(user);
     await this.access.assertReadFolder(scope, id);
-    const folder = await this.prisma.folder.findUniqueOrThrow({ where: { id } });
+    const folder = await this.prisma.folder.findUniqueOrThrow({
+      where: { id },
+    });
     const children = await this.prisma.folder.findMany({
       where: {
         parentId: id,
@@ -137,10 +145,14 @@ export class PrivateFoldersService {
       parentLevel = scope.folderLevels.get(dto.parentId);
     } else if (!scope.isAdmin) {
       // Seul un Administrateur crée un dossier de premier niveau (09 §4).
-      throw adminOnly('Seul un Administrateur peut créer un dossier de premier niveau.');
+      throw adminOnly(
+        'Seul un Administrateur peut créer un dossier de premier niveau.',
+      );
     }
     if (dto.confidentiality && !scope.isAdmin) {
-      throw adminOnly('Seul un Administrateur définit la confidentialité d’un dossier.');
+      throw adminOnly(
+        'Seul un Administrateur définit la confidentialité d’un dossier.',
+      );
     }
 
     const folder = await this.prisma.folder.create({
@@ -174,21 +186,29 @@ export class PrivateFoldersService {
     const scope = await this.access.scopeFor(user);
     await this.access.assertWriteFolder(scope, id);
     if (dto.confidentiality !== undefined && !scope.isAdmin) {
-      throw adminOnly('Seul un Administrateur modifie la confidentialité d’un dossier.');
+      throw adminOnly(
+        'Seul un Administrateur modifie la confidentialité d’un dossier.',
+      );
     }
 
-    const before = await this.prisma.folder.findUniqueOrThrow({ where: { id } });
+    const before = await this.prisma.folder.findUniqueOrThrow({
+      where: { id },
+    });
     const data: Prisma.FolderUpdateInput = {
       confidentiality: dto.confidentiality,
     };
     for (const field of CLASSIFICATION_FIELDS) {
-      if (dto[field] !== undefined) Object.assign(data, { [field]: dto[field] });
+      if (dto[field] !== undefined)
+        Object.assign(data, { [field]: dto[field] });
     }
     const folder = await this.prisma.folder.update({ where: { id }, data });
 
     const changed: Record<string, unknown> = {};
     const previous: Record<string, unknown> = {};
-    for (const field of [...CLASSIFICATION_FIELDS, 'confidentiality'] as const) {
+    for (const field of [
+      ...CLASSIFICATION_FIELDS,
+      'confidentiality',
+    ] as const) {
       if (folder[field] !== before[field]) {
         previous[field] = before[field];
         changed[field] = folder[field];
@@ -212,7 +232,9 @@ export class PrivateFoldersService {
   async remove(user: AuthenticatedUser, id: string) {
     const scope = await this.access.scopeFor(user);
     await this.access.assertReadFolder(scope, id);
-    const folder = await this.prisma.folder.findUniqueOrThrow({ where: { id } });
+    const folder = await this.prisma.folder.findUniqueOrThrow({
+      where: { id },
+    });
 
     const [children, documents] = await Promise.all([
       this.prisma.folder.count({ where: { parentId: id } }),
@@ -222,7 +244,8 @@ export class PrivateFoldersService {
     if (children > 0 || documents > 0) {
       throw new ConflictException({
         code: 'FOLDER_NOT_EMPTY',
-        message: 'Ce dossier contient encore des sous-dossiers ou des documents.',
+        message:
+          'Ce dossier contient encore des sous-dossiers ou des documents.',
         details: [],
       });
     }
@@ -248,6 +271,85 @@ export class PrivateFoldersService {
       entityId: id,
       before: { name: folder.name, parentId: folder.parentId },
     });
+  }
+
+  /**
+   * Déplace un dossier (avec tout son contenu) sous un autre parent, ou au
+   * premier niveau. **Administrateur seul** : les droits suivent l'arborescence
+   * (un droit sur un dossier couvre ses descendants), donc déplacer un dossier
+   * change qui peut le voir — c'est une modification de droits (blueprint/11 §3 :
+   * « seul un Administrateur crée ou modifie un droit »). Le dossier garde sa
+   * confidentialité et ses droits directs ; ses documents ne bougent pas.
+   * Refusé sous lui-même ou sous un de ses descendants (cycle).
+   */
+  async move(user: AuthenticatedUser, id: string, parentId: string | null) {
+    const scope = await this.access.scopeFor(user);
+    if (!scope.isAdmin) {
+      throw adminOnly('Seul un Administrateur peut déplacer un dossier.');
+    }
+    await this.access.assertReadFolder(scope, id);
+
+    // Lecture de l'arbre et écriture dans la même transaction sérialisable : deux
+    // déplacements simultanés ne peuvent pas, ensemble, fermer une boucle.
+    const { before, folder, parentName, previousParentName } =
+      await this.prisma.$transaction(
+        async (tx) => {
+          const nodes = await tx.folder.findMany({
+            select: { id: true, name: true, parentId: true },
+          });
+          const byId = new Map(nodes.map((n) => [n.id, n]));
+          const current = byId.get(id);
+          if (!current) throw folderNotFound();
+          if (parentId !== null && !byId.has(parentId)) throw folderNotFound();
+
+          for (
+            let cursor = parentId ? byId.get(parentId) : undefined, hops = 0;
+            cursor && hops <= nodes.length;
+            cursor = cursor.parentId ? byId.get(cursor.parentId) : undefined,
+              hops += 1
+          ) {
+            if (cursor.id === id) {
+              throw new ConflictException({
+                code: 'FOLDER_MOVE_INVALID',
+                message:
+                  'Un dossier ne peut pas être déplacé dans lui-même ni dans l’un de ses sous-dossiers.',
+                details: [],
+              });
+            }
+          }
+
+          const previous = byId.get(current.parentId ?? '');
+          const target = parentId ? byId.get(parentId) : undefined;
+          const folder =
+            current.parentId === parentId
+              ? await tx.folder.findUniqueOrThrow({ where: { id } })
+              : await tx.folder.update({ where: { id }, data: { parentId } });
+          return {
+            before: current,
+            folder,
+            parentName: target?.name ?? null,
+            previousParentName: previous?.name ?? null,
+          };
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+
+    if (before.parentId !== folder.parentId) {
+      await this.audit.record({
+        actorId: user.id,
+        action: 'FOLDER_MOVED',
+        entityType: 'Folder',
+        entityId: id,
+        before: {
+          name: folder.name,
+          parentId: before.parentId,
+          parentName: previousParentName,
+        },
+        after: { name: folder.name, parentId: folder.parentId, parentName },
+      });
+    }
+    const counts = await this.documentCounts(scope, [id]);
+    return this.view(scope, folder, counts.get(id) ?? 0);
   }
 
   /** Utilisé par les documents : dossier lisible ou 403. */

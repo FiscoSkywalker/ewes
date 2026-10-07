@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -26,7 +27,10 @@ import type {
   UpdatePrivateDocumentDto,
   UploadPrivateDocumentDto,
 } from './dto/private-document.dto.js';
-import { DOCUMENT_INCLUDE, PrivateAccessService } from './private-access.service.js';
+import {
+  DOCUMENT_INCLUDE,
+  PrivateAccessService,
+} from './private-access.service.js';
 import {
   PrivateStorageService,
   type UploadedPrivateFile,
@@ -44,7 +48,9 @@ type DocumentWithFolder = PrivateDocument & {
 const TYPE_FAMILY_MIMES: Record<DocumentTypeFamily, string[]> = {
   pdf: ['application/pdf'],
   image: ['image/jpeg', 'image/png', 'image/webp'],
-  word: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  word: [
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ],
   excel: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
   powerpoint: [
     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -56,8 +62,16 @@ const adminOnly = (message: string) =>
 
 /** Nom de fichier de téléchargement : ASCII sûr + forme UTF-8 (RFC 5987) pour les accents. */
 function contentDisposition(name: string, extension: string) {
-  const base = name.replace(/[\\/:*?"<>|\r\n\t]+/g, ' ').trim().slice(0, 150) || 'document';
-  const ascii = base.normalize('NFD').replace(/[^\x20-\x7e]/g, '').replace(/"/g, '') || 'document';
+  const base =
+    name
+      .replace(/[\\/:*?"<>|\r\n\t]+/g, ' ')
+      .trim()
+      .slice(0, 150) || 'document';
+  const ascii =
+    base
+      .normalize('NFD')
+      .replace(/[^\x20-\x7e]/g, '')
+      .replace(/"/g, '') || 'document';
   const encoded = encodeURIComponent(`${base}.${extension}`);
   return `attachment; filename="${ascii}.${extension}"; filename*=UTF-8''${encoded}`;
 }
@@ -152,7 +166,8 @@ export class PrivateDocumentsService {
     if (
       dto.confidentiality &&
       !scope.isAdmin &&
-      confidentialityRank(dto.confidentiality) < confidentialityRank(folderLevel)
+      confidentialityRank(dto.confidentiality) <
+        confidentialityRank(folderLevel)
     ) {
       throw adminOnly(
         'Seul un Administrateur peut abaisser la confidentialité sous celle du dossier.',
@@ -161,7 +176,8 @@ export class PrivateDocumentsService {
 
     const { storedName, detected } = await this.storage.save(file);
     const name =
-      dto.name ?? (file.originalname.replace(/\.[^.]*$/, '').slice(0, 200) || 'document');
+      dto.name ??
+      (file.originalname.replace(/\.[^.]*$/, '').slice(0, 200) || 'document');
     let document;
     try {
       document = await this.prisma.privateDocument.create({
@@ -215,15 +231,22 @@ export class PrivateDocumentsService {
     // surcharge, déplacement vers un dossier moins strict) : Administrateur seul.
     const level = (folderId: string, override: ConfidentialityLevel | null) =>
       confidentialityRank(
-        override ?? scope.folderLevels.get(folderId) ?? ConfidentialityLevel.CONFIDENTIEL,
+        override ??
+          scope.folderLevels.get(folderId) ??
+          ConfidentialityLevel.CONFIDENTIEL,
       );
     const newOverride =
-      dto.confidentiality === undefined ? current.confidentiality : dto.confidentiality;
+      dto.confidentiality === undefined
+        ? current.confidentiality
+        : dto.confidentiality;
     if (
       !scope.isAdmin &&
-      level(targetFolderId, newOverride) < level(current.folderId, current.confidentiality)
+      level(targetFolderId, newOverride) <
+        level(current.folderId, current.confidentiality)
     ) {
-      throw adminOnly('Seul un Administrateur peut abaisser la confidentialité d’un document.');
+      throw adminOnly(
+        'Seul un Administrateur peut abaisser la confidentialité d’un document.',
+      );
     }
 
     const updated = await this.prisma.privateDocument.update({
@@ -239,7 +262,12 @@ export class PrivateDocumentsService {
 
     const before: Record<string, unknown> = {};
     const after: Record<string, unknown> = {};
-    for (const field of ['name', 'description', 'confidentiality', 'folderId'] as const) {
+    for (const field of [
+      'name',
+      'description',
+      'confidentiality',
+      'folderId',
+    ] as const) {
       if (updated[field] !== current[field]) {
         before[field] = current[field];
         after[field] = updated[field];
@@ -255,6 +283,84 @@ export class PrivateDocumentsService {
         after: after as Prisma.InputJsonObject,
       });
     }
+    return this.view(scope, updated);
+  }
+
+  /**
+   * Remplace le fichier d'un document **sans changer le document** : même
+   * identifiant, même nom, même dossier, mêmes confidentialité et droits
+   * (un lien ou un partage existant continue de fonctionner). Droit requis :
+   * celui de modifier le document. Un document archivé doit d'abord être
+   * restauré (il est figé). Le nouveau fichier est validé sur son contenu comme
+   * au téléversement.
+   *
+   * L'ancien fichier **reste sur le disque**, inatteignable (comme une
+   * suppression logique, blueprint/11 §3.5) : un remplacement par erreur reste
+   * récupérable par l'exploitant, son nom de stockage est consigné dans l'audit.
+   * Pas de gestion de versions en V1.
+   */
+  async replaceFile(
+    user: AuthenticatedUser,
+    id: string,
+    file: UploadedPrivateFile,
+  ) {
+    const scope = await this.access.scopeFor(user);
+    const current = await this.access.writableDocument(scope, id);
+    if (current.status === DocumentLifecycleStatus.ARCHIVED) {
+      throw new ConflictException({
+        code: 'DOCUMENT_ARCHIVED',
+        message:
+          'Ce document est archivé : restaurez-le avant de remplacer son fichier.',
+        details: [],
+      });
+    }
+
+    const { storedName, detected } = await this.storage.save(file);
+    let updated;
+    try {
+      // Conditionné au fichier lu plus haut : deux remplacements simultanés ne
+      // s'écrasent pas en silence (le second est refusé, son fichier retiré).
+      const { count } = await this.prisma.privateDocument.updateMany({
+        where: { id, storedName: current.storedName, deletedAt: null },
+        data: {
+          storedName,
+          fileType: detected.mimeType,
+          fileSizeBytes: file.size,
+        },
+      });
+      if (count === 0) {
+        throw new ConflictException({
+          code: 'DOCUMENT_CHANGED',
+          message:
+            'Ce document vient d’être modifié par quelqu’un d’autre : rechargez-le puis recommencez.',
+          details: [],
+        });
+      }
+      updated = await this.prisma.privateDocument.findUniqueOrThrow({
+        where: { id },
+        include: DOCUMENT_INCLUDE,
+      });
+    } catch (error) {
+      await this.storage.remove(storedName);
+      throw error;
+    }
+    await this.audit.record({
+      actorId: user.id,
+      action: 'DOCUMENT_REPLACED',
+      entityType: 'PrivateDocument',
+      entityId: id,
+      before: {
+        name: current.name,
+        fileType: current.fileType,
+        fileSizeBytes: current.fileSizeBytes,
+        previousFile: current.storedName,
+      },
+      after: {
+        name: current.name,
+        fileType: detected.mimeType,
+        fileSizeBytes: file.size,
+      },
+    });
     return this.view(scope, updated);
   }
 
@@ -331,7 +437,10 @@ export class PrivateDocumentsService {
       action: 'DOCUMENT_DOWNLOADED',
       entityType: 'PrivateDocument',
       entityId: id,
-      after: { fileType: document.fileType, fileSizeBytes: document.fileSizeBytes },
+      after: {
+        fileType: document.fileType,
+        fileSizeBytes: document.fileSizeBytes,
+      },
     });
     const extension = document.storedName.split('.').pop()!;
     return {
@@ -390,7 +499,9 @@ export class PrivateDocumentsService {
           { id: { in: candidates.map((c) => c.id) } },
           {
             ...(query.status && { status: query.status }),
-            ...(query.type && { fileType: { in: TYPE_FAMILY_MIMES[query.type] } }),
+            ...(query.type && {
+              fileType: { in: TYPE_FAMILY_MIMES[query.type] },
+            }),
           },
           // Classement du dossier : sans effet sur un document partagé isolément
           // (son dossier n'est pas révélé, on ne filtre donc pas dessus).

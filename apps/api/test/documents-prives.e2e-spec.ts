@@ -50,7 +50,7 @@ describe('Documents privés (e2e)', () => {
   const get = (token: string, url: string) =>
     request(app.getHttpServer()).get(`/api/v1${url}`).set(bearer(token));
   const send = (
-    method: 'post' | 'patch' | 'delete',
+    method: 'post' | 'patch' | 'put' | 'delete',
     token: string,
     url: string,
     body?: object,
@@ -93,6 +93,33 @@ describe('Documents privés (e2e)', () => {
       .set(bearer(token))
       .buffer(true)
       .parse(binary);
+
+  const replace = (
+    token: string,
+    id: string,
+    file: Buffer,
+    filename = 'nouvelle-version.pdf',
+  ) =>
+    request(app.getHttpServer())
+      .put(`/api/v1/documents-prives/files/${id}/file`)
+      .set(bearer(token))
+      .attach('file', file, filename);
+  const storedFiles = async () => (existsSync(storageDir) ? readdir(storageDir) : []);
+  const moveFolder = (token: string, id: string, parentId: string | null | undefined) =>
+    send('post', token, `/documents-prives/folders/${id}/move`, parentId === undefined ? {} : { parentId });
+  /** Dossiers créés par les scénarios de déplacement, supprimés en fin de suite (les plus récents d'abord). */
+  const extraFolders: string[] = [];
+  const makeFolder = async (name: string, parentId?: string, category = 'Test') => {
+    const created = (
+      await send('post', tAdmin, '/documents-prives/folders', {
+        name: `${tag} ${name}`,
+        category,
+        ...(parentId && { parentId }),
+      }).expect(201)
+    ).body.id as string;
+    extraFolders.push(created);
+    return created;
+  };
 
   const grantFolder = async (folderId: string, userId: string) =>
     (await send('post', tAdmin, '/admin/access-grants/folders', { folderId, userId }).expect(201))
@@ -161,8 +188,12 @@ describe('Documents privés (e2e)', () => {
   });
 
   afterAll(async () => {
-    const folderIds = [ids.root, ids.sub, ids.other].filter(Boolean);
+    const folderIds = [ids.root, ids.sub, ids.other, ...extraFolders].filter(Boolean);
     await prisma.privateDocument.deleteMany({ where: { folderId: { in: folderIds } } });
+    for (const id of [...extraFolders].reverse()) {
+      await prisma.folder.updateMany({ where: { parentId: id }, data: { parentId: null } });
+      await prisma.folder.deleteMany({ where: { id } });
+    }
     await prisma.folder.deleteMany({ where: { id: ids.sub } });
     await prisma.folder.deleteMany({ where: { id: { in: [ids.root, ids.other].filter(Boolean) } } });
     const userIds = Object.values(emails);
@@ -613,5 +644,207 @@ describe('Documents privés (e2e)', () => {
     // Aucune route d'écriture n'existe.
     await send('delete', tAdmin, `/admin/audit-logs/${first.id}`).expect(404);
     await send('patch', tAdmin, `/admin/audit-logs/${first.id}`, { action: 'X' }).expect(404);
+  });
+
+  it('moves a folder with its content — administrator only — and the rights follow the tree', async () => {
+    const source = await makeFolder('Déplacé');
+    const child = await makeFolder('Enfant', source);
+    const target = await makeFolder('Cible', undefined, 'Juridique');
+    const doc = await upload(tAdmin, child, pdf('dans-enfant'), { name: `${tag} Pièce` }).expect(201);
+    const grant = await grantFolder(target, ids.user1);
+
+    // Avant : le droit sur la cible ne couvre pas le dossier.
+    await get(tUser1, `/documents-prives/folders/${child}`).expect(403);
+
+    // Ni le Gestionnaire (même avec droit d'écriture) ni l'Utilisateur ne déplacent.
+    const writer = await grantFolder(source, ids.gest);
+    for (const token of [tGest, tUser1]) {
+      const refused = await moveFolder(token, source, target);
+      expect(refused.status).toBe(403);
+      expect(refused.body.code).toBe('FORBIDDEN_ROLE');
+    }
+    await revokeFolder(writer);
+    await request(app.getHttpServer())
+      .post(`/api/v1/documents-prives/folders/${source}/move`)
+      .send({ parentId: target })
+      .expect(401);
+
+    // Déplacement de l'enfant sous la cible : ses documents le suivent, sans changer.
+    const moved = await moveFolder(tAdmin, child, target).expect(200);
+    expect(moved.body.parentId).toBe(target);
+    expect(moved.body.documentCount).toBe(1);
+    const after = await get(tAdmin, `/documents-prives/files/${doc.body.id}`).expect(200);
+    expect(after.body.folderId).toBe(child);
+    expect(after.body.confidentiality).toBe('RESTREINT');
+
+    // Le droit de la cible couvre maintenant le dossier déplacé et son document.
+    await get(tUser1, `/documents-prives/folders/${child}`).expect(200);
+    await get(tUser1, `/documents-prives/files/${doc.body.id}`).expect(200);
+    const tree = (await get(tUser1, '/documents-prives/folders').expect(200)).body.data as {
+      id: string;
+      parentId: string | null;
+    }[];
+    expect(tree.find((f) => f.id === child)?.parentId).toBe(target);
+
+    // Au premier niveau : plus de parent, et le droit hérité de la cible disparaît.
+    const top = await moveFolder(tAdmin, child, null).expect(200);
+    expect(top.body.parentId).toBeNull();
+    await get(tUser1, `/documents-prives/folders/${child}`).expect(403);
+    await get(tUser1, `/documents-prives/files/${doc.body.id}`).expect(403);
+
+    // Journal : un seul événement par déplacement réel, avec les noms avant/après.
+    const events = (await auditOf(`action=FOLDER_MOVED&entityId=${child}`)).reverse();
+    expect(events).toHaveLength(2);
+    expect(events[0].beforeData).toMatchObject({ parentId: source, parentName: `${tag} Déplacé` });
+    expect(events[0].afterData).toMatchObject({ parentId: target, parentName: `${tag} Cible` });
+    expect(events[1].beforeData).toMatchObject({ parentId: target });
+    expect(events[1].afterData).toMatchObject({ parentId: null, parentName: null });
+
+    // Déplacer au même endroit : sans effet, sans trace.
+    await moveFolder(tAdmin, child, null).expect(200);
+    expect(await auditOf(`action=FOLDER_MOVED&entityId=${child}`)).toHaveLength(2);
+    await revokeFolder(grant);
+  });
+
+  it('refuses to move a folder into itself or its own descendants, and rejects bad targets', async () => {
+    const a = await makeFolder('Boucle A');
+    const b = await makeFolder('Boucle B', a);
+    const c = await makeFolder('Boucle C', b);
+
+    for (const [id, target] of [
+      [a, a],
+      [a, b],
+      [a, c],
+      [b, c],
+    ] as const) {
+      const res = await moveFolder(tAdmin, id, target);
+      expect(res.status).toBe(409);
+      expect(res.body.code).toBe('FOLDER_MOVE_INVALID');
+    }
+    // L'arbre est intact.
+    const tree = (await get(tAdmin, '/documents-prives/folders').expect(200)).body.data as {
+      id: string;
+      parentId: string | null;
+    }[];
+    const parentOf = (id: string) => tree.find((f) => f.id === id)?.parentId;
+    expect([parentOf(a), parentOf(b), parentOf(c)]).toEqual([null, a, b]);
+
+    await moveFolder(tAdmin, a, '00000000-0000-4000-8000-000000000000').expect(404);
+    await moveFolder(tAdmin, '00000000-0000-4000-8000-000000000000', a).expect(404);
+    await moveFolder(tAdmin, a, 'pas-un-uuid').expect(400);
+    await moveFolder(tAdmin, a, undefined).expect(400);
+    // Remonter une branche entière fonctionne : C devient fille de A.
+    expect((await moveFolder(tAdmin, c, a).expect(200)).body.parentId).toBe(a);
+  });
+
+  it('replaces the file of a document in place: same document and rights, new content, old file kept out of reach', async () => {
+    const created = await upload(tGest, ids.sub, pdf('version-1'), { name: `${tag} Rapport` }).expect(201);
+    const id = created.body.id as string;
+    const docGrant = await grantDocument(id, ids.user2);
+    const filesBefore = await storedFiles();
+
+    const v2 = Buffer.concat([pdf('version-2'), Buffer.from('X'.repeat(500))]);
+    const replaced = await replace(tGest, id, v2).expect(200);
+    expect(replaced.body).toMatchObject({
+      id,
+      name: `${tag} Rapport`,
+      folderId: ids.sub,
+      confidentiality: created.body.confidentiality,
+      fileType: 'application/pdf',
+      fileSizeBytes: v2.length,
+      status: 'ACTIVE',
+      uploadedByName: created.body.uploadedByName,
+    });
+    expect(JSON.stringify(replaced.body)).not.toMatch(/storedName|previousFile/);
+
+    // Le téléchargement rend le nouveau contenu, y compris pour qui a un droit sur le document.
+    const dl = await download(tGest, id).expect(200);
+    expect(Buffer.compare(dl.body as Buffer, v2)).toBe(0);
+    expect(Buffer.compare((await download(tUser2, id).expect(200)).body as Buffer, v2)).toBe(0);
+
+    // Un fichier de plus sur le disque : l'ancien est conservé, aucune route ne le sert.
+    const filesAfter = await storedFiles();
+    expect(filesAfter).toHaveLength(filesBefore.length + 1);
+
+    // Journal : qui, avant/après, et le fichier conservé.
+    const [entry] = await auditOf(`action=DOCUMENT_REPLACED&entityId=${id}`);
+    expect(entry.actorId).toBe(ids.gest);
+    expect(entry.beforeData).toMatchObject({ fileSizeBytes: created.body.fileSizeBytes });
+    expect(entry.afterData).toMatchObject({ fileSizeBytes: v2.length });
+    const kept = entry.beforeData?.previousFile as string;
+    expect(kept).toMatch(/^[0-9a-f-]{36}\.pdf$/);
+    expect(filesAfter).toContain(kept);
+
+    // Le type suit le nouveau fichier (PDF -> DOCX), l'extension du téléchargement aussi.
+    const word = await replace(tGest, id, ooxml('word/'), 'rapport.docx').expect(200);
+    expect(word.body.fileType).toContain('wordprocessingml');
+    expect(String((await download(tGest, id)).headers['content-disposition'])).toMatch(/\.docx/);
+    await revokeDocument(docGrant);
+  });
+
+  it('validates a replacement like an upload and leaves the document untouched on failure', async () => {
+    const created = await upload(tAdmin, ids.root, pdf('intact'), { name: `${tag} Intact` }).expect(201);
+    const id = created.body.id as string;
+    const filesBefore = await storedFiles();
+
+    const fake = await replace(tAdmin, id, Buffer.from('MZ\x90\x00 pas un pdf'), 'faux.pdf');
+    expect(fake.status).toBe(415);
+    expect(fake.body.code).toBe('DOCUMENT_TYPE_NOT_ALLOWED');
+    const big = await replace(tAdmin, id, Buffer.concat([pdf('big'), Buffer.alloc(MAX_PRIVATE_FILE_BYTES)]));
+    expect(big.status).toBe(413);
+    const none = await request(app.getHttpServer())
+      .put(`/api/v1/documents-prives/files/${id}/file`)
+      .set(bearer(tAdmin));
+    expect(none.status).toBe(400);
+    expect(none.body.code).toBe('DOCUMENT_FILE_REQUIRED');
+
+    expect(await storedFiles()).toEqual(filesBefore);
+    expect(Buffer.compare((await download(tAdmin, id).expect(200)).body as Buffer, pdf('intact'))).toBe(0);
+    expect(await auditOf(`action=DOCUMENT_REPLACED&entityId=${id}`)).toHaveLength(0);
+    await replace(tAdmin, '00000000-0000-4000-8000-000000000000', pdf('x')).expect(404);
+  });
+
+  it('requires the right to modify the document to replace its file, and frees nothing for anyone else', async () => {
+    const created = await upload(tAdmin, ids.other, pdf('protege'), { name: `${tag} Protégé` }).expect(201);
+    const id = created.body.id as string;
+    const filesBefore = await storedFiles();
+
+    await request(app.getHttpServer())
+      .put(`/api/v1/documents-prives/files/${id}/file`)
+      .attach('file', pdf('x'), 'x.pdf')
+      .expect(401);
+    // Aucun droit sur ce dossier : même 403 qu'ailleurs, Gestionnaire compris.
+    for (const token of [tGest, tUser2]) {
+      const res = await replace(token, id, pdf('intrus'));
+      expect(res.status).toBe(403);
+      expect(res.body.code).toBe('DOCUMENT_ACCESS_FORBIDDEN');
+    }
+    // Lecture seule : l'Utilisateur ne remplace pas, même avec un droit de dossier.
+    const grant = await grantFolder(ids.other, ids.user1);
+    const readOnly = await replace(tUser1, id, pdf('lecteur'));
+    expect(readOnly.status).toBe(403);
+    expect(readOnly.body.code).toBe('DOCUMENT_WRITE_FORBIDDEN');
+    await revokeFolder(grant);
+
+    expect(await storedFiles()).toEqual(filesBefore);
+    expect(Buffer.compare((await download(tAdmin, id).expect(200)).body as Buffer, pdf('protege'))).toBe(0);
+    const denied = (await auditOf(`action=DOCUMENT_ACCESS_DENIED&entityId=${id}`)).filter((e) =>
+      [ids.gest, ids.user2, ids.user1].includes(e.actorId as string),
+    );
+    expect(denied.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('refuses to replace an archived document until it is restored, and a deleted one', async () => {
+    const created = await upload(tAdmin, ids.root, pdf('archive'), { name: `${tag} Archivé` }).expect(201);
+    const id = created.body.id as string;
+    await send('post', tAdmin, `/documents-prives/files/${id}/archive`).expect(200);
+    const refused = await replace(tAdmin, id, pdf('apres-archivage'));
+    expect(refused.status).toBe(409);
+    expect(refused.body.code).toBe('DOCUMENT_ARCHIVED');
+    await send('post', tAdmin, `/documents-prives/files/${id}/restore`).expect(200);
+    await replace(tAdmin, id, pdf('apres-restauration')).expect(200);
+
+    await send('delete', tAdmin, `/documents-prives/files/${id}`).expect(204);
+    await replace(tAdmin, id, pdf('apres-suppression')).expect(404);
   });
 });

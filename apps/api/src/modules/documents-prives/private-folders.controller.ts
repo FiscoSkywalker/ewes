@@ -18,7 +18,11 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
-import { CreateFolderDto, UpdateFolderDto } from './dto/folder.dto.js';
+import {
+  CreateFolderDto,
+  MoveFolderDto,
+  UpdateFolderDto,
+} from './dto/folder.dto.js';
 import { PrivateFoldersService } from './private-folders.service.js';
 
 /**
@@ -64,6 +68,21 @@ export class PrivateFoldersController {
     @Body() dto: UpdateFolderDto,
   ) {
     return this.folders.update(user, id, dto);
+  }
+
+  @Post(':id/move')
+  @Roles(Role.ADMINISTRATEUR)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Déplacer un dossier avec son contenu (Administrateur : les droits suivent l’arborescence)',
+  })
+  move(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: MoveFolderDto,
+  ) {
+    return this.folders.move(user, id, dto.parentId);
   }
 
   @Delete(':id')

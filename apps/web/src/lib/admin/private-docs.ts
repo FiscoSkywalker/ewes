@@ -377,11 +377,16 @@ export function uploadPrivateFile(
   data: () => FormData,
   onProgress: (fraction: number) => void,
   signal?: AbortSignal,
+  /** Par défaut : nouveau document ; `PUT documents-prives/files/:id/file` remplace le fichier d'un document. */
+  target: { method: 'POST' | 'PUT'; path: string } = {
+    method: 'POST',
+    path: 'documents-prives/files',
+  },
 ): Promise<PrivateDocument> {
   const attempt = (retried: boolean): Promise<PrivateDocument> =>
     new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/backend/documents-prives/files');
+      xhr.open(target.method, `/api/backend/${target.path}`);
       xhr.responseType = 'json';
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) onProgress(event.loaded / event.total);
