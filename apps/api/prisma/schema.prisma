@@ -326,6 +326,13 @@ model Realisation {
   partners  RealisationPartner[]
 
   @@index([serviceId, status, publishedAt])
+  // Recherche partielle (ILIKE '%mot%') des écrans d'administration : index
+  // trigrammes (extension pg_trgm, créée par la migration).
+  @@index([titleFr(ops: raw("gin_trgm_ops"))], type: Gin, map: "realisations_titleFr_trgm_idx")
+  @@index([titleEn(ops: raw("gin_trgm_ops"))], type: Gin, map: "realisations_titleEn_trgm_idx")
+  @@index([clientName(ops: raw("gin_trgm_ops"))], type: Gin, map: "realisations_clientName_trgm_idx")
+  @@index([location(ops: raw("gin_trgm_ops"))], type: Gin, map: "realisations_location_trgm_idx")
+  @@index([slug(ops: raw("gin_trgm_ops"))], type: Gin, map: "realisations_slug_trgm_idx")
   @@map("realisations")
 }
 
@@ -393,6 +400,15 @@ model Article {
   documents ArticleDocument[]
 
   @@index([type, status, publishedAt])
+  // Recherche partielle (ILIKE '%mot%') des écrans d'administration : index
+  // trigrammes (extension pg_trgm, créée par la migration).
+  @@index([titleFr(ops: raw("gin_trgm_ops"))], type: Gin, map: "articles_titleFr_trgm_idx")
+  @@index([titleEn(ops: raw("gin_trgm_ops"))], type: Gin, map: "articles_titleEn_trgm_idx")
+  @@index([slug(ops: raw("gin_trgm_ops"))], type: Gin, map: "articles_slug_trgm_idx")
+  @@index([excerptFr(ops: raw("gin_trgm_ops"))], type: Gin, map: "articles_excerptFr_trgm_idx")
+  @@index([excerptEn(ops: raw("gin_trgm_ops"))], type: Gin, map: "articles_excerptEn_trgm_idx")
+  @@index([contextFr(ops: raw("gin_trgm_ops"))], type: Gin, map: "articles_contextFr_trgm_idx")
+  @@index([contextEn(ops: raw("gin_trgm_ops"))], type: Gin, map: "articles_contextEn_trgm_idx")
   @@map("articles")
 }
 
@@ -450,6 +466,13 @@ model PublicDocument {
   articleLinks     ArticleDocument[]
 
   @@index([status, publishedAt])
+  // Recherche partielle (ILIKE '%mot%') des écrans d'administration : index
+  // trigrammes (extension pg_trgm, créée par la migration).
+  @@index([titleFr(ops: raw("gin_trgm_ops"))], type: Gin, map: "public_documents_titleFr_trgm_idx")
+  @@index([titleEn(ops: raw("gin_trgm_ops"))], type: Gin, map: "public_documents_titleEn_trgm_idx")
+  @@index([slug(ops: raw("gin_trgm_ops"))], type: Gin, map: "public_documents_slug_trgm_idx")
+  @@index([excerptFr(ops: raw("gin_trgm_ops"))], type: Gin, map: "public_documents_excerptFr_trgm_idx")
+  @@index([excerptEn(ops: raw("gin_trgm_ops"))], type: Gin, map: "public_documents_excerptEn_trgm_idx")
   @@map("public_documents")
 }
 
@@ -586,6 +609,13 @@ model ContactMessage {
 
   @@index([createdAt])
   @@index([email, contentHash, createdAt])
+  // Recherche partielle (ILIKE '%mot%') des écrans d'administration : index
+  // trigrammes (extension pg_trgm, créée par la migration).
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "contact_messages_name_trgm_idx")
+  @@index([organization(ops: raw("gin_trgm_ops"))], type: Gin, map: "contact_messages_organization_trgm_idx")
+  @@index([email(ops: raw("gin_trgm_ops"))], type: Gin, map: "contact_messages_email_trgm_idx")
+  @@index([phone(ops: raw("gin_trgm_ops"))], type: Gin, map: "contact_messages_phone_trgm_idx")
+  @@index([message(ops: raw("gin_trgm_ops"))], type: Gin, map: "contact_messages_message_trgm_idx")
   @@map("contact_messages")
 }
 
@@ -666,5 +696,8 @@ model Media {
   createdAt    DateTime @default(now())
 
   @@index([createdAt])
+  // Recherche partielle (ILIKE '%mot%') des écrans d'administration : index
+  // trigrammes (extension pg_trgm, créée par la migration).
+  @@index([originalName(ops: raw("gin_trgm_ops"))], type: Gin, map: "media_originalName_trgm_idx")
   @@map("media")
 }
