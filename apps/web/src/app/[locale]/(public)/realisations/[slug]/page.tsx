@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ArrowRight, ChevronRight, Download, FileText } from 'lucide-react';
@@ -15,6 +14,7 @@ import {
   getRealisationSlugs,
   getRelatedProjects,
 } from '@/lib/api/public-realisations';
+import { GalleryLightbox } from '@/components/public/gallery-lightbox';
 import { ProjectCard } from '@/components/public/project-card';
 import { ProjectCover } from '@/components/public/project-cover';
 import { ShareLinks } from '@/components/public/share-links';
@@ -250,28 +250,11 @@ export default async function RealisationPage({
                 >
                   {tDetail('sections.gallery')}
                 </h2>
-                <ul className="mt-5 grid gap-4 sm:grid-cols-2">
-                  {extraImages.map((image, index) => (
-                    <li
-                      key={image.url}
-                      className="relative aspect-[4/3] overflow-hidden rounded-card bg-night"
-                    >
-                      <Image
-                        src={image.url}
-                        alt={image.alt}
-                        fill
-                        sizes="(min-width: 1024px) 440px, (min-width: 640px) 50vw, 100vw"
-                        className="object-cover"
-                      />
-                      <span className="sr-only">
-                        {tDetail('galleryImage', {
-                          index: index + 2,
-                          count: detail.gallery.length,
-                        })}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <GalleryLightbox
+                  images={extraImages}
+                  firstNumber={2}
+                  total={detail.gallery.length}
+                />
               </section>
             )}
 

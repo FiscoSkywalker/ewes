@@ -829,6 +829,13 @@
       "downloadLabel": "Télécharger {title} ({format}, {size})",
       "pages": "{count, plural, one {# page} other {# pages}}",
       "galleryImage": "Image {index} sur {count}",
+      "lightbox": {
+        "label": "Galerie d’images",
+        "open": "Agrandir l’image {index} sur {count}",
+        "close": "Fermer",
+        "previous": "Image précédente",
+        "next": "Image suivante"
+      },
       "related": "Autres missions de ce type",
       "allProjects": "Toutes les réalisations",
       "shareNative": "Partager cette réalisation",

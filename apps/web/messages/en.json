@@ -829,6 +829,13 @@
       "downloadLabel": "Download {title} ({format}, {size})",
       "pages": "{count, plural, one {# page} other {# pages}}",
       "galleryImage": "Image {index} of {count}",
+      "lightbox": {
+        "label": "Image gallery",
+        "open": "Enlarge image {index} of {count}",
+        "close": "Close",
+        "previous": "Previous image",
+        "next": "Next image"
+      },
       "related": "More assignments of this type",
       "allProjects": "All projects",
       "shareNative": "Share this project",
