@@ -2,7 +2,11 @@
 
 import { useState } from 'react';
 import { thumbOf } from '@/lib/admin/media';
-import { initials, type ExpertFormValues } from '@/lib/admin/experts';
+import {
+  initials,
+  objectPositionOf,
+  type ExpertFormValues,
+} from '@/lib/admin/experts';
 import { Card, SegmentedControl } from '../ui';
 
 type Locale = 'fr' | 'en';
@@ -59,7 +63,8 @@ export function ExpertPreview({
           <img
             src={thumbOf(values.photoUrl)}
             alt=""
-            className="absolute inset-0 size-full object-cover object-[50%_25%]"
+            className="absolute inset-0 size-full object-cover"
+            style={{ objectPosition: objectPositionOf(values.photoFocal) }}
           />
         ) : (
           <span className="absolute inset-0 grid place-items-center bg-[#16384a] text-6xl font-bold text-white/70">

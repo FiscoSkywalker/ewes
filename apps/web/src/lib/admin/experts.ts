@@ -13,6 +13,9 @@ export interface Expert {
   specialtiesEn: string[];
   yearsOfExperience: number | null;
   photoUrl: string | null;
+  /** Point focal du portrait, en % de l'image ; `null` : cadrage par défaut. */
+  photoFocalX: number | null;
+  photoFocalY: number | null;
   serviceId: string | null;
   service: { id: string; slug: string; nameFr: string } | null;
   sortOrder: number;
@@ -21,6 +24,23 @@ export interface Expert {
   createdAt: string;
   updatedAt: string;
 }
+
+/** Point focal d'un portrait : la zone de l'image qui reste visible quand elle est recadrée. */
+export interface FocalPoint {
+  /** 0 = bord gauche, 100 = bord droit. */
+  x: number;
+  /** 0 = haut, 100 = bas. */
+  y: number;
+}
+
+/** Cadrage d'un portrait sans point focal choisi (centre, quart supérieur : un visage de portrait). */
+export const DEFAULT_FOCAL: FocalPoint = { x: 50, y: 25 };
+
+/** Valeur CSS `object-position` d'un portrait recadré sur son point focal. */
+export const objectPositionOf = (focal: FocalPoint | null) => {
+  const { x, y } = focal ?? DEFAULT_FOCAL;
+  return `${x}% ${y}%`;
+};
 
 /** Mêmes limites que l'API (`MAX_EXPERT_SPECIALTIES` et DTO). */
 export const MAX_SPECIALTIES = 12;
@@ -53,6 +73,12 @@ export const expertSchema = z.object({
     ),
   serviceId: z.string(),
   photoUrl: z.string(),
+  photoFocal: z
+    .object({
+      x: z.number().int().min(0).max(100),
+      y: z.number().int().min(0).max(100),
+    })
+    .nullable(),
 });
 
 export type ExpertFormValues = z.infer<typeof expertSchema>;
@@ -68,6 +94,7 @@ export const EMPTY_EXPERT: ExpertFormValues = {
   yearsOfExperience: '',
   serviceId: '',
   photoUrl: '',
+  photoFocal: null,
 };
 
 export function toFormValues(e: Expert): ExpertFormValues {
@@ -83,6 +110,10 @@ export function toFormValues(e: Expert): ExpertFormValues {
       e.yearsOfExperience !== null ? String(e.yearsOfExperience) : '',
     serviceId: e.serviceId ?? '',
     photoUrl: e.photoUrl ?? '',
+    photoFocal:
+      e.photoFocalX !== null && e.photoFocalY !== null
+        ? { x: e.photoFocalX, y: e.photoFocalY }
+        : null,
   };
 }
 
@@ -102,6 +133,9 @@ export function toPayload(v: ExpertFormValues) {
       v.yearsOfExperience === '' ? null : Number(v.yearsOfExperience),
     serviceId: orNull(v.serviceId),
     photoUrl: orNull(v.photoUrl),
+    // Sans photo, un point focal n'a pas de sens : il part avec elle.
+    photoFocalX: v.photoUrl ? (v.photoFocal?.x ?? null) : null,
+    photoFocalY: v.photoUrl ? (v.photoFocal?.y ?? null) : null,
   };
 }
 

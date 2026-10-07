@@ -19,6 +19,8 @@ interface PublicExpert {
   specialtiesEn: string[];
   yearsOfExperience: number | null;
   photoUrl: string | null;
+  photoFocalX: number | null;
+  photoFocalY: number | null;
   poleSlug: string | null;
 }
 
@@ -55,6 +57,12 @@ export async function getExperts(locale: string): Promise<Expert[] | null> {
       years: expert.yearsOfExperience,
       bio: ((english && expert.bioEn) || expert.bioFr || '').trim(),
       photo: expert.photoUrl ?? undefined,
+      focal:
+        expert.photoUrl &&
+        expert.photoFocalX !== null &&
+        expert.photoFocalY !== null
+          ? { x: expert.photoFocalX, y: expert.photoFocalY }
+          : undefined,
     }));
   } catch {
     return null;

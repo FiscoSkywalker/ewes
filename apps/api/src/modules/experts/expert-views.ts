@@ -24,6 +24,8 @@ export function toPublicView(expert: ExpertWithService) {
     specialtiesEn: expert.specialtiesEn,
     yearsOfExperience: expert.yearsOfExperience,
     photoUrl: expert.photoUrl,
+    photoFocalX: expert.photoFocalX,
+    photoFocalY: expert.photoFocalY,
     poleSlug: expert.service?.slug ?? null,
   };
 }

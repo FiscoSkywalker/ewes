@@ -95,4 +95,30 @@ export class CreateExpertDto {
     message: 'L’adresse doit désigner une image de la médiathèque.',
   })
   photoUrl?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Point focal du portrait : position horizontale en % de la largeur de l’image (0 = gauche, 100 = droite). « null » : cadrage par défaut. Remis à « null » quand le portrait change sans point focal fourni.',
+    minimum: 0,
+    maximum: 100,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  photoFocalX?: number | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Point focal du portrait : position verticale en % de la hauteur de l’image (0 = haut, 100 = bas). « null » : cadrage par défaut.',
+    minimum: 0,
+    maximum: 100,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  photoFocalY?: number | null;
 }

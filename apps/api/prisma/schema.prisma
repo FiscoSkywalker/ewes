@@ -280,6 +280,9 @@ model Expert {
   yearsOfExperience Int?
   /// Portrait : adresse d'une image de la médiathèque (`/uploads/<nom>`) ; absent, un monogramme.
   photoUrl          String?
+  /// Point focal du portrait, en % de la largeur (X) et de la hauteur (Y) de l'image : la zone qui reste visible quand le site recadre la photo. `null` : cadrage par défaut (centre, quart supérieur).
+  photoFocalX       Int?
+  photoFocalY       Int?
   /// Pôle de rattachement (couleur d'accent et pastille « Pôle … »).
   serviceId         String?
   service           Service?      @relation(fields: [serviceId], references: [id])

@@ -47,7 +47,14 @@ function Portrait({ expert, sizes }: { expert: Expert; sizes: string }) {
         alt=""
         fill
         sizes={sizes}
-        className="object-cover object-[50%_25%]"
+        className={
+          expert.focal ? 'object-cover' : 'object-cover object-[50%_25%]'
+        }
+        style={
+          expert.focal
+            ? { objectPosition: `${expert.focal.x}% ${expert.focal.y}%` }
+            : undefined
+        }
       />
     );
   }

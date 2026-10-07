@@ -306,6 +306,100 @@ describe('Experts (e2e)', () => {
       .expect(204);
   });
 
+  it('keeps the portrait focal point with its photo, validates it, and resets it when the photo changes', async () => {
+    const upload = async () =>
+      (
+        await request(app.getHttpServer())
+          .post('/api/v1/admin/media')
+          .set(auth)
+          .attach('file', PNG, 'portrait.png')
+          .expect(201)
+      ).body.url as string;
+    const [first, second] = [await upload(), await upload()];
+    const created = await create({
+      photoUrl: first,
+      photoFocalX: 30,
+      photoFocalY: 10,
+    }).expect(201);
+    const id = created.body.id as string;
+    expect(created.body).toMatchObject({ photoFocalX: 30, photoFocalY: 10 });
+    const patch = (body: object) =>
+      request(app.getHttpServer())
+        .patch(`/api/v1/admin/experts/${id}`)
+        .set(auth)
+        .send(body);
+
+    // Un autre champ ne touche pas au point focal ; les bornes (0 et 100) sont permises.
+    expect((await patch({ roleFr: 'Chef' }).expect(200)).body).toMatchObject({
+      photoFocalX: 30,
+      photoFocalY: 10,
+    });
+    expect(
+      (await patch({ photoFocalX: 0, photoFocalY: 100 }).expect(200)).body,
+    ).toMatchObject({ photoFocalX: 0, photoFocalY: 100 });
+
+    // Le site public le reçoit avec la photo, sans autre champ interne.
+    await act(id, 'publish').expect(200);
+    const shown = (
+      (await request(app.getHttpServer()).get('/api/v1/experts').expect(200))
+        .body.data as Record<string, unknown>[]
+    ).find((e) => e.fullName === `${prefix} A`)!;
+    expect(shown).toMatchObject({
+      photoUrl: first,
+      photoFocalX: 0,
+      photoFocalY: 100,
+    });
+
+    // Valeurs hors bornes, non entières, mal typées ou incomplètes : refusées, rien n'est écrit.
+    for (const body of [
+      { photoFocalX: 101, photoFocalY: 50 },
+      { photoFocalX: -1, photoFocalY: 50 },
+      { photoFocalX: 50.5, photoFocalY: 50 },
+      { photoFocalX: '50', photoFocalY: 50 },
+    ]) {
+      await patch(body).expect(400);
+    }
+    for (const body of [
+      { photoFocalX: 40 },
+      { photoFocalY: 40 },
+      { photoFocalX: 40, photoFocalY: null },
+    ]) {
+      const incomplete = await patch(body).expect(400);
+      expect(incomplete.body.code).toBe('EXPERT_FOCAL_INCOMPLETE');
+    }
+    expect((await patch({}).expect(200)).body).toMatchObject({
+      photoFocalX: 0,
+      photoFocalY: 100,
+    });
+
+    // Une nouvelle photo sans point focal : l'ancien visait l'ancienne image, retour au cadrage par défaut.
+    expect(
+      (await patch({ photoUrl: second }).expect(200)).body,
+    ).toMatchObject({ photoUrl: second, photoFocalX: null, photoFocalY: null });
+    // Nouvelle photo avec son propre point focal : gardé.
+    expect(
+      (
+        await patch({
+          photoUrl: first,
+          photoFocalX: 70,
+          photoFocalY: 20,
+        }).expect(200)
+      ).body,
+    ).toMatchObject({ photoUrl: first, photoFocalX: 70, photoFocalY: 20 });
+    // Remise explicite au cadrage par défaut, puis retrait de la photo.
+    expect(
+      (
+        await patch({ photoFocalX: null, photoFocalY: null }).expect(200)
+      ).body,
+    ).toMatchObject({ photoFocalX: null, photoFocalY: null });
+    await patch({ photoFocalX: 60, photoFocalY: 60 }).expect(200);
+    expect((await patch({ photoUrl: null }).expect(200)).body).toMatchObject({
+      photoUrl: null,
+      photoFocalX: null,
+      photoFocalY: null,
+    });
+  });
+
   it('traces publication, unpublication and deletion with the actor', async () => {
     const id = (await create().expect(201)).body.id as string;
     await act(id, 'publish').expect(200);

@@ -19,6 +19,8 @@ export interface Expert {
   bio: string;
   /** Portrait ; absent, un monogramme. */
   photo?: string;
+  /** Point focal du portrait (% de l'image) ; absent, cadrage par défaut. */
+  focal?: { x: number; y: number };
 }
 
 /**

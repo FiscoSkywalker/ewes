@@ -59,7 +59,18 @@ export function ExpertEditor({
   });
   const [formError, setFormError] = useState<string | null>(null);
   const watched = useWatch({ control });
-  const values: ExpertFormValues = { ...defaults, ...watched };
+  const watchedFocal = watched.photoFocal;
+  const values: ExpertFormValues = {
+    ...defaults,
+    ...watched,
+    // `useWatch` rend les objets imbriqués en version partielle : on reconstitue le point entier.
+    photoFocal:
+      watchedFocal === undefined
+        ? defaults.photoFocal
+        : watchedFocal?.x !== undefined && watchedFocal.y !== undefined
+          ? { x: watchedFocal.x, y: watchedFocal.y }
+          : null,
+  };
 
   const services = useQuery({
     queryKey: ['services', 'list'],
@@ -239,7 +250,15 @@ export function ExpertEditor({
         <PortraitCard
           value={values.photoUrl}
           name={values.fullName}
-          onChange={(url) => setValue('photoUrl', url, { shouldDirty: true })}
+          focal={values.photoFocal}
+          onChange={(url) => {
+            setValue('photoUrl', url, { shouldDirty: true });
+            // Le point choisi visait l'ancienne image.
+            setValue('photoFocal', null, { shouldDirty: true });
+          }}
+          onFocalChange={(focal) =>
+            setValue('photoFocal', focal, { shouldDirty: true })
+          }
         />
         <ExpertPreview values={values} poleName={poleName} />
       </div>

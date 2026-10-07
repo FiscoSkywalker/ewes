@@ -46,6 +46,40 @@ export function cleanSpecialties(values: string[] | undefined) {
   return result;
 }
 
+/**
+ * Point focal à enregistrer (X et Y vont ensemble). Fourni, il est pris tel
+ * quel (`null` : cadrage par défaut). Absent, il reste inchangé — sauf si le
+ * portrait change ou est retiré : l'ancien point visait l'ancienne image, il
+ * est remis au cadrage par défaut plutôt que de viser n'importe où dans la
+ * nouvelle.
+ */
+export function focalFor(
+  dto: {
+    photoUrl?: string | null;
+    photoFocalX?: number | null;
+    photoFocalY?: number | null;
+  },
+  currentPhotoUrl: string | null | undefined,
+): { photoFocalX?: number | null; photoFocalY?: number | null } {
+  const { photoFocalX: x, photoFocalY: y } = dto;
+  const hasX = typeof x === 'number';
+  const hasY = typeof y === 'number';
+  if (hasX !== hasY) {
+    throw new BadRequestException({
+      code: 'EXPERT_FOCAL_INCOMPLETE',
+      message:
+        'Le point focal se donne en entier (horizontal et vertical), ou pas du tout.',
+      details: ['photoFocalX', 'photoFocalY'],
+    });
+  }
+  const photoChanged =
+    dto.photoUrl !== undefined &&
+    (dto.photoUrl ?? null) !== (currentPhotoUrl ?? null);
+  const pick = (value: number | null | undefined) =>
+    value !== undefined ? value : photoChanged ? null : undefined;
+  return { photoFocalX: pick(x), photoFocalY: pick(y) };
+}
+
 @Injectable()
 export class ExpertsService {
   constructor(
@@ -97,6 +131,7 @@ export class ExpertsService {
         yearsOfExperience: dto.yearsOfExperience,
         serviceId: dto.serviceId,
         photoUrl: dto.photoUrl,
+        ...focalFor(dto, undefined),
         sortOrder: (last._max.sortOrder ?? -1) + 1,
       },
       include: WITH_SERVICE,
@@ -119,6 +154,7 @@ export class ExpertsService {
         yearsOfExperience: dto.yearsOfExperience,
         serviceId: dto.serviceId,
         photoUrl: dto.photoUrl,
+        ...focalFor(dto, current.photoUrl),
       },
       include: WITH_SERVICE,
     });
