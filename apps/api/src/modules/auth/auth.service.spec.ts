@@ -103,6 +103,8 @@ describe('AuthService', () => {
       audit as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       lockout as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { notify: vi.fn() } as any,
     );
   });
 

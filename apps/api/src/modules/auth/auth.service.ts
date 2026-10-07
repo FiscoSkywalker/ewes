@@ -12,6 +12,7 @@ import * as argon2 from 'argon2';
 import { createHash, randomUUID } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
+import { AccountLockedNotifier } from '../users/account-locked-notifier.service.js';
 import { InvitationsService } from '../users/invitations.service.js';
 import { LoginLockoutService } from '../users/login-lockout.service.js';
 import { UsersService } from '../users/users.service.js';
@@ -56,6 +57,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly audit: AuditService,
     private readonly lockout: LoginLockoutService,
+    private readonly lockedNotifier: AccountLockedNotifier,
   ) {}
 
   async login(email: string, password: string, ctx: RequestContext) {
@@ -236,6 +238,7 @@ export class AuthService {
             until: until.toISOString(),
           },
         });
+        await this.lockedNotifier.notify(attempted, until);
       }
     } catch (error) {
       this.logger.error(`Compteur de verrouillage non tenu : ${String(error)}`);

@@ -769,6 +769,69 @@ describe('Utilisateurs et rôles (e2e)', () => {
       expect(row).toMatchObject({ entityId: null, actorId: null });
     });
 
+    describe('e-mail d’alerte', () => {
+      const mailsTo = (to: string) =>
+        prisma.notification.findMany({
+          where: { recipientEmail: to, type: 'ACCOUNT_LOCKED' },
+        });
+
+      it('prévient la personne une fois, sans secret ni lien, et pas avant le verrouillage', async () => {
+        const user = await makeUser('lockmail1', Role.UTILISATEUR);
+        await failN(user.email, MAX - 1);
+        expect(await mailsTo(user.email)).toHaveLength(0);
+
+        await failN(user.email, 1);
+        // Refus pendant le verrou : pas de second message.
+        await attempt(user.email, password).expect(429);
+        await attempt(user.email, 'encore-un-essai').expect(429);
+
+        const [mail] = await mailsTo(user.email);
+        expect(await mailsTo(user.email)).toHaveLength(1);
+        const stored = JSON.stringify(mail.payload);
+        expect(stored).toContain('temporairement verrouillé');
+        expect(stored).toContain(user.fullName);
+        expect(stored).not.toContain('mauvais-mot-de-passe');
+        expect(stored).not.toContain(password);
+        expect(stored).not.toMatch(/https?:\/\//);
+      });
+
+      it('n’envoie rien à une adresse inconnue ni à un compte désactivé', async () => {
+        const ghost = `${tag}-fantome-mail@ewes.example`;
+        await failN(ghost, MAX);
+        expect(await mailsTo(ghost)).toHaveLength(0);
+
+        const off = await makeUser('lockmail2', Role.UTILISATEUR);
+        await prisma.user.update({
+          where: { id: off.id },
+          data: { isActive: false },
+        });
+        await failN(off.email, MAX);
+        expect(await mailsTo(off.email)).toHaveLength(0);
+        // Le verrouillage reste tracé, lui.
+        expect(await events(off.id, 'AUTH_ACCOUNT_LOCKED')).toHaveLength(1);
+      });
+
+      it('plafonne à un e-mail par heure : un nouveau verrouillage ne remplit pas la boîte', async () => {
+        const user = await makeUser('lockmail3', Role.UTILISATEUR);
+        await failN(user.email, MAX);
+        expect(await mailsTo(user.email)).toHaveLength(1);
+
+        await as(admin.auth).post(`/admin/users/${user.id}/unlock`).expect(200);
+        await failN(user.email, MAX);
+        expect(await events(user.id, 'AUTH_ACCOUNT_LOCKED')).toHaveLength(2);
+        expect(await mailsTo(user.email)).toHaveLength(1);
+
+        // Une heure plus tard, la personne est de nouveau prévenue.
+        await prisma.notification.updateMany({
+          where: { recipientEmail: user.email, type: 'ACCOUNT_LOCKED' },
+          data: { createdAt: new Date(Date.now() - 61 * 60_000) },
+        });
+        await as(admin.auth).post(`/admin/users/${user.id}/unlock`).expect(200);
+        await failN(user.email, MAX);
+        expect(await mailsTo(user.email)).toHaveLength(2);
+      });
+    });
+
     it('resets the counter on a successful login', async () => {
       const user = await makeUser('lock3', Role.UTILISATEUR);
       await failN(user.email, MAX - 1);

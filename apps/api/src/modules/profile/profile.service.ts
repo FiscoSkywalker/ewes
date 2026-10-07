@@ -13,6 +13,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { AccountLockedNotifier } from '../users/account-locked-notifier.service.js';
 import { LoginLockoutService } from '../users/login-lockout.service.js';
 import { avatarVersionOf } from '../users/user-views.js';
 import {
@@ -95,6 +96,7 @@ export class ProfileService {
     private readonly lockout: LoginLockoutService,
     private readonly notifications: NotificationsService,
     private readonly avatars: AvatarStorageService,
+    private readonly lockedNotifier: AccountLockedNotifier,
   ) {}
 
   /** Compte actif et non supprimé ; un jeton encore valide d'un compte désactivé n'ouvre plus rien. */
@@ -261,6 +263,7 @@ export class ProfileService {
         after: { reason: 'wrong_current_password' },
       });
       if (await this.lockout.recordFailure(user.email)) {
+        const until = new Date(Date.now() + this.lockout.windowMs);
         await this.audit.record({
           actorId: null,
           action: 'AUTH_ACCOUNT_LOCKED',
@@ -269,9 +272,10 @@ export class ProfileService {
           after: {
             email: user.email,
             failures: this.lockout.maxFailures,
-            until: new Date(Date.now() + this.lockout.windowMs).toISOString(),
+            until: until.toISOString(),
           },
         });
+        await this.lockedNotifier.notify(user.email, until);
       }
     } catch (error) {
       this.logger.error(
