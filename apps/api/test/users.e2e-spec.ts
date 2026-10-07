@@ -595,6 +595,45 @@ describe('Utilisateurs et rôles (e2e)', () => {
       expect(on.body.grants).toEqual({ folders: 0, documents: 0 });
     });
 
+    it('applies a deactivation, a demotion or a deletion at once to an access token already issued', async () => {
+      const target = await makeUser('live-token', Role.GESTIONNAIRE);
+      const { accessToken } = await login(target.email);
+      const held = { Authorization: `Bearer ${accessToken}` };
+      await as(held).get('/me').expect(200);
+      await as(held).get('/admin/contacts').expect(200);
+
+      // Rétrogradé : le même jeton n'ouvre plus l'espace de gestion, sans attendre son expiration.
+      await as(admin.auth)
+        .patch(`/admin/users/${target.id}/role`, { role: Role.UTILISATEUR })
+        .expect(200);
+      const demoted = await as(held).get('/admin/contacts');
+      expect(demoted.status).toBe(403);
+      await as(held).get('/me').expect(200);
+
+      // Désactivé : refusé partout, avec la même réponse qu'un jeton invalide.
+      await as(admin.auth)
+        .post(`/admin/users/${target.id}/deactivate`)
+        .expect(200);
+      const off = await as(held).get('/me');
+      expect(off.status).toBe(401);
+      expect(off.body.code).toBe('TOKEN_INVALID');
+
+      // Réactivé : le jeton, encore valide, redevient utilisable — avec le rôle d'aujourd'hui.
+      await as(admin.auth)
+        .post(`/admin/users/${target.id}/reactivate`)
+        .expect(200);
+      expect((await as(held).get('/me').expect(200)).body.role).toBe(
+        Role.UTILISATEUR,
+      );
+
+      // Supprimé : refusé.
+      await prisma.user.update({
+        where: { id: target.id },
+        data: { deletedAt: new Date() },
+      });
+      await as(held).get('/me').expect(401);
+    });
+
     it('never lets an administrator deactivate their own account', async () => {
       const res = await as(admin.auth)
         .post(`/admin/users/${admin.id}/deactivate`)

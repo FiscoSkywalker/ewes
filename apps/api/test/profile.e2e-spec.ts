@@ -229,9 +229,10 @@ describe('Profil (e2e)', () => {
         where: { id: user.id },
         data: { isActive: false },
       });
-      await as(accessToken).get('/me').expect(404);
-      await as(accessToken).patch('/me', { fullName: 'Pirate' }).expect(404);
-      await as(accessToken).get('/me/account').expect(404);
+      // Refusé dès la porte (le jeton est jugé sur l'état du compte, relu à chaque requête).
+      await as(accessToken).get('/me').expect(401);
+      await as(accessToken).patch('/me', { fullName: 'Pirate' }).expect(401);
+      await as(accessToken).get('/me/account').expect(401);
     });
   });
 
