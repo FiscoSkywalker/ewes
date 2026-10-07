@@ -146,6 +146,8 @@ describe('Site settings (e2e)', () => {
     const routes = [
       ['get', '/api/v1/admin/settings/general'],
       ['patch', '/api/v1/admin/settings/general'],
+      ['get', '/api/v1/admin/settings/legal'],
+      ['patch', '/api/v1/admin/settings/legal'],
       ['get', '/api/v1/admin/settings/mail'],
       ['patch', '/api/v1/admin/settings/mail'],
       ['post', '/api/v1/admin/settings/mail/test'],
@@ -287,6 +289,63 @@ describe('Site settings (e2e)', () => {
       x: 'https://twitter.com/ewes',
       youtube: 'https://youtu.be/abc',
     });
+  });
+
+  it('keeps the legal notices editable, empty by default, and shows them publicly with the e-mail fallback', async () => {
+    const patchLegal = (body: Record<string, unknown>) =>
+      request(app.getHttpServer())
+        .patch('/api/v1/admin/settings/legal')
+        .set(admin)
+        .send(body);
+    const before = await request(app.getHttpServer())
+      .get('/api/v1/admin/settings/legal')
+      .set(admin)
+      .expect(200);
+    // Seul le représentant légal du contrat est connu ; le reste reste à saisir par EWES.
+    expect(before.body).toMatchObject({
+      legalRepresentative: DEFAULT_SITE_SETTINGS.legalRepresentative,
+      legalRccm: null,
+      hostingName: null,
+      privacyEmail: null,
+    });
+    const publicBefore = (await getPublic()).body.data.legal;
+    expect(publicBefore.rccm).toBeNull();
+    // Sans adresse dédiée, les droits sur les données passent par l'e-mail public.
+    expect(publicBefore.privacyEmail).toBe((await getPublic()).body.data.email);
+
+    const res = await patchLegal({
+      legalRccm: '  CD/LSH/RCCM/00-X-0000  ',
+      legalCapital: '10 000 USD',
+      hostingName: 'Hébergeur Exemple',
+      privacyEmail: ' Donnees@EWES.example ',
+      apdReceipt: '',
+    }).expect(200);
+    expect(res.body).toMatchObject({
+      legalRccm: 'CD/LSH/RCCM/00-X-0000',
+      privacyEmail: 'donnees@ewes.example',
+      apdReceipt: null,
+    });
+    const publicAfter = (await getPublic()).body.data.legal;
+    expect(publicAfter).toMatchObject({
+      rccm: 'CD/LSH/RCCM/00-X-0000',
+      capital: '10 000 USD',
+      hostingName: 'Hébergeur Exemple',
+      privacyEmail: 'donnees@ewes.example',
+    });
+
+    // Une mention vidée disparaît ; un e-mail invalide est refusé champ par champ.
+    await patchLegal({ legalRccm: '' }).expect(200);
+    expect((await getPublic()).body.data.legal.rccm).toBeNull();
+    const refused = await patchLegal({ privacyEmail: 'pas-un-email' }).expect(
+      400,
+    );
+    expect(
+      (refused.body.details as { field: string }[]).map((d) => d.field),
+    ).toContain('privacyEmail');
+
+    const entries = await auditRows('SETTINGS_LEGAL_UPDATED');
+    expect(entries.length).toBeGreaterThanOrEqual(2);
+    expect(entries[0].beforeData).toMatchObject({ legalRccm: null });
   });
 
   it('reports the mail setup without ever exposing a secret', async () => {

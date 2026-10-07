@@ -29,4 +29,16 @@ export const FALLBACK_SITE_SETTINGS: PublicSiteSettings = {
   closesAt: '17:00',
   timeZone: 'Africa/Lubumbashi',
   social: { linkedin: null, facebook: null, x: null, youtube: null },
+  // Seul le représentant légal est connu (contrat) ; le reste se saisit dans le portail.
+  legal: {
+    representative: 'Arthur Kaniki Tshamala',
+    rccm: null,
+    idNat: null,
+    nif: null,
+    capital: null,
+    hostingName: null,
+    hostingAddress: null,
+    privacyEmail: 'arthurkaniki@gmail.com',
+    apdReceipt: null,
+  },
 };

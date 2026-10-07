@@ -21,6 +21,16 @@ export const DEFAULT_SITE_SETTINGS = {
   youtubeUrl: null,
   contactRecipientEmail: null,
   contactAutoReply: true,
+  // Représentant légal : contrat de prestation. Les autres mentions légales sont inconnues du projet.
+  legalRepresentative: 'Arthur Kaniki Tshamala',
+  legalRccm: null,
+  legalIdNat: null,
+  legalNif: null,
+  legalCapital: null,
+  hostingName: null,
+  hostingAddress: null,
+  privacyEmail: null,
+  apdReceipt: null,
 };
 
 /** Fuseau des horaires d'ouverture (le siège est à Lubumbashi, UTC+2, sans heure d'été). */

@@ -18,6 +18,31 @@ export interface GeneralSettings {
   updatedAt: string | null;
 }
 
+/** `GET /admin/settings/legal` : mentions légales et protection des données (pages légales du site). */
+export interface LegalSettings {
+  legalRepresentative: string | null;
+  legalRccm: string | null;
+  legalIdNat: string | null;
+  legalNif: string | null;
+  legalCapital: string | null;
+  hostingName: string | null;
+  hostingAddress: string | null;
+  privacyEmail: string | null;
+  apdReceipt: string | null;
+  updatedAt: string | null;
+}
+
+/** Mentions que la loi attend d'un site d'entreprise et que le projet ne peut pas deviner. */
+export function missingLegalNotices(settings: LegalSettings): string[] {
+  const required: [string, string | null][] = [
+    ['Registre du commerce (RCCM)', settings.legalRccm],
+    ['Identification nationale', settings.legalIdNat],
+    ['Numéro d’impôt (NIF)', settings.legalNif],
+    ['Hébergeur du site', settings.hostingName],
+  ];
+  return required.filter(([, value]) => !value).map(([label]) => label);
+}
+
 /** État du transport d'e-mails, sans aucun secret (`MailTransportStatus` de l'API). */
 export interface MailTransport {
   configured: boolean;
@@ -208,6 +233,61 @@ export function toGeneralPayload(values: GeneralFormValues) {
     facebookUrl: orNull(values.facebookUrl),
     xUrl: orNull(values.xUrl),
     youtubeUrl: orNull(values.youtubeUrl),
+  };
+}
+
+// --- Formulaire « Informations légales » ----------------------------------
+
+const optionalText = (max: number) =>
+  z.string().trim().max(max, `${max} caractères au plus.`);
+
+export const legalSchema = z.object({
+  legalRepresentative: optionalText(120),
+  legalRccm: optionalText(80),
+  legalIdNat: optionalText(80),
+  legalNif: optionalText(80),
+  legalCapital: optionalText(80),
+  hostingName: optionalText(160),
+  hostingAddress: optionalText(300),
+  privacyEmail: z
+    .string()
+    .trim()
+    .max(254, '254 caractères au plus.')
+    .refine(
+      (value) => value === '' || z.email().safeParse(value).success,
+      'Saisissez une adresse e-mail valide.',
+    ),
+  apdReceipt: optionalText(120),
+});
+
+export type LegalFormValues = z.infer<typeof legalSchema>;
+
+export function toLegalFormValues(settings: LegalSettings): LegalFormValues {
+  return {
+    legalRepresentative: settings.legalRepresentative ?? '',
+    legalRccm: settings.legalRccm ?? '',
+    legalIdNat: settings.legalIdNat ?? '',
+    legalNif: settings.legalNif ?? '',
+    legalCapital: settings.legalCapital ?? '',
+    hostingName: settings.hostingName ?? '',
+    hostingAddress: settings.hostingAddress ?? '',
+    privacyEmail: settings.privacyEmail ?? '',
+    apdReceipt: settings.apdReceipt ?? '',
+  };
+}
+
+/** Corps JSON : une mention vidée part en `null` (l'API l'efface, le site ne l'affiche plus). */
+export function toLegalPayload(values: LegalFormValues) {
+  return {
+    legalRepresentative: orNull(values.legalRepresentative),
+    legalRccm: orNull(values.legalRccm),
+    legalIdNat: orNull(values.legalIdNat),
+    legalNif: orNull(values.legalNif),
+    legalCapital: orNull(values.legalCapital),
+    hostingName: orNull(values.hostingName),
+    hostingAddress: orNull(values.hostingAddress),
+    privacyEmail: orNull(values.privacyEmail),
+    apdReceipt: orNull(values.apdReceipt),
   };
 }
 

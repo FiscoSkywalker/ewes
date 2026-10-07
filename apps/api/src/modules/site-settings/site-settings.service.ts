@@ -15,6 +15,7 @@ import { AuditService } from '../audit/audit.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import type { UpdateGeneralSettingsDto } from './dto/update-general-settings.dto.js';
+import type { UpdateLegalSettingsDto } from './dto/update-legal-settings.dto.js';
 import type { UpdateMailSettingsDto } from './dto/update-mail-settings.dto.js';
 import { DEFAULT_SITE_SETTINGS } from './site-settings.defaults.js';
 import { SOCIAL_FIELDS, type CurrentSettings } from './site-settings-views.js';
@@ -88,6 +89,27 @@ export class SiteSettingsService {
     };
     this.validate(current, patch);
     return this.save(actor, 'SETTINGS_GENERAL_UPDATED', current, patch, true);
+  }
+
+  async updateLegal(actor: AuthenticatedUser, dto: UpdateLegalSettingsDto) {
+    const current = await this.current();
+    return this.save(
+      actor,
+      'SETTINGS_LEGAL_UPDATED',
+      current,
+      {
+        legalRepresentative: dto.legalRepresentative,
+        legalRccm: dto.legalRccm,
+        legalIdNat: dto.legalIdNat,
+        legalNif: dto.legalNif,
+        legalCapital: dto.legalCapital,
+        hostingName: dto.hostingName,
+        hostingAddress: dto.hostingAddress,
+        privacyEmail: dto.privacyEmail,
+        apdReceipt: dto.apdReceipt,
+      },
+      true,
+    );
   }
 
   async updateMail(actor: AuthenticatedUser, dto: UpdateMailSettingsDto) {

@@ -16,6 +16,13 @@
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu"
   },
+  "Legal": {
+    "toc": "Sommaire",
+    "updated": "Dernière mise à jour : {date}",
+    "others": "Autres documents légaux",
+    "newTab": "s’ouvre dans un nouvel onglet",
+    "nav": "Informations légales"
+  },
   "Footer": {
     "identity": "Environment, Water and Engineering Services (EWES SARL) : société à responsabilité limitée issue du Pôle de l’Environnement de l’Interface Université de Lubumbashi–Société (IUS).",
     "addressTitle": "Adresse",
@@ -1049,7 +1056,7 @@
       "fallback": "Vous pouvez aussi nous écrire directement à"
     },
     "requiredNote": "Les champs marqués * sont obligatoires.",
-    "privacyNote": "Vos informations servent uniquement à répondre à votre demande."
+    "privacyNote": "Vos informations servent uniquement à répondre à votre demande. En envoyant ce formulaire, vous acceptez ce traitement ; vos droits sont détaillés dans notre <link>politique de confidentialité</link>."
   },
   "HomeAbout": {
     "eyebrow": "01 · À propos",

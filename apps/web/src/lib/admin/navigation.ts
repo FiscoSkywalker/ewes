@@ -533,6 +533,26 @@ export const NAV_GROUPS: NavGroup[] = [
             ],
           },
           {
+            id: 'settings-legal',
+            label: 'Informations légales',
+            href: '/admin/parametres/legal',
+            description:
+              'Mentions légales, hébergeur et protection des données du site.',
+            keywords: [
+              'mentions légales',
+              'rccm',
+              'nif',
+              'confidentialité',
+              'données personnelles',
+              'hébergeur',
+              'cookies',
+            ],
+            features: [
+              'Identité légale affichée dans les mentions légales',
+              'Hébergeur et contact pour les droits sur les données',
+            ],
+          },
+          {
             id: 'settings-mail',
             label: 'Messagerie',
             href: '/admin/parametres/messagerie',

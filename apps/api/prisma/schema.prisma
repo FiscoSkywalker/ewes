@@ -586,6 +586,19 @@ model SiteSettings {
   contactRecipientEmail String?
   /// Envoyer un accusé de réception à l'expéditeur du formulaire de contact.
   contactAutoReply      Boolean  @default(true)
+  /// Mentions légales (Code du numérique, art. 52) : tout est facultatif, une mention vide n'est pas affichée.
+  legalRepresentative   String?
+  legalRccm             String?
+  legalIdNat            String?
+  legalNif              String?
+  legalCapital          String?
+  /// Hébergeur du site (nom, puis adresse/pays) : exigé par les mentions légales.
+  hostingName           String?
+  hostingAddress        String?
+  /// Point de contact pour exercer ses droits sur ses données ; absent, l'e-mail public s'applique.
+  privacyEmail          String?
+  /// Référence du récépissé de déclaration à l'Autorité de protection des données (art. 186).
+  apdReceipt            String?
   updatedAt             DateTime @updatedAt
 
   @@map("site_settings")

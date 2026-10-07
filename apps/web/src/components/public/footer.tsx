@@ -4,6 +4,7 @@ import { ArrowUp, Lock } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { getPoleServices } from '@/lib/api/public-services';
 import { getSiteSettings } from '@/lib/api/public-site-settings';
+import { LEGAL_SLUGS, legalLabels } from '@/lib/legal';
 import { activeSocials, addressFor } from '@/lib/site-settings';
 
 /**
@@ -15,10 +16,12 @@ export async function Footer() {
   const t = await getTranslations('Footer');
   const tNav = await getTranslations('Nav');
   const tPoles = await getTranslations('ServicesOverview');
+  const tLegal = await getTranslations('Legal');
   // Noms des pôles pilotés par le portail ; repli sur les messages.
   const locale = await getLocale();
   const poles = await getPoleServices(locale);
   const partners = t.raw('partners') as string[];
+  const legalNames = legalLabels(locale);
   // Coordonnées pilotées par le portail ; repli sur les valeurs d'origine.
   const settings = await getSiteSettings();
   const socials = activeSocials(settings);
@@ -117,10 +120,24 @@ export async function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 pt-6 font-mono text-[11px] sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 pt-6 font-mono text-[11px] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           © {new Date().getFullYear()} EWES S.A.R.L. {t('rights')}
         </div>
+        <nav
+          aria-label={tLegal('nav')}
+          className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:order-last sm:basis-full sm:border-t sm:border-on-night/12 sm:pt-4"
+        >
+          {LEGAL_SLUGS.map((slug) => (
+            <Link
+              key={slug}
+              href={`/${slug}`}
+              className="transition-colors hover:text-on-night"
+            >
+              {legalNames[slug]}
+            </Link>
+          ))}
+        </nav>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <Link
             href="/documents"

@@ -3,15 +3,20 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Mail, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import { Mail, Scale, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 import { backendJson } from '@/lib/api/backend';
 import { cx, focusRing } from '@/lib/admin/cx';
 import { NAV_GROUPS } from '@/lib/admin/navigation';
-import { MAIL_QUERY_KEY } from '@/lib/admin/settings-queries';
-import type { MailOverview } from '@/lib/admin/settings';
+import { LEGAL_QUERY_KEY, MAIL_QUERY_KEY } from '@/lib/admin/settings-queries';
+import {
+  missingLegalNotices,
+  type LegalSettings,
+  type MailOverview,
+} from '@/lib/admin/settings';
 
 const ICONS: Record<string, LucideIcon> = {
   'settings-general': SlidersHorizontal,
+  'settings-legal': Scale,
   'settings-mail': Mail,
 };
 
@@ -44,6 +49,14 @@ export function SettingsNav() {
   const attention = mail.data
     ? !mail.data.transport.configured || mail.data.summary.failed > 0
     : false;
+  const legal = useQuery({
+    queryKey: LEGAL_QUERY_KEY,
+    queryFn: () => backendJson<LegalSettings>('admin/settings/legal'),
+    staleTime: 30_000,
+  });
+  const legalIncomplete = legal.data
+    ? missingLegalNotices(legal.data).length > 0
+    : false;
 
   return (
     <nav aria-label="Sections des paramètres" className="lg:sticky lg:top-24">
@@ -51,7 +64,9 @@ export function SettingsNav() {
         {SECTIONS.map((section) => {
           const active = pathname === section.href;
           const Icon = section.icon;
-          const flagged = section.id === 'settings-mail' && attention;
+          const flagged =
+            (section.id === 'settings-mail' && attention) ||
+            (section.id === 'settings-legal' && legalIncomplete);
           return (
             <li key={section.id} className="shrink-0 lg:shrink">
               <Link

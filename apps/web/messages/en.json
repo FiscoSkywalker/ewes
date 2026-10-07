@@ -16,6 +16,13 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
+  "Legal": {
+    "toc": "Contents",
+    "updated": "Last updated: {date}",
+    "others": "Other legal documents",
+    "newTab": "opens in a new tab",
+    "nav": "Legal information"
+  },
   "Footer": {
     "identity": "Environment, Water and Engineering Services (EWES SARL): a limited liability company that grew out of the Environment Centre of the University of Lubumbashi–Society Interface (IUS).",
     "addressTitle": "Address",
@@ -1049,7 +1056,7 @@
       "fallback": "You can also write to us directly at"
     },
     "requiredNote": "Fields marked * are required.",
-    "privacyNote": "Your information is used only to answer your request."
+    "privacyNote": "Your information is used only to answer your request. By sending this form you agree to this processing; your rights are detailed in our <link>privacy policy</link>."
   },
   "HomeAbout": {
     "eyebrow": "01 · About us",

@@ -10,6 +10,21 @@ export const SOCIAL_NETWORKS = [
 
 export type SocialNetworkId = (typeof SOCIAL_NETWORKS)[number]['id'];
 
+/** Mentions légales telles que servies par `GET /site-settings` : une mention absente n'est pas affichée. */
+export interface PublicLegalInfo {
+  representative: string | null;
+  rccm: string | null;
+  idNat: string | null;
+  nif: string | null;
+  capital: string | null;
+  hostingName: string | null;
+  hostingAddress: string | null;
+  /** Point de contact des droits sur les données (à défaut, l'e-mail public). */
+  privacyEmail: string;
+  /** Référence du récépissé de déclaration à l'Autorité de protection des données. */
+  apdReceipt: string | null;
+}
+
 /** Coordonnées publiques telles que servies par `GET /site-settings`. */
 export interface PublicSiteSettings {
   phone: string;
@@ -24,6 +39,7 @@ export interface PublicSiteSettings {
   closesAt: string;
   timeZone: string;
   social: Record<SocialNetworkId, string | null>;
+  legal: PublicLegalInfo;
 }
 
 /** Adresse dans la langue du visiteur, avec le même repli que l'API (français). */

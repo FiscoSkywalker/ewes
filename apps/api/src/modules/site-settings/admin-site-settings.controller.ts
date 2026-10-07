@@ -17,9 +17,10 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { UpdateGeneralSettingsDto } from './dto/update-general-settings.dto.js';
+import { UpdateLegalSettingsDto } from './dto/update-legal-settings.dto.js';
 import { UpdateMailSettingsDto } from './dto/update-mail-settings.dto.js';
 import { SiteSettingsService } from './site-settings.service.js';
-import { toGeneralView } from './site-settings-views.js';
+import { toGeneralView, toLegalView } from './site-settings-views.js';
 
 /** Paramètres de la plateforme : Administrateur uniquement (blueprint/14 §2). */
 @ApiTags('admin/settings')
@@ -48,6 +49,27 @@ export class AdminSiteSettingsController {
     @Body() dto: UpdateGeneralSettingsDto,
   ) {
     return toGeneralView(await this.settings.updateGeneral(actor, dto));
+  }
+
+  @Get('legal')
+  @ApiOperation({
+    summary:
+      'Mentions légales et informations de protection des données (pages légales du site)',
+  })
+  async legal() {
+    return toLegalView(await this.settings.current());
+  }
+
+  @Patch('legal')
+  @ApiOperation({
+    summary:
+      'Modifier les mentions légales (visibles aussitôt sur les pages légales du site)',
+  })
+  async updateLegal(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Body() dto: UpdateLegalSettingsDto,
+  ) {
+    return toLegalView(await this.settings.updateLegal(actor, dto));
   }
 
   @Get('mail')

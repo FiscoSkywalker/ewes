@@ -43,6 +43,22 @@ export function toGeneralView(settings: CurrentSettings) {
   };
 }
 
+/** Mentions légales et protection des données, telles que servies au portail et au site. */
+export function toLegalView(settings: CurrentSettings) {
+  return {
+    legalRepresentative: settings.legalRepresentative,
+    legalRccm: settings.legalRccm,
+    legalIdNat: settings.legalIdNat,
+    legalNif: settings.legalNif,
+    legalCapital: settings.legalCapital,
+    hostingName: settings.hostingName,
+    hostingAddress: settings.hostingAddress,
+    privacyEmail: settings.privacyEmail,
+    apdReceipt: settings.apdReceipt,
+    updatedAt: settings.updatedAt,
+  };
+}
+
 /** Ce que le site public affiche : valeurs dérivées incluses, rien de la messagerie. */
 export function toPublicView(settings: CurrentSettings) {
   return {
@@ -61,6 +77,18 @@ export function toPublicView(settings: CurrentSettings) {
       facebook: settings.facebookUrl,
       x: settings.xUrl,
       youtube: settings.youtubeUrl,
+    },
+    legal: {
+      representative: settings.legalRepresentative,
+      rccm: settings.legalRccm,
+      idNat: settings.legalIdNat,
+      nif: settings.legalNif,
+      capital: settings.legalCapital,
+      hostingName: settings.hostingName,
+      hostingAddress: settings.hostingAddress,
+      // Point de contact des droits sur les données : à défaut, l'e-mail public.
+      privacyEmail: settings.privacyEmail ?? settings.email,
+      apdReceipt: settings.apdReceipt,
     },
   };
 }

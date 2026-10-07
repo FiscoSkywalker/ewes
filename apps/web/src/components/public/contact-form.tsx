@@ -12,6 +12,7 @@ import {
   type ContactOutcome,
   type ContactRequest,
 } from '@/lib/contact-request';
+import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/public/ui';
 
 interface Sector {
@@ -324,7 +325,18 @@ export function ContactForm({ onSectorChange }: ContactFormProps) {
           {sending ? t('submit.sending') : t('submitLabel')}
         </Button>
         <p className="max-w-sm text-[11px] leading-5 text-on-night-muted/80">
-          {t('requiredNote')} {t('privacyNote')} {t('formNote')}
+          {t('requiredNote')}{' '}
+          {t.rich('privacyNote', {
+            link: (chunks) => (
+              <Link
+                href="/confidentialite"
+                className="underline underline-offset-2 transition-colors hover:text-on-night"
+              >
+                {chunks}
+              </Link>
+            ),
+          })}{' '}
+          {t('formNote')}
         </p>
       </div>
 
