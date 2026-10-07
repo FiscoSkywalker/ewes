@@ -7,6 +7,7 @@ import {
   ArchiveRestore,
   ChevronRight,
   Download,
+  ExternalLink,
   Eye,
   FileUp,
   FolderInput,
@@ -254,6 +255,9 @@ function SheetBody({
       {fileTypeOf(document.fileType)?.family === 'image' && (
         <ImagePreview document={document} />
       )}
+      {fileTypeOf(document.fileType)?.family === 'pdf' && (
+        <PdfPreview document={document} />
+      )}
 
       {document.description && (
         <p className="whitespace-pre-line text-[13.5px] leading-relaxed text-ink-muted">
@@ -393,11 +397,12 @@ function Detail({
 }
 
 /**
- * Aperçu d'une image, à la demande : le fichier passe par la même route
- * authentifiée que le téléchargement (droit revérifié, consultation tracée),
- * il n'est donc chargé que si la personne le demande.
+ * Chargement d'un aperçu, à la demande : le fichier passe par la même route
+ * authentifiée que le téléchargement (droit revérifié, consultation tracée
+ * `DOCUMENT_DOWNLOADED`), il n'est donc chargé que si la personne le demande.
+ * L'adresse d'objet est libérée au retrait de l'aperçu et à la fermeture de la fiche.
  */
-function ImagePreview({ document }: { document: PrivateDocument }) {
+function usePreview(document: PrivateDocument, mimeType?: string) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -412,13 +417,25 @@ function ImagePreview({ document }: { document: PrivateDocument }) {
     setError(null);
     try {
       const { blob } = await fetchDocumentFile(document);
-      setUrl(URL.createObjectURL(blob));
+      // Le type est imposé : un aperçu ne dépend jamais de ce que le réseau a annoncé.
+      setUrl(
+        URL.createObjectURL(
+          mimeType ? new Blob([blob], { type: mimeType }) : blob,
+        ),
+      );
     } catch (caught) {
       setError(describeError(caught).message);
     } finally {
       setLoading(false);
     }
   }
+
+  return { url, setUrl, loading, error, setError, load };
+}
+
+/** Aperçu d'une image, à la demande. */
+function ImagePreview({ document }: { document: PrivateDocument }) {
+  const { url, setUrl, loading, error, setError, load } = usePreview(document);
 
   if (url) {
     return (
@@ -434,6 +451,77 @@ function ImagePreview({ document }: { document: PrivateDocument }) {
         }}
         className="max-h-80 w-full rounded-xl border border-line bg-sunken object-contain"
       />
+    );
+  }
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <Button variant="secondary" icon={Eye} loading={loading} onClick={load}>
+        Afficher l’aperçu
+      </Button>
+      {error && (
+        <p role="alert" className="text-xs font-medium text-bad">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Aperçu d'un PDF, à la demande, dans la visionneuse du navigateur (aucune
+ * bibliothèque ajoutée). Quand le navigateur n'affiche pas les PDF dans la
+ * page (c'est le cas de la plupart des navigateurs Android), aucun bouton
+ * trompeur : la fiche renvoie au téléchargement.
+ */
+function PdfPreview({ document }: { document: PrivateDocument }) {
+  const { url, setUrl, loading, error, load } = usePreview(
+    document,
+    'application/pdf',
+  );
+  // `pdfViewerEnabled` n'existe pas partout : seule une réponse « non » explicite masque l'aperçu.
+  const supported = navigator.pdfViewerEnabled !== false;
+
+  if (!supported) {
+    return (
+      <p className="text-xs leading-relaxed text-ink-subtle">
+        Ce navigateur n’affiche pas les PDF dans la page : téléchargez le
+        document pour le lire.
+      </p>
+    );
+  }
+  if (url) {
+    return (
+      <div className="flex flex-col gap-2">
+        <iframe
+          src={url}
+          title={`Aperçu de ${document.name}`}
+          className="h-[60dvh] w-full rounded-xl border border-line bg-sunken"
+        />
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener"
+            className={cx(
+              'inline-flex items-center gap-1.5 rounded text-xs font-medium text-brand hover:underline',
+              focusRing,
+            )}
+          >
+            <ExternalLink size={13} aria-hidden="true" />
+            Ouvrir dans un onglet
+          </a>
+          <button
+            type="button"
+            onClick={() => setUrl(null)}
+            className={cx(
+              'rounded text-xs font-medium text-ink-muted hover:text-ink hover:underline',
+              focusRing,
+            )}
+          >
+            Fermer l’aperçu
+          </button>
+        </div>
+      </div>
     );
   }
   return (
