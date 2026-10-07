@@ -64,3 +64,5 @@ Les messages de contact, les documents privés et les journaux d'audit suivent u
 > Note (2026-10-07) — migration `20261007114026_user_notifications_seen` : `users.notificationsSeenAt` (« tout lu jusqu'ici » de la cloche du portail, `NULL` = rien de lu). État d'affichage de la personne : aucune trace d'audit.
 
 > Note (2026-10-07) — migration `20261007115646_expert_photo_focal` : `experts.photoFocalX` et `photoFocalY` (entiers 0–100, `NULL` = cadrage par défaut) : point focal du portrait, en % de la largeur et de la hauteur de l'image. Les deux vont ensemble ; ils sont remis à `NULL` quand le portrait change ou est retiré sans nouveau point (l'ancien visait l'ancienne image).
+
+> Note (2026-10-07) — migration `20261007130000_key_figure_years_since_2008` (données) : le chiffre clé « De références documentées » (valeur fixe 17 « ans », repris des textes d'origine) passe en source `YEARS_SINCE` avec `sinceYear` = 2008 : le site affiche l'année courante moins 2008 (18 en 2026). Ne touche que la ligne d'origine encore intacte ; un chiffre déjà modifié depuis le portail n'est pas écrasé.
