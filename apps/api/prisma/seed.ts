@@ -460,6 +460,11 @@ async function main() {
 
   try {
     await seedAdmin(prisma, email, password);
+    // Production : le compte Administrateur seul, le contenu est saisi depuis le portail.
+    if (process.env.SEED_ADMIN_ONLY === 'true') {
+      console.log("SEED_ADMIN_ONLY : contenu d'exemple non créé.");
+      return;
+    }
     await seedAboutPage(prisma);
     await seedServices(prisma);
     await seedExperts(prisma);

@@ -1,0 +1,164 @@
+# Production EWES — VPS Ubuntu, Docker Compose + Nginx + HTTPS (blueprint/18_Deployment.md).
+# Le Compose de développement (PostgreSQL seul) reste docker-compose.yml.
+#
+# Ne se lance pas à la main : utiliser ops/deploy/compose.sh (il fournit les deux
+# fichiers de variables) et ops/deploy/deploy.sh pour déployer. Procédure complète :
+# ops/deploy/README.md.
+#
+# Seul Nginx publie des ports (80 et 443). PostgreSQL et l'API ne sont joignables que
+# depuis le réseau Docker, comme l'exige TRUST_PROXY_HOPS=1 (blueprint/18 §2).
+name: ewes
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      # Rôle PROPRIÉTAIRE des tables : réservé aux migrations (service `tools`) et aux
+      # sauvegardes. L'application se connecte avec le rôle restreint `ewes_app`
+      # (créé par ops/deploy/db-roles.sh), voir blueprint/10_Security.md constat 8.
+      POSTGRES_USER: ewes
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env}
+      POSTGRES_DB: ewes
+    volumes:
+      - ewes_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ewes -d ewes"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    logging: *logging
+
+  api:
+    image: ${IMAGE_REPO:?IMAGE_REPO manquant (.image.env)}-api:${IMAGE_TAG:?IMAGE_TAG manquant (.image.env)}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: postgresql://ewes_app:${DB_APP_PASSWORD:?DB_APP_PASSWORD manquant dans .env}@postgres:5432/ewes?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET manquant dans .env}
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET manquant dans .env}
+      JWT_REFRESH_EXPIRES_IN: 7d
+      # Nginx est le seul proxy de confiance devant l'API.
+      TRUST_PROXY_HOPS: "1"
+      WEB_APP_URL: https://${DOMAIN:?DOMAIN manquant dans .env}
+      WEB_REVALIDATE_URL: http://web:3000/api/revalidate
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:?REVALIDATE_SECRET manquant dans .env}
+      PUBLICATION_WATCH_INTERVAL_SECONDS: "60"
+      RETENTION_SWEEP_INTERVAL_HOURS: "24"
+      LOGIN_LOCKOUT_MAX_FAILURES: "5"
+      LOGIN_LOCKOUT_MINUTES: "15"
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      CONTACT_NOTIFICATION_EMAIL: ${CONTACT_NOTIFICATION_EMAIL:-}
+    volumes:
+      # Montages de DOSSIERS de l'hôte (et non volumes nommés) : les sauvegardes
+      # (ops/backup) les lisent directement. Propriétaire attendu : uid 1000.
+      - /srv/ewes/storage/private:/data/private
+      - /srv/ewes/storage/public:/data/public
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    logging: *logging
+
+  web:
+    image: ${IMAGE_REPO}-web:${IMAGE_TAG}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      API_INTERNAL_URL: http://api:3001/api/v1
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET}
+      AUTH_REFRESH_TOKEN_TTL_SECONDS: "604800"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/robots.txt').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    logging: *logging
+
+  nginx:
+    image: nginx:1.28-alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./ops/deploy/nginx/ewes.conf.template:/etc/nginx/templates/ewes.conf.template:ro
+      - ./ops/deploy/nginx/proxy.conf:/etc/nginx/snippets/proxy.conf:ro
+      - /srv/ewes/certbot/conf:/etc/letsencrypt:ro
+      - /srv/ewes/certbot/www:/var/www/certbot:ro
+    # Recharge la configuration toutes les 6 h pour prendre le certificat renouvelé.
+    # Le script d'entrée de l'image (modèles + envsubst) n'agit que si la commande
+    # commence par `nginx` : on l'appelle donc explicitement.
+    command:
+      - /bin/sh
+      - -c
+      - |
+        (while :; do sleep 6h; nginx -s reload; done) &
+        exec /docker-entrypoint.sh nginx -g 'daemon off;'
+    logging: *logging
+
+  # Renouvellement automatique du certificat Let's Encrypt (défi par fichier, via Nginx).
+  certbot:
+    image: certbot/certbot:v5.1.0
+    restart: unless-stopped
+    volumes:
+      - /srv/ewes/certbot/conf:/etc/letsencrypt
+      - /srv/ewes/certbot/www:/var/www/certbot
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        trap exit TERM
+        while :; do
+          certbot renew --webroot -w /var/www/certbot --quiet
+          sleep 12h &
+          wait $${!}
+        done
+    logging: *logging
+
+  # Migrations Prisma et amorçage — lancé à la demande (`compose.sh run --rm tools …`),
+  # jamais démarré avec la pile. Se connecte avec le rôle propriétaire.
+  tools:
+    image: ${IMAGE_REPO}-api-tools:${IMAGE_TAG}
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://ewes:${POSTGRES_PASSWORD}@postgres:5432/ewes?schema=public
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      # En production, l'amorçage ne crée que le compte Administrateur (pas de contenu d'exemple).
+      SEED_ADMIN_ONLY: "true"
+      PUBLIC_MEDIA_PATH: /data/public
+    volumes:
+      - /srv/ewes/storage/public:/data/public
+
+volumes:
+  ewes_postgres_data:

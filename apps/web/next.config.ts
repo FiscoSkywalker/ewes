@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
@@ -5,9 +6,18 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** Base de l'API NestJS (déjà utilisée par les routes BFF et les lectures serveur). */
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:3001/api/v1';
 
 const isProduction = process.env.NODE_ENV === 'production';
+
+/**
+ * Image Docker (apps/web/Dockerfile) : sortie « standalone », qui n'embarque que
+ * les fichiers utiles à l'exécution. Activée par variable pour ne rien changer au
+ * développement ni au build local (sous Windows elle exige des liens symboliques).
+ */
+const isStandalone = process.env.NEXT_OUTPUT === 'standalone';
 
 /**
  * Politique de contenu (blueprint/10_Security.md §3). Les scripts et styles
@@ -52,6 +62,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Ne pas annoncer « Next.js » dans chaque réponse.
   poweredByHeader: false,
+  ...(isStandalone && {
+    output: 'standalone' as const,
+    // Monorepo npm : les dépendances sont installées à la racine du dépôt.
+    outputFileTracingRoot: join(process.cwd(), '../../'),
+  }),
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

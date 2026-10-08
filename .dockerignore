@@ -1,0 +1,24 @@
+# Contexte de build Docker = racine du dépôt (monorepo npm). On n'y envoie que le code :
+# ni dépendances locales (réinstallées dans l'image), ni secrets, ni données.
+.git
+.github
+.claude
+.cursor
+**/node_modules
+**/.next
+**/dist
+**/coverage
+**/*.tsbuildinfo
+
+# Secrets et données : jamais dans une image
+**/.env
+**/.env.*
+!**/.env.example
+apps/api/storage
+
+# Documentation et exploitation : inutiles à l'exécution
+blueprint
+raw
+ops
+docker-compose*.yml
+**/*.md

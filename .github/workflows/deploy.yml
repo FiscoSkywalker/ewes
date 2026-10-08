@@ -1,0 +1,178 @@
+# Mise en production : à chaque push sur main (après CI), construction des images Docker,
+# envoi sur GHCR (gratuit), puis déploiement sur le VPS par SSH.
+#
+# Retour arrière : Actions > Deploy > Run workflow, en indiquant l'étiquette d'une image
+# déjà construite (sha-xxxxxxx, visible dans l'historique de ce workflow) : ni CI ni build.
+#
+# Configuration à faire une fois (ops/deploy/README.md, étape 8) :
+#   Variable de dépôt : SITE_URL        (https://votre-domaine, sans barre finale)
+#   Secrets de dépôt  : VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_KNOWN_HOSTS
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Étiquette d'une image déjà construite à redéployer (retour arrière). Vide : construire et déployer main."
+        required: false
+        default: ""
+
+# Un seul déploiement à la fois, jamais interrompu en cours de route.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    if: ${{ inputs.image_tag == '' }}
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: ci
+    if: ${{ inputs.image_tag == '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Étiquette et noms d'images
+        id: meta
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "::error::La variable de dépôt SITE_URL est absente (ex. https://ewes.example) : elle est figée dans le site à la construction."
+            exit 1
+          fi
+          case "$SITE_URL" in
+            https://*/*|https://) echo "::error::SITE_URL doit être de la forme https://domaine, sans chemin ni barre finale."; exit 1 ;;
+            https://*) ;;
+            *) echo "::error::SITE_URL doit commencer par https://."; exit 1 ;;
+          esac
+          echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          # GHCR n'accepte que des minuscules.
+          echo "repo=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image API
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          target: runner
+          push: true
+          tags: ${{ steps.meta.outputs.repo }}-api:${{ steps.meta.outputs.tag }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+
+      - name: Image des migrations
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          target: tools
+          push: true
+          tags: ${{ steps.meta.outputs.repo }}-api-tools:${{ steps.meta.outputs.tag }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+
+      - name: Image du site
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.repo }}-web:${{ steps.meta.outputs.tag }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=${{ vars.SITE_URL }}
+            NEXT_PUBLIC_API_URL=${{ vars.SITE_URL }}/api/v1
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
+  deploy:
+    needs: build
+    # build est ignoré lors d'un retour arrière ; il ne doit pas avoir échoué sinon.
+    if: ${{ !cancelled() && !failure() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    env:
+      IMAGE_TAG: ${{ inputs.image_tag != '' && inputs.image_tag || needs.build.outputs.tag }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Connexion SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          for name in VPS_USER VPS_HOST VPS_SSH_KEY VPS_KNOWN_HOSTS; do
+            if [ -z "${!name}" ]; then echo "::error::Le secret $name est absent."; exit 1; fi
+          done
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Empreinte du serveur épinglée : pas de ssh-keyscan à l'aveugle (attaque de l'homme du milieu).
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host vps
+            HostName ${VPS_HOST}
+            User ${VPS_USER}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          EOF
+
+      - name: Envoi des fichiers de déploiement
+        run: tar czf - docker-compose.prod.yml ops/deploy | ssh vps 'tar xzf - -C /opt/ewes'
+
+      - name: Déploiement
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          # L'expansion côté poste est voulue : on envoie les valeurs au VPS (SC2029).
+          IMAGE_REPO="ghcr.io/${GITHUB_REPOSITORY,,}"
+          # Connexion temporaire à GHCR avec le jeton de ce job (valable le temps du job).
+          # shellcheck disable=SC2029
+          printf '%s' "$GHCR_TOKEN" | ssh vps "docker login ghcr.io -u '$GHCR_USER' --password-stdin"
+          # shellcheck disable=SC2029
+          ssh vps "cd /opt/ewes && chmod +x ops/deploy/*.sh && IMAGE_REPO='$IMAGE_REPO' ./ops/deploy/deploy.sh '$IMAGE_TAG'"
+
+      - name: Fermeture de la session GHCR
+        if: always()
+        run: ssh vps 'docker logout ghcr.io' || true
+
+      - name: Le site répond
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          curl --fail --silent --show-error --location --retry 6 --retry-delay 10 --retry-all-errors \
+            --output /dev/null "$SITE_URL/fr"
+          curl --fail --silent --show-error --retry 3 --retry-delay 5 --retry-all-errors \
+            --output /dev/null "$SITE_URL/robots.txt"
+          echo "Déploiement $IMAGE_TAG en ligne : $SITE_URL"

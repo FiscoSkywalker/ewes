@@ -2,3 +2,4 @@
 *.sh text eol=lf
 ops/backup/*.cron text eol=lf
 ops/backup/*.env.example text eol=lf
+ops/deploy/nginx/* text eol=lf

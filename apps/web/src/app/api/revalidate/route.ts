@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 
 /**
@@ -8,6 +8,11 @@ import { NextResponse } from 'next/server';
  * Protégée par un secret partagé ; seuls les tags `page:<slug>`, `service:<slug>`, `realisation:<slug>`,
  * `article:<slug>`, `document:<slug>`, `services`, `key-figures`, `site-settings`, `experts`, `realisations`, `articles` et
  * `documents` sont acceptés.
+ *
+ * `{ "all": true }` invalide toutes les pages d'un coup. Utilisé par le déploiement
+ * (ops/deploy/deploy.sh) : l'image du site est construite sans accès à l'API, donc ses
+ * pages sont pré-rendues avec les textes de repli et sans les tags ci-dessus ; seule une
+ * invalidation par chemin les fait relire l'API à la première visite.
  */
 const TAG_PATTERN =
   /^(?:(?:page|service|realisation|article|document):[a-z0-9]+(?:-[a-z0-9]+)*|services|key-figures|site-settings|experts|realisations|articles|documents)$/;
@@ -30,7 +35,12 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as {
     tag?: unknown;
+    all?: unknown;
   } | null;
+  if (body?.all === true) {
+    revalidatePath('/', 'layout');
+    return NextResponse.json({ revalidated: true, all: true });
+  }
   if (typeof body?.tag !== 'string' || !TAG_PATTERN.test(body.tag)) {
     return NextResponse.json({ code: 'BAD_REQUEST' }, { status: 400 });
   }

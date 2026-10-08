@@ -3,7 +3,9 @@ import type { NewsCategory, NewsItem } from '@/data/news';
 import { isRichHtml, plainTextParagraphs } from '@/lib/rich-text';
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:3001/api/v1';
 
 /** Durée de repli : la revalidation à la demande reste le mécanisme principal. */
 const ARTICLES_REVALIDATE_SECONDS = 3_600;
@@ -96,9 +98,16 @@ async function fetchAllPublished(): Promise<PublicArticle[] | null> {
 }
 
 /** Date ISO à la précision voulue : `AAAA`, `AAAA-MM` ou `AAAA-MM-JJ` (UTC). */
-function isoDate(publishedAt: string, precision: PublicArticle['datePrecision']) {
+function isoDate(
+  publishedAt: string,
+  precision: PublicArticle['datePrecision'],
+) {
   const day = publishedAt.slice(0, 10);
-  return precision === 'YEAR' ? day.slice(0, 4) : precision === 'MONTH' ? day.slice(0, 7) : day;
+  return precision === 'YEAR'
+    ? day.slice(0, 4)
+    : precision === 'MONTH'
+      ? day.slice(0, 7)
+      : day;
 }
 
 /**

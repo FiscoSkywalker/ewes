@@ -5,7 +5,9 @@ import type {
 } from '@/components/public/documents-showcase';
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:3001/api/v1';
 
 /** Durée de repli : la revalidation à la demande reste le mécanisme principal. */
 const DOCUMENTS_REVALIDATE_SECONDS = 3_600;
@@ -76,7 +78,8 @@ async function fetchAllPublished(): Promise<PublicDocumentApi[] | null> {
 
 /** « 740 Ko » / « 3,2 Mo » en français, « 740 KB » / « 3.2 MB » en anglais. */
 export function formatFileSize(bytes: number, locale: string) {
-  const units = locale === 'en' ? ['B', 'KB', 'MB', 'GB'] : ['o', 'Ko', 'Mo', 'Go'];
+  const units =
+    locale === 'en' ? ['B', 'KB', 'MB', 'GB'] : ['o', 'Ko', 'Mo', 'Go'];
   let value = bytes;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {

@@ -2,7 +2,9 @@ import type { Expert } from '@/data/experts';
 import { poleOfSlug } from '@/lib/poles';
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:3001/api/v1';
 
 /** Durée de repli : la revalidation à la demande reste le mécanisme principal. */
 const EXPERTS_REVALIDATE_SECONDS = 86_400;

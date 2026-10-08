@@ -3,7 +3,9 @@ import { formatFileSize } from '@/lib/api/public-documents';
 import type { Project, ProjectCategory } from '@/data/projects';
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:3001/api/v1';
 
 /** Durée de repli : la revalidation à la demande reste le mécanisme principal. */
 const REALISATIONS_REVALIDATE_SECONDS = 3_600;

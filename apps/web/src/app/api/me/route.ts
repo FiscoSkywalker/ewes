@@ -4,7 +4,9 @@ import { clientContextHeaders } from '@/lib/api/client-context';
 import { ACCESS_TOKEN_COOKIE } from '@/lib/auth/cookies';
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:3001/api/v1';
 
 /**
  * Proxy BFF vers `GET /me` (NestJS) : le jeton d'accès (cookie httpOnly)

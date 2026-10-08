@@ -1,7 +1,9 @@
 import type { LocalizedFigure } from '@/lib/key-figures';
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:3001/api/v1';
 
 /** Durée de repli : la revalidation à la demande reste le mécanisme principal. */
 const KEY_FIGURES_REVALIDATE_SECONDS = 86_400;

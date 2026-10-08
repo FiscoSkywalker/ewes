@@ -8,7 +8,9 @@ import {
 } from '@/lib/auth/cookies';
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:3001/api/v1';
 
 /**
  * Proxy BFF vers `POST /auth/login` (NestJS) : les jetons ne transitent

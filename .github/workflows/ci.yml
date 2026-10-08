@@ -1,0 +1,85 @@
+# Vérifications à chaque pull request, et avant chaque déploiement (appelé par deploy.yml).
+# Reprend le pipeline de blueprint/18_Deployment.md §3 : format, lint, types/build, tests.
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ewes
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: ewes
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ewes -d ewes"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    # Valeurs de test uniquement : base jetable de ce job, aucun secret réel.
+    env:
+      DATABASE_URL: postgresql://ewes:ci-only-password@localhost:5432/ewes?schema=public
+      JWT_ACCESS_SECRET: ci-only-access-secret
+      JWT_REFRESH_SECRET: ci-only-refresh-secret
+      REVALIDATE_SECRET: ci-only-revalidate-secret
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Client Prisma
+        run: npx prisma generate
+        working-directory: apps/api
+
+      - name: Lint API
+        run: npm run lint:api
+
+      - name: Lint site
+        run: npm run lint:web
+
+      # `build` sert de vérification de types stricte sur les deux applications.
+      - name: Build API
+        run: npm run build:api
+
+      - name: Build site
+        run: npm run build:web
+
+      - name: Tests unitaires API
+        run: npm run test --workspace=apps/api
+
+      - name: Migrations sur une base vide
+        run: npx prisma migrate deploy
+        working-directory: apps/api
+
+      # Certaines suites (ex. experts) supposent un service existant : même amorçage qu'en développement.
+      - name: Amorçage de la base de test
+        run: npm run db:seed --workspace=apps/api
+
+      - name: Tests de bout en bout API
+        run: npm run test:e2e --workspace=apps/api
