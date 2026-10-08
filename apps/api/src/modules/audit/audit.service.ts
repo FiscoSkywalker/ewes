@@ -20,7 +20,7 @@ export interface AuditEntry {
 /** Filet de sécurité : au-delà, les facettes sont recalculées même sans nouvelle écriture. */
 const FACETS_TTL_MS = 10 * 60_000;
 
-interface Facets {
+export interface Facets {
   actions: { action: string; count: number }[];
   entityTypes: { entityType: string; count: number }[];
   actors: { id: string; fullName: string }[];
