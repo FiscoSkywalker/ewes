@@ -17,6 +17,15 @@ export interface AuditEntry {
   after?: Prisma.InputJsonValue;
 }
 
+/** Filet de sécurité : au-delà, les facettes sont recalculées même sans nouvelle écriture. */
+const FACETS_TTL_MS = 10 * 60_000;
+
+interface Facets {
+  actions: { action: string; count: number }[];
+  entityTypes: { entityType: string; count: number }[];
+  actors: { id: string; fullName: string }[];
+}
+
 /**
  * Journal d'audit en écriture seule (blueprint/09_Business_Rules.md §7) :
  * aucune méthode ne modifie ni ne supprime une entrée. N'y mettre jamais de
@@ -26,6 +35,18 @@ export interface AuditEntry {
  */
 @Injectable()
 export class AuditService {
+  /**
+   * Facettes déjà calculées, une par source (journal courant / archive). Elles
+   * coûtent trois parcours complets de la table : on les calcule une fois, puis
+   * on les réutilise jusqu'à la prochaine écriture dans le journal (`record`)
+   * ou, au plus, `FACETS_TTL_MS`. Une seule instance de l'API est prévue
+   * (blueprint/18) : l'invalidation locale suffit.
+   */
+  private readonly facetsCache = new Map<
+    boolean,
+    { value: Promise<Facets>; expiresAt: number }
+  >();
+
   constructor(private readonly prisma: PrismaService) {}
 
   async record(entry: AuditEntry): Promise<void> {
@@ -43,6 +64,16 @@ export class AuditService {
         afterData: entry.after,
       },
     });
+    // Nouvelle action, nouvel auteur ou nouveaux effectifs : les facettes sont à refaire.
+    // (L'archivage laisse toujours une entrée, donc invalide aussi l'archive.)
+    this.facetsCache.clear();
+  }
+
+  /** Journal courant, ou archive (entrées de plus de 12 mois) : mêmes colonnes, même lecture. */
+  private source(archived: boolean) {
+    return (
+      archived ? this.prisma.auditLogArchive : this.prisma.auditLog
+    ) as typeof this.prisma.auditLog;
   }
 
   async list(query: {
@@ -60,7 +91,10 @@ export class AuditService {
     /** Jours inclus (UTC), `AAAA-MM-JJ`. */
     from?: string;
     to?: string;
+    /** Lire l'archive (entrées de plus de 12 mois) au lieu du journal courant. */
+    archived?: boolean;
   }) {
+    const model = this.source(query.archived ?? false);
     const search = query.q?.trim() ? escapeLike(query.q.trim()) : undefined;
     const where: Prisma.AuditLogWhereInput = {
       ...(query.actorId && { actorId: query.actorId }),
@@ -108,7 +142,7 @@ export class AuditService {
       }),
     };
     const [data, total] = await Promise.all([
-      this.prisma.auditLog.findMany({
+      model.findMany({
         where,
         // Nom seul : de quoi afficher « par … » sans exposer l'e-mail de l'acteur.
         include: { actor: { select: { id: true, fullName: true } } },
@@ -116,7 +150,7 @@ export class AuditService {
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
-      this.prisma.auditLog.count({ where }),
+      model.count({ where }),
     ]);
     const entities = await resolveEntities(this.prisma, data);
     // Bénéficiaire d'un droit (ACCESS_*) : l'utilisateur cité dans les valeurs avant/après.
@@ -157,19 +191,37 @@ export class AuditService {
    * De quoi remplir les filtres de l'écran : les actions et types d'éléments
    * réellement présents (avec leur effectif) et les personnes qui ont agi.
    */
-  async facets() {
+  facets(archived = false): Promise<Facets> {
+    const cached = this.facetsCache.get(archived);
+    if (cached && cached.expiresAt > Date.now()) return cached.value;
+    const value = this.computeFacets(archived);
+    this.facetsCache.set(archived, {
+      value,
+      expiresAt: Date.now() + FACETS_TTL_MS,
+    });
+    // Un échec n'est pas mémorisé : le prochain appel réessaie.
+    value.catch(() => {
+      if (this.facetsCache.get(archived)?.value === value) {
+        this.facetsCache.delete(archived);
+      }
+    });
+    return value;
+  }
+
+  private async computeFacets(archived: boolean): Promise<Facets> {
+    const model = this.source(archived);
     const [actions, entityTypes, actorGroups] = await Promise.all([
-      this.prisma.auditLog.groupBy({
+      model.groupBy({
         by: ['action'],
         _count: { _all: true },
         orderBy: { action: 'asc' },
       }),
-      this.prisma.auditLog.groupBy({
+      model.groupBy({
         by: ['entityType'],
         _count: { _all: true },
         orderBy: { entityType: 'asc' },
       }),
-      this.prisma.auditLog.groupBy({
+      model.groupBy({
         by: ['actorId'],
         where: { actorId: { not: null } },
         _count: { _all: true },

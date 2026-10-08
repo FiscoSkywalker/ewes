@@ -19,6 +19,7 @@ import { ContactModule } from './modules/contact/contact.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { MediaModule } from './modules/media/media.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
+import { RetentionModule } from './modules/retention/retention.module.js';
 import { AdminModule } from './modules/admin/admin.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 
@@ -52,6 +53,7 @@ import { HealthModule } from './modules/health/health.module.js';
     NotificationsModule,
     MediaModule,
     AuditModule,
+    RetentionModule,
     AdminModule,
     HealthModule,
   ],

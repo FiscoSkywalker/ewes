@@ -5,7 +5,10 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { AuditService } from './audit.service.js';
-import { ListAuditLogsDto } from './dto/list-audit-logs.dto.js';
+import {
+  FacetsAuditLogsDto,
+  ListAuditLogsDto,
+} from './dto/list-audit-logs.dto.js';
 
 /** Consultation seule : l'audit n'est ni modifiable ni supprimable via l'API. */
 @ApiTags('admin/audit-logs')
@@ -21,8 +24,8 @@ export class AdminAuditController {
     summary:
       'Actions, types d’éléments et auteurs présents dans le journal (filtres)',
   })
-  facets() {
-    return this.auditService.facets();
+  facets(@Query() query: FacetsAuditLogsDto) {
+    return this.auditService.facets(query.archived ?? false);
   }
 
   @Get()

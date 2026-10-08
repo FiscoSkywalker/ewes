@@ -26,6 +26,8 @@ Logs structurés (horodatage, niveau, identifiant de corrélation, contexte sans
 
 Sauvegarde quotidienne chiffrée de la base de données et des fichiers de l'espace documentaire privé, avec rétention à définir avec EWES. Test de restauration à effectuer avant la mise en production officielle et à répéter périodiquement. Accès serveur en moindre privilège (SSH par clé, pas de mot de passe).
 
+> Note (2026-10-08) — **Conservation.** L'API archive le journal d'audit de plus de 12 mois et supprime les messages de contact de plus de 24 mois (`RETENTION_SWEEP_INTERVAL_HOURS`, 24 h par défaut, `0` désactive ; une seule instance de l'API est prévue, en lancer plusieurs ne casserait rien). Les sauvegardes doivent couvrir **`audit_logs_archive`** : l'archive est la seule copie des entrées anciennes. Une suppression de message de contact est définitive : elle l'est aussi pour les anciennes sauvegardes tant qu'elles sont conservées, à prendre en compte dans leur rétention.
+
 # 6. Runbook d'incident (minimal)
 
 **Compte compromis :** révoquer les sessions/jetons de l'utilisateur, forcer la réinitialisation du mot de passe, vérifier l'audit des actions récentes de ce compte.

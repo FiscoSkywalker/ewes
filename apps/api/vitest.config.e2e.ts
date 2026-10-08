@@ -13,6 +13,10 @@ export default defineConfig({
     hookTimeout: 30_000,
     // Pas de minuteur de parution programmée dans les suites : celle qui le teste
     // appelle `tick()` elle-même, à l'heure qu'elle choisit.
-    env: { PUBLICATION_WATCH_INTERVAL_SECONDS: '0' },
+    // Idem pour la purge/l'archivage : la suite qui les teste appelle `sweep()` elle-même.
+    env: {
+      PUBLICATION_WATCH_INTERVAL_SECONDS: '0',
+      RETENTION_SWEEP_INTERVAL_HOURS: '0',
+    },
   },
 });

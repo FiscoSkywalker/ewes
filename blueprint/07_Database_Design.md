@@ -31,11 +31,25 @@ Un contenu (Realisation, Article, Page) n'est visible côté public que si son s
 
 # 5. Index requis
 
-Email unique sur `User` ; `slug` unique par langue sur `Realisation`/`Article`/`Page` ; `Realisation(service_id, status, publishedAt)` ; `Article(type, status, publishedAt)` ; `Folder(parentId)` ; `PrivateDocument(folderId)` ; `FolderAccessGrant(userId, folderId)` unique ; `ContactMessage(createdAt)` ; `AuditLog(actorId, createdAt)`.
+Email unique sur `User` ; `slug` unique par langue sur `Realisation`/`Article`/`Page` ; `Realisation(service_id, status, publishedAt)` ; `Article(type, status, publishedAt)` ; `Folder(parentId)` ; `PrivateDocument(folderId)` ; `FolderAccessGrant(userId, folderId)` unique ; `ContactMessage(createdAt)` ; `AuditLog(actorId, createdAt)` ; `AuditLog(createdAt DESC, id DESC)` (vue par défaut du journal) ; mêmes index sur `AuditLogArchive`.
 
 # 6. Rétention des données
 
-Les messages de contact, les documents privés et les journaux d'audit suivent une politique de rétention à définir avec EWES (par défaut : conservation indéfinie tant que le compte du prestataire est actif, sauvegarde chiffrée quotidienne, restauration testée). Aucune donnée personnelle sensible au-delà des coordonnées de contact n'est collectée en V1.
+Durées **validées avec EWES le 2026-10-08** (annoncées dans la politique de confidentialité du site, à changer ensemble avec elle) :
+
+| Donnée | Durée | Mécanisme |
+|---|---|---|
+| Journal d'audit | **12 mois en ligne**, puis **archive** (jamais supprimé) | Fonction SQL `audit_logs_archive_before(cutoff, batch)` : déplace les lignes de plus de 12 mois vers `audit_logs_archive` (mêmes colonnes + `archivedAt`) en une seule instruction ; refuse tout `cutoff` plus récent que 12 mois. C'est la seule voie que le déclencheur d'écriture seule de `audit_logs` accepte pour retirer une ligne. `audit_logs_archive` est elle aussi en écriture seule (aucune suppression, `TRUNCATE` interdit). |
+| Messages de contact | **24 mois** après leur dernière mise à jour (création ou changement de statut), puis suppression | Avec leurs e-mails (`CONTACT_RECEIVED`, `CONTACT_ACKNOWLEDGEMENT`, retrouvés par la clé d'idempotence `contact:<id>:…`) qui portent nom et adresse du visiteur. |
+| Documents privés | Conservation tant qu'ils ne sont pas supprimés par l'Administrateur | — |
+
+Le balayage est assuré par `RetentionService` (`apps/api/src/modules/retention/`) : un minuteur sans planificateur tiers, au démarrage (après 60 s) puis toutes les `RETENTION_SWEEP_INTERVAL_HOURS` heures (24 par défaut, `0` désactive). Chaque balayage qui agit laisse une entrée d'audit sans donnée personnelle (`RETENTION_AUDIT_ARCHIVED`, `RETENTION_CONTACTS_PURGED` : nombre et date limite). Les durées sont des constantes du code, non des variables d'environnement, pour ne jamais diverger du texte légal.
+
+> **Ouvert** — l'archive n'est pas encore purgée : la politique de confidentialité annonce 5 ans pour le journal d'activité ; sans purge de l'archive, la conservation est en fait indéfinie. À trancher avec EWES (suppression de l'archive après 5 ans, ou texte légal à ajuster). Une purge de l'archive devra passer par une fonction SQL dédiée, comme l'archivage.
+
+Aucune donnée personnelle sensible au-delà des coordonnées de contact n'est collectée en V1.
+
+> Note (2026-10-08) — migration `20261008075707_audit_log_archive` : table `audit_logs_archive`, index `(createdAt DESC, id DESC)` sur le journal et l'archive (la vue par défaut, du plus récent au plus ancien, ne trie plus toute la table), gardes d'écriture seule et fonction d'archivage. Une table unique d'archive a été préférée à une table par période (`audit_logs_2025`…) : une table par période suppose de créer des tables à l'exécution (DDL depuis l'application, modèle Prisma statique, lecture multi-tables) ; le partitionnement natif PostgreSQL reste la voie si le volume l'exigeait un jour.
 
 # 7. Références
 

@@ -93,6 +93,8 @@ export const ACTION_LABELS: Record<string, string> = {
   USER_AVATAR_REMOVED: 'Photo de profil retirée',
   USER_SESSIONS_CLOSED: 'Appareils déconnectés',
   AUTH_TOKEN_REUSE_DETECTED: 'Jeton de session rejoué (session fermée)',
+  RETENTION_AUDIT_ARCHIVED: 'Journal archivé (plus de 12 mois)',
+  RETENTION_CONTACTS_PURGED: 'Messages de contact supprimés (24 mois)',
 };
 
 /** Libellé d'une action ; un code inconnu (action future) reste lisible. */
@@ -149,7 +151,10 @@ export const CATEGORIES: CategoryDef[] = [
   {
     id: 'settings',
     label: 'Paramètres',
-    matches: (a) => a.startsWith('SETTINGS_') || a.startsWith('MAIL_'),
+    matches: (a) =>
+      a.startsWith('SETTINGS_') ||
+      a.startsWith('MAIL_') ||
+      a.startsWith('RETENTION_'),
   },
   { id: 'content', label: 'Contenus du site', matches: () => true },
 ];
@@ -200,6 +205,7 @@ export const ENTITY_LABELS: Record<string, string> = {
   User: 'Compte',
   UserInvitation: 'Invitation',
   SiteSettings: 'Paramètres',
+  AuditLog: 'Journal d’audit',
 };
 
 export const entityTypeLabel = (type: string) => ENTITY_LABELS[type] ?? type;
@@ -283,6 +289,8 @@ const FIELD_LABELS: Record<string, string> = {
   contactAutoReply: 'Accusé de réception',
   recipient: 'Destinataire',
   outcome: 'Résultat',
+  count: 'Nombre d’entrées',
+  olderThan: 'Antérieures au',
 };
 
 const VALUE_LABELS: Record<string, Record<string, string>> = {

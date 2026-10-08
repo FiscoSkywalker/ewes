@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDateString,
   IsInt,
   IsOptional,
@@ -12,7 +13,21 @@ import {
   Min,
 } from 'class-validator';
 
-export class ListAuditLogsDto {
+export class FacetsAuditLogsDto {
+  @ApiPropertyOptional({
+    description:
+      'Lire l’archive (entrées de plus de 12 mois, déplacées du journal courant) au lieu du journal courant.',
+    default: false,
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    value === 'true' ? true : value === 'false' ? false : value,
+  )
+  @IsBoolean()
+  archived?: boolean;
+}
+
+export class ListAuditLogsDto extends FacetsAuditLogsDto {
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
   @Type(() => Number)

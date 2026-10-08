@@ -88,6 +88,7 @@ model User {
   folderAccessGrants   FolderAccessGrant[]
   documentAccessGrants DocumentAccessGrant[]
   auditLogs            AuditLog[]            @relation("AuditActor")
+  auditLogArchive      AuditLogArchive[]     @relation("AuditArchiveActor")
   invitationsSent      UserInvitation[]      @relation("InvitationSender")
   notifications        Notification[]
   mediaUploads         Media[]
@@ -681,7 +682,36 @@ model AuditLog {
   @@index([actorId, createdAt])
   @@index([entityType, entityId, createdAt])
   @@index([action, createdAt])
+  // Vue par défaut du journal (tout, du plus récent au plus ancien) : sans cet
+  // index, chaque affichage trierait toute la table.
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
   @@map("audit_logs")
+}
+
+/// Archive du journal d'audit : les entrées de plus de 12 mois y sont déplacées
+/// (jamais supprimées) par `audit_logs_archive_before()` (migration
+/// `audit_log_archive`), la seule voie que le déclencheur de `audit_logs`
+/// accepte pour retirer une ligne. Mêmes colonnes que `AuditLog` + `archivedAt` ;
+/// écriture seule elle aussi (déclencheur `audit_logs_archive_guard`).
+model AuditLogArchive {
+  id         String   @id
+  actorId    String?
+  actor      User?    @relation("AuditArchiveActor", fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  beforeData Json?
+  afterData  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime
+  archivedAt DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@map("audit_logs_archive")
 }
 
 model MediaAsset {

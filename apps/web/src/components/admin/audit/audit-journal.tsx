@@ -103,6 +103,8 @@ const tile =
 
 export function AuditJournal() {
   const initial = useInitialFilters();
+  // Journal courant (12 derniers mois) ou archive (plus anciennes entrées, en lecture seule).
+  const [archived, setArchived] = useState(false);
   const [category, setCategory] = useState<CategoryFilter>(initial.category);
   const [action, setAction] = useState('');
   const [actorId, setActorId] = useState(initial.actorId);
@@ -115,15 +117,26 @@ export function AuditJournal() {
   const [openId, setOpenId] = useState<string | null>(null);
   const q = useDebouncedValue(search.trim());
 
-  const facets = useQuery({
+  const liveFacets = useQuery({
     queryKey: ['audit', 'facets'],
     queryFn: () => backendJson<AuditFacets>('admin/audit-logs/facets'),
     staleTime: 60_000,
   });
+  const archiveFacets = useQuery({
+    queryKey: ['audit', 'facets', 'archive'],
+    queryFn: () =>
+      backendJson<AuditFacets>('admin/audit-logs/facets?archived=true'),
+    enabled: archived,
+    staleTime: 60_000,
+  });
+  const facets = archived ? archiveFacets : liveFacets;
   const known = facets.data?.actions ?? [];
   const inCategory = (value: CategoryFilter) =>
     known.filter((a) => value === 'all' || categoryOf(a.action) === value);
-  const deniedCodes = inCategory('security').map((a) => a.action);
+  // Les repères du haut décrivent toujours le journal courant, jamais l'archive.
+  const deniedCodes = (liveFacets.data?.actions ?? [])
+    .filter((a) => categoryOf(a.action) === 'security')
+    .map((a) => a.action);
 
   // Action effective : celle choisie, sinon toutes celles de la catégorie.
   const categoryCodes = category === 'all' ? [] : inCategory(category);
@@ -157,6 +170,7 @@ export function AuditJournal() {
   };
 
   const params = buildParams({ page: String(page), limit: String(PAGE_SIZE) });
+  if (archived) params.set('archived', 'true');
   if (actionParam) params.set('action', actionParam);
   if (range.from) params.set('from', range.from);
   if (range.to) params.set('to', range.to);
@@ -314,6 +328,12 @@ export function AuditJournal() {
         </Button>
       }
     />
+  ) : archived ? (
+    <EmptyState
+      icon={ScrollText}
+      title="Aucune entrée archivée"
+      description="Les entrées du journal de plus de 12 mois sont déplacées ici automatiquement."
+    />
   ) : (
     <EmptyState
       icon={ScrollText}
@@ -346,7 +366,30 @@ export function AuditJournal() {
         }
       />
 
-      <section aria-label="Repères">
+      <div className="space-y-2">
+        <SegmentedControl<'current' | 'archive'>
+          label="Source du journal"
+          value={archived ? 'archive' : 'current'}
+          onChange={(value) => {
+            setArchived(value === 'archive');
+            // Les actions et auteurs présents diffèrent d'une source à l'autre.
+            reset();
+          }}
+          options={[
+            { value: 'current', label: 'Journal courant' },
+            { value: 'archive', label: 'Archives' },
+          ]}
+          className="w-full sm:w-auto"
+        />
+        {archived ? (
+          <p className="text-sm text-ink-muted">
+            Entrées de plus de 12 mois, déplacées automatiquement du journal
+            courant. Elles restent inaltérables et consultables ici.
+          </p>
+        ) : null}
+      </div>
+
+      <section aria-label="Repères" hidden={archived}>
         <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-3">
           <li>
             <button

@@ -30,7 +30,7 @@ Un message de contact valide déclenche une notification interne et un accusé d
 
 # 7. Audit
 
-Toute action de publication/dépublication, changement de droit documentaire, changement de rôle et suppression de contenu ou de document produit une entrée d'audit non modifiable. L'audit est consultable par l'Administrateur uniquement.
+Toute action de publication/dépublication, changement de droit documentaire, changement de rôle et suppression de contenu ou de document produit une entrée d'audit non modifiable. L'audit est consultable par l'Administrateur uniquement. Les entrées de plus de 12 mois sont déplacées automatiquement dans une archive, elle aussi inaltérable et consultable par l'Administrateur (`07` §6) ; elles ne sont jamais supprimées par ce mécanisme. Les messages de contact sont supprimés 24 mois après leur dernière mise à jour.
 
 # 8. Références
 
