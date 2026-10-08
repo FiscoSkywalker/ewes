@@ -477,4 +477,70 @@ describe('Contact (e2e)', () => {
       expect(res.body.details[0].field).toBe(bad.split('=')[0]);
     }
   });
+
+  it('exports the filtered messages as a safe CSV, restricted to staff and audited', async () => {
+    const needle = `exp${stamp}`;
+    const row = (name: string, over: Record<string, unknown> = {}) =>
+      prisma.contactMessage.create({
+        data: {
+          name: `${name} ${needle}`,
+          organization: 'Org; "Export"',
+          email: sender(),
+          phone: '+243 81 000 00 00',
+          sector: 'EAU',
+          message: 'Message de test pour l’export CSV.',
+          ...over,
+        },
+      });
+    await row('Bob', { status: 'TRAITE' });
+    await row('Alice');
+    // Un visiteur malveillant tente une formule : elle doit sortir inerte.
+    await row('Zoé', { message: '=HYPERLINK("http://evil.example","clic")' });
+    const exportUrl = (query = '') => `/api/v1/admin/contacts/export${query}`;
+    const get = (query: string) => request(app.getHttpServer()).get(exportUrl(query)).set('Authorization', `Bearer ${tAdmin}`);
+
+    // Réservé à l'équipe.
+    await request(app.getHttpServer()).get(exportUrl()).expect(401);
+    const userToken = (
+      await request(app.getHttpServer()).post('/api/v1/auth/login').send({ email: userEmail, password }).expect(200)
+    ).body.accessToken as string;
+    await request(app.getHttpServer()).get(exportUrl()).set('Authorization', `Bearer ${userToken}`).expect(403);
+
+    const res = await get(`?q=${needle}&sort=name&order=asc`).buffer(true).expect(200);
+    expect(res.headers['content-type']).toMatch(/^text\/csv; charset=utf-8/);
+    expect(res.headers['content-disposition']).toMatch(/^attachment; filename="messages-contact-\d{4}-\d{2}-\d{2}\.csv"$/);
+    expect(res.headers['cache-control']).toBe('private, no-store');
+    const text = res.text;
+    expect(text.startsWith('﻿Date de réception;Nom;')).toBe(true);
+    const lines = text.trimEnd().split('\r\n');
+    expect(lines).toHaveLength(4);
+    // Même tri que la liste ; séparateurs et guillemets protégés.
+    expect(lines.slice(1).map((l) => l.split(';')[1].split(' ')[0])).toEqual(['Alice', 'Bob', 'Zoé']);
+    expect(lines[1]).toContain('"Org; ""Export"""');
+    expect(lines[1]).toContain('Eau (adduction, traitement, épuration)');
+    expect(lines[1]).toContain(';À traiter;');
+    expect(lines[2]).toContain(';Traité;');
+    // Formule neutralisée, aucune donnée interne.
+    expect(lines[3]).toContain(`"'=HYPERLINK(""http://evil.example"",""clic"")"`);
+    expect(text).not.toMatch(/contentHash|submissionKey/);
+
+    // Les filtres de la liste s'appliquent ; un paramètre inconnu est refusé.
+    const handled = (await get(`?q=${needle}&status=TRAITE`).expect(200)).text.trimEnd().split('\r\n');
+    expect(handled).toHaveLength(2);
+    expect(handled[1]).toContain('Bob');
+    await get('?sort=email').expect(400);
+    await get('?limit=1').expect(400);
+
+    // Audité : qui, combien, quel filtre — jamais le contenu des messages.
+    const audit = await request(app.getHttpServer())
+      .get('/api/v1/admin/audit-logs?action=CONTACT_EXPORTED&limit=5')
+      .set('Authorization', `Bearer ${tAdmin}`)
+      .expect(200);
+    expect(audit.body.data[0]).toMatchObject({
+      action: 'CONTACT_EXPORTED',
+      entityType: 'ContactMessage',
+      afterData: { count: 1, status: 'TRAITE', searched: true },
+    });
+    expect(JSON.stringify(audit.body)).not.toMatch(/HYPERLINK|Message de test pour l’export/);
+  });
 });

@@ -426,6 +426,9 @@ export const GUIDE_TOPICS: GuideTopic[] = [
       'e-mail',
       'boîte de réception',
       'traité',
+      'exporter',
+      'csv',
+      'excel',
     ],
     blocks: [
       {
@@ -444,6 +447,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
         items: [
           '**Remettre à traiter** est possible depuis un message traité.',
           'Un message ne peut pas être modifié après son envoi : seul son suivi change.',
+          '**Exporter en CSV** (en haut de la liste) télécharge un fichier Excel de **tous** les messages de la liste affichée, avec la recherche et le tri en cours, pas seulement la page visible. Ce fichier contient des données personnelles : rangez-le avec soin et supprimez-le quand vous n’en avez plus besoin. Chaque export est consigné dans le journal d’audit.',
           'Chaque message reçu déclenche une notification par e-mail à l’équipe, et un accusé de réception à l’expéditeur. L’adresse de réception se règle dans **Paramètres › Messagerie** (administrateur).',
         ],
       },

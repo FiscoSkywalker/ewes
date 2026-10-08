@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { CheckCheck, Inbox, SearchX } from 'lucide-react';
+import { CheckCheck, Download, Inbox, SearchX } from 'lucide-react';
 import { backendJson, type Paginated } from '@/lib/api/backend';
 import {
   contactTopic,
+  downloadContactsCsv,
   type ContactMessage,
   type ContactStatus,
 } from '@/lib/admin/contacts';
@@ -21,6 +22,7 @@ import {
   SegmentedControl,
   StatusChip,
   useDebouncedValue,
+  useToast,
   type Column,
   type SortState,
 } from '../ui';
@@ -145,6 +147,8 @@ export function ContactList({ status }: { status: ContactStatus }) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
   const view = VIEWS[status];
   const q = useDebouncedValue(search.trim());
+  const toast = useToast();
+  const [exporting, setExporting] = useState(false);
 
   const list = useQuery({
     queryKey: ['contacts', 'list', status, page, q, sort],
@@ -166,6 +170,27 @@ export function ContactList({ status }: { status: ContactStatus }) {
   const done = useContactCount('TRAITE');
 
   const total = list.data?.meta.total ?? 0;
+
+  /** Exporte la liste telle qu'affichée : même statut, même recherche, même tri, toutes les pages. */
+  async function exportCsv() {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({
+        status,
+        sort: SORT_FIELDS[sort.id],
+        order: sort.direction,
+      });
+      if (q) params.set('q', q);
+      await downloadContactsCsv(params);
+      toast.success('Export téléchargé', {
+        description: `Les messages ${status === 'NOUVEAU' ? 'à traiter' : 'traités'}${q ? ` correspondant à « ${q} »` : ''} (${total}).`,
+      });
+    } catch (error) {
+      toast.error(error);
+    } finally {
+      setExporting(false);
+    }
+  }
   // La page demandée n'existe plus (messages traités entre-temps) : retour à la dernière.
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
   if (list.data && page > lastPage) setPage(lastPage);
@@ -177,15 +202,27 @@ export function ContactList({ status }: { status: ContactStatus }) {
         title={view.title}
         description={view.description}
         actions={
-          <SegmentedControl
-            label="Filtrer par statut"
-            value={status}
-            onChange={(next) => router.push(VIEWS[next].href)}
-            options={[
-              { value: 'NOUVEAU', label: 'À traiter', count: pending.data },
-              { value: 'TRAITE', label: 'Traités', count: done.data },
-            ]}
-          />
+          <>
+            <SegmentedControl
+              label="Filtrer par statut"
+              value={status}
+              onChange={(next) => router.push(VIEWS[next].href)}
+              options={[
+                { value: 'NOUVEAU', label: 'À traiter', count: pending.data },
+                { value: 'TRAITE', label: 'Traités', count: done.data },
+              ]}
+            />
+            <Button
+              variant="secondary"
+              icon={Download}
+              loading={exporting}
+              disabled={total === 0}
+              onClick={() => void exportCsv()}
+              title="Télécharge tous les messages de cette liste (recherche et tri compris), au format CSV pour Excel"
+            >
+              Exporter en CSV
+            </Button>
+          </>
         }
       />
 

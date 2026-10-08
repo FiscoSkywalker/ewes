@@ -32,6 +32,7 @@ export const ACTION_LABELS: Record<string, string> = {
   ACCESS_GRANTED: 'Droit d’accès attribué',
   ACCESS_REVOKED: 'Droit d’accès révoqué',
   CONTACT_STATUS_CHANGED: 'Statut d’un message modifié',
+  CONTACT_EXPORTED: 'Messages de contact exportés (CSV)',
   DOCUMENT_UPLOADED: 'Document privé téléversé',
   DOCUMENT_UPDATED: 'Document privé modifié',
   DOCUMENT_REPLACED: 'Fichier d’un document privé remplacé',
@@ -290,7 +291,8 @@ const FIELD_LABELS: Record<string, string> = {
   contactAutoReply: 'Accusé de réception',
   recipient: 'Destinataire',
   outcome: 'Résultat',
-  count: 'Nombre d’entrées',
+  count: 'Nombre',
+  searched: 'Recherche appliquée',
   olderThan: 'Antérieures au',
 };
 
@@ -301,6 +303,7 @@ const VALUE_LABELS: Record<string, Record<string, string>> = {
     ARCHIVED: 'Archivé',
     NOUVEAU: 'Nouveau',
     TRAITE: 'Traité',
+    ALL: 'Tous',
   },
   scope: { folder: 'Dossier', document: 'Document' },
   outcome: { sent: 'Envoyé', failed: 'Échec', pending: 'En attente' },

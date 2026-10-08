@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { ContactMessage, ContactMessageStatus, Prisma } from '@prisma/client';
 import { createHash } from 'node:crypto';
 import { escapeLike } from '../../common/utils/like.js';
@@ -8,6 +13,8 @@ import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SiteSettingsService } from '../site-settings/site-settings.service.js';
 import { acknowledgement, teamNotification } from './contact-emails.js';
+import { MAX_EXPORT_ROWS, contactsToCsv } from './contact-export.js';
+import type { ExportContactsDto } from './dto/export-contacts.dto.js';
 import type { ListContactsDto } from './dto/list-contacts.dto.js';
 import type { SubmitContactDto } from './dto/submit-contact.dto.js';
 
@@ -149,9 +156,12 @@ export class ContactService {
     });
   }
 
-  async list(query: ListContactsDto) {
+  /** Filtres de la liste et de l'export : un seul endroit, pour que le fichier reflète l'écran. */
+  private filters(
+    query: Pick<ListContactsDto, 'status' | 'q'>,
+  ): Prisma.ContactMessageWhereInput {
     const search = query.q?.trim() ? escapeLike(query.q.trim()) : undefined;
-    const where: Prisma.ContactMessageWhereInput = {
+    return {
       ...(query.status && { status: query.status }),
       ...(search && {
         OR: (
@@ -161,16 +171,26 @@ export class ContactService {
         })),
       }),
     };
+  }
+
+  /** `id` départage les ex æquo : une page ne doit ni répéter ni sauter de ligne. */
+  private ordering(
+    query: Pick<ListContactsDto, 'sort' | 'order'>,
+  ): Prisma.ContactMessageOrderByWithRelationInput[] {
     // Organisation facultative : les messages sans organisation passent toujours en dernier.
     const primary: Prisma.ContactMessageOrderByWithRelationInput =
       query.sort === 'organization'
         ? { organization: { sort: query.order, nulls: 'last' } }
         : { [query.sort]: query.order };
+    return [primary, { createdAt: 'desc' }, { id: 'asc' }];
+  }
+
+  async list(query: ListContactsDto) {
+    const where = this.filters(query);
     const [data, total] = await Promise.all([
       this.prisma.contactMessage.findMany({
         where,
-        // `id` départage les ex æquo : une page ne doit ni répéter ni sauter de ligne.
-        orderBy: [primary, { createdAt: 'desc' }, { id: 'asc' }],
+        orderBy: this.ordering(query),
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
@@ -181,6 +201,42 @@ export class ContactService {
         ({ contentHash: _hash, submissionKey: _key, ...rest }) => rest,
       ),
       meta: { page: query.page, limit: query.limit, total },
+    };
+  }
+
+  /**
+   * Export CSV des messages correspondant aux filtres de la liste. Ce sont des
+   * données personnelles remises en bloc : l'export est donc audité (qui, quand,
+   * combien, quel filtre — jamais le contenu des messages) et refusé au-delà de
+   * `MAX_EXPORT_ROWS`. L'entrée d'audit est écrite avant l'envoi du fichier.
+   */
+  async exportCsv(actor: AuthenticatedUser, query: ExportContactsDto) {
+    const rows = await this.prisma.contactMessage.findMany({
+      where: this.filters(query),
+      orderBy: this.ordering(query),
+      take: MAX_EXPORT_ROWS + 1,
+    });
+    if (rows.length > MAX_EXPORT_ROWS) {
+      throw new UnprocessableEntityException({
+        code: 'CONTACT_EXPORT_TOO_LARGE',
+        message: `Plus de ${MAX_EXPORT_ROWS} messages correspondent : affinez la recherche pour les exporter.`,
+        details: [],
+      });
+    }
+    await this.audit.record({
+      actorId: actor.id,
+      action: 'CONTACT_EXPORTED',
+      entityType: 'ContactMessage',
+      after: {
+        count: rows.length,
+        status: query.status ?? 'ALL',
+        searched: Boolean(query.q?.trim()),
+      },
+    });
+    const day = new Date().toISOString().slice(0, 10);
+    return {
+      filename: `messages-contact-${day}.csv`,
+      csv: contactsToCsv(rows),
     };
   }
 
