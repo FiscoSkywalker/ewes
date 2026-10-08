@@ -703,12 +703,7 @@
           "role": "Responsable formation",
           "pole": "env",
           "years": 18,
-          "specialties": [
-            "Formation",
-            "RSE",
-            "Inspections E&S",
-            "Après-mine"
-          ],
+          "specialties": ["Formation", "RSE", "Inspections E&S", "Après-mine"],
           "bio": "Conçoit et anime les programmes de renforcement des capacités des cadres, techniciens et services publics."
         },
         {
@@ -1113,10 +1108,7 @@
     "chapterLink": "Explorer le pôle",
     "detailLink": "Fiche détaillée",
     "allLink": "Tous nos services",
-    "relations": [
-      "oriente",
-      "guide"
-    ],
+    "relations": ["oriente", "guide"],
     "audiencesTitle": "Pour qui nous travaillons"
   },
   "Method": {

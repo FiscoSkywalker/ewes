@@ -38,7 +38,10 @@ export class ContactController {
     @Headers('idempotency-key') idempotencyKey: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ): Promise<SubmitResult> {
-    if (idempotencyKey !== undefined && !IDEMPOTENCY_KEY_PATTERN.test(idempotencyKey)) {
+    if (
+      idempotencyKey !== undefined &&
+      !IDEMPOTENCY_KEY_PATTERN.test(idempotencyKey)
+    ) {
       throw new BadRequestException({
         code: 'IDEMPOTENCY_KEY_INVALID',
         message: 'En-tête Idempotency-Key invalide (UUID attendu).',

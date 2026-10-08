@@ -429,7 +429,11 @@ describe('Profil (e2e)', () => {
       const user = await makeUser('bell5');
       const { accessToken } = await open(user.email);
       await as(accessToken).put('/me/notifications-seen', {}).expect(200);
-      expect(await prisma.auditLog.count({ where: { entityId: user.id, action: { contains: 'NOTIFICATION' } } })).toBe(0);
+      expect(
+        await prisma.auditLog.count({
+          where: { entityId: user.id, action: { contains: 'NOTIFICATION' } },
+        }),
+      ).toBe(0);
     });
   });
 

@@ -94,7 +94,11 @@ describe('access policy', () => {
   it('inherits a folder grant to documents, including sub-folders', () => {
     const scope = scopeOf(Role.UTILISATEUR, ['a']);
     expect(
-      canReadDocument(scope, { id: 'd1', folderId: 'a', confidentiality: null }),
+      canReadDocument(scope, {
+        id: 'd1',
+        folderId: 'a',
+        confidentiality: null,
+      }),
     ).toBe(true);
     expect(
       canReadDocument(scope, {
@@ -104,7 +108,11 @@ describe('access policy', () => {
       }),
     ).toBe(true);
     expect(
-      canReadDocument(scope, { id: 'd3', folderId: 'b', confidentiality: null }),
+      canReadDocument(scope, {
+        id: 'd3',
+        folderId: 'b',
+        confidentiality: null,
+      }),
     ).toBe(false);
   });
 
@@ -145,7 +153,11 @@ describe('access policy', () => {
       }),
     ).toBe(true);
     expect(
-      canReadDocument(scope, { id: 'd9', folderId: 'a', confidentiality: null }),
+      canReadDocument(scope, {
+        id: 'd9',
+        folderId: 'a',
+        confidentiality: null,
+      }),
     ).toBe(false);
     // Le dossier du document reste invisible.
     expect(canReadFolder(scope, 'a')).toBe(false);

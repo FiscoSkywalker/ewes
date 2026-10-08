@@ -41,7 +41,9 @@ export class SubmitContactDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)
-  @Matches(/^[^\r\n\t]+$/, { message: 'Le nom ne doit pas contenir de saut de ligne.' })
+  @Matches(/^[^\r\n\t]+$/, {
+    message: 'Le nom ne doit pas contenir de saut de ligne.',
+  })
   name!: string;
 
   @ApiProperty()
@@ -49,7 +51,9 @@ export class SubmitContactDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  @Matches(/^[^\r\n\t]+$/, { message: 'L’organisation ne doit pas contenir de saut de ligne.' })
+  @Matches(/^[^\r\n\t]+$/, {
+    message: 'L’organisation ne doit pas contenir de saut de ligne.',
+  })
   organization!: string;
 
   @ApiProperty()
@@ -63,7 +67,9 @@ export class SubmitContactDto {
   @ApiPropertyOptional()
   @IsOptional()
   @Transform(trim)
-  @Matches(/^[0-9+().\-\s]{5,40}$/, { message: 'Numéro de téléphone invalide.' })
+  @Matches(/^[0-9+().\-\s]{5,40}$/, {
+    message: 'Numéro de téléphone invalide.',
+  })
   phone?: string;
 
   @ApiProperty({ enum: CONTACT_SECTORS })
@@ -83,7 +89,9 @@ export class SubmitContactDto {
   locale?: (typeof CONTACT_LOCALES)[number];
 
   /** Champ piège : invisible pour un humain. Rempli => robot, message écarté. */
-  @ApiPropertyOptional({ description: 'Champ piège anti-robot : laisser vide.' })
+  @ApiPropertyOptional({
+    description: 'Champ piège anti-robot : laisser vide.',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)

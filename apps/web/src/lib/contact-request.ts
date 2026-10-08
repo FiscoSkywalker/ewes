@@ -14,7 +14,8 @@ export type ContactField = keyof ContactRequest;
 /** Longueur minimale du message (évite les demandes vides de sens). */
 export const CONTACT_MESSAGE_MIN = 20;
 
-export type ContactFieldError = 'required' | 'email' | 'messageShort' | 'invalid';
+export type ContactFieldError =
+  'required' | 'email' | 'messageShort' | 'invalid';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 

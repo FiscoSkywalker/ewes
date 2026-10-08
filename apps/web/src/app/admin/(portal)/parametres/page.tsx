@@ -29,14 +29,11 @@ export default function GeneralSettingsPage() {
   });
 
   async function save(values: GeneralFormValues) {
-    const saved = await backendJson<GeneralSettings>(
-      'admin/settings/general',
-      {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(toGeneralPayload(values)),
-      },
-    );
+    const saved = await backendJson<GeneralSettings>('admin/settings/general', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(toGeneralPayload(values)),
+    });
     // La réponse du serveur fait foi (adresses normalisées, jours triés).
     queryClient.setQueryData(GENERAL_QUERY_KEY, saved);
     await invalidatePortalData(queryClient);

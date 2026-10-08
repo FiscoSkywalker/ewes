@@ -88,7 +88,10 @@ export function buildScope(args: {
     userId: args.userId,
     role: args.role,
     isAdmin: args.role === Role.ADMINISTRATEUR,
-    readableFolderIds: expandReadableFolders(args.folders, args.grantedFolderIds),
+    readableFolderIds: expandReadableFolders(
+      args.folders,
+      args.grantedFolderIds,
+    ),
     grantedDocumentIds: new Set(args.grantedDocumentIds),
     folderLevels: new Map(args.folders.map((f) => [f.id, f.confidentiality])),
   };
@@ -125,7 +128,9 @@ export function canReadDocument(
 
 export function canWriteFolder(scope: AccessScope, folderId: string): boolean {
   if (scope.isAdmin) return true;
-  return scope.role === Role.GESTIONNAIRE && scope.readableFolderIds.has(folderId);
+  return (
+    scope.role === Role.GESTIONNAIRE && scope.readableFolderIds.has(folderId)
+  );
 }
 
 /** Écrire sur un document suppose de pouvoir le lire ET d'écrire dans son dossier. */
@@ -134,7 +139,9 @@ export function canWriteDocument(
   document: DocumentRef,
 ): boolean {
   if (scope.isAdmin) return true;
-  return canReadDocument(scope, document) && canWriteFolder(scope, document.folderId);
+  return (
+    canReadDocument(scope, document) && canWriteFolder(scope, document.folderId)
+  );
 }
 
 /**

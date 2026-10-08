@@ -22,12 +22,16 @@ export class CreateDocumentGrantDto {
 }
 
 export class ListGrantsDto {
-  @ApiPropertyOptional({ description: 'Filtrer par dossier (droits de dossier).' })
+  @ApiPropertyOptional({
+    description: 'Filtrer par dossier (droits de dossier).',
+  })
   @IsOptional()
   @IsUUID()
   folderId?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrer par document (droits de document).' })
+  @ApiPropertyOptional({
+    description: 'Filtrer par document (droits de document).',
+  })
   @IsOptional()
   @IsUUID()
   documentId?: string;

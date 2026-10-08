@@ -141,11 +141,11 @@ export class DocumentsPublicsService {
       deletedAt: null,
       ...this.filters(query),
       ...(search && {
-        OR: (['titleFr', 'titleEn', 'slug', 'excerptFr', 'excerptEn'] as const).map(
-          (field) => ({
-            [field]: { contains: search, mode: 'insensitive' as const },
-          }),
-        ),
+        OR: (
+          ['titleFr', 'titleEn', 'slug', 'excerptFr', 'excerptEn'] as const
+        ).map((field) => ({
+          [field]: { contains: search, mode: 'insensitive' as const },
+        })),
       }),
     };
     // Année facultative : les documents sans année passent toujours en dernier.
@@ -299,7 +299,8 @@ export class DocumentsPublicsService {
     if (!(await this.storage.exists(current.storedName))) {
       throw new ConflictException({
         code: 'DOCUMENT_FILE_MISSING',
-        message: 'Le fichier du document est introuvable : téléversez-le à nouveau.',
+        message:
+          'Le fichier du document est introuvable : téléversez-le à nouveau.',
         details: [],
       });
     }
@@ -311,19 +312,34 @@ export class DocumentsPublicsService {
       },
       include: WITH_SERVICE,
     });
-    await this.record(actor, 'PUBLIC_DOCUMENT_PUBLISHED', published, current.status);
+    await this.record(
+      actor,
+      'PUBLIC_DOCUMENT_PUBLISHED',
+      published,
+      current.status,
+    );
     await this.revalidate(published.slug);
     return published;
   }
 
   /** Retire immédiatement le document (et son fichier) du site public. */
   unpublish(actor: AuthenticatedUser, id: string) {
-    return this.setStatus(actor, id, ContentStatus.DRAFT, 'PUBLIC_DOCUMENT_UNPUBLISHED');
+    return this.setStatus(
+      actor,
+      id,
+      ContentStatus.DRAFT,
+      'PUBLIC_DOCUMENT_UNPUBLISHED',
+    );
   }
 
   /** Dépublie en conservant le document pour l'historique interne. */
   archive(actor: AuthenticatedUser, id: string) {
-    return this.setStatus(actor, id, ContentStatus.ARCHIVED, 'PUBLIC_DOCUMENT_ARCHIVED');
+    return this.setStatus(
+      actor,
+      id,
+      ContentStatus.ARCHIVED,
+      'PUBLIC_DOCUMENT_ARCHIVED',
+    );
   }
 
   private async setStatus(
@@ -372,7 +388,13 @@ export class DocumentsPublicsService {
       where: { id },
       data: { deletedAt: new Date() },
     });
-    await this.record(actor, 'PUBLIC_DOCUMENT_DELETED', current, current.status, { deleted: true });
+    await this.record(
+      actor,
+      'PUBLIC_DOCUMENT_DELETED',
+      current,
+      current.status,
+      { deleted: true },
+    );
     await this.revalidate(current.slug);
   }
 

@@ -3,4 +3,5 @@
  * ne le fait pas, et un `%` tapé dans une recherche ferait sinon correspondre
  * toutes les lignes.
  */
-export const escapeLike = (text: string): string => text.replace(/[\\%_]/g, '\\$&');
+export const escapeLike = (text: string): string =>
+  text.replace(/[\\%_]/g, '\\$&');

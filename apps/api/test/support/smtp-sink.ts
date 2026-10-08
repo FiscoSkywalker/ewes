@@ -13,29 +13,35 @@ export interface SinkMessage {
 function decodeHeader(value: string): string {
   return value
     .replace(/\r?\n[ \t]+/g, '')
-    .replace(/=\?UTF-8\?([QB])\?([^?]*)\?=/gi, (_m, kind: string, text: string) =>
-      kind.toUpperCase() === 'B'
-        ? Buffer.from(text, 'base64').toString('utf-8')
-        : Buffer.from(
-            text
-              .replace(/_/g, ' ')
-              .replace(/=([0-9A-F]{2})/gi, (_x, hex: string) =>
-                String.fromCharCode(parseInt(hex, 16)),
-              ),
-            'latin1',
-          ).toString('utf-8'),
+    .replace(
+      /=\?UTF-8\?([QB])\?([^?]*)\?=/gi,
+      (_m, kind: string, text: string) =>
+        kind.toUpperCase() === 'B'
+          ? Buffer.from(text, 'base64').toString('utf-8')
+          : Buffer.from(
+              text
+                .replace(/_/g, ' ')
+                .replace(/=([0-9A-F]{2})/gi, (_x, hex: string) =>
+                  String.fromCharCode(parseInt(hex, 16)),
+                ),
+              'latin1',
+            ).toString('utf-8'),
     );
 }
 
 function decodeBody(headers: string, body: string): string {
-  const encoding = /content-transfer-encoding:\s*(\S+)/i.exec(headers)?.[1]?.toLowerCase();
+  const encoding = /content-transfer-encoding:\s*(\S+)/i
+    .exec(headers)?.[1]
+    ?.toLowerCase();
   if (encoding === 'base64') {
     return Buffer.from(body.replace(/\s+/g, ''), 'base64').toString('utf-8');
   }
   if (encoding === 'quoted-printable') {
     const bytes = body
       .replace(/=\r?\n/g, '')
-      .replace(/=([0-9A-F]{2})/gi, (_m, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+      .replace(/=([0-9A-F]{2})/gi, (_m, hex: string) =>
+        String.fromCharCode(parseInt(hex, 16)),
+      );
     return Buffer.from(bytes, 'latin1').toString('utf-8');
   }
   return body;
@@ -55,7 +61,9 @@ export class SmtpSink {
 
   /** `port` 0 = port libre choisi par le système. */
   async start(port = 0): Promise<void> {
-    await new Promise<void>((resolve) => this.server.listen(port, '127.0.0.1', resolve));
+    await new Promise<void>((resolve) =>
+      this.server.listen(port, '127.0.0.1', resolve),
+    );
     this.port = (this.server.address() as net.AddressInfo).port;
   }
 
@@ -134,7 +142,9 @@ export class SmtpSink {
     const headers = split === -1 ? raw : raw.slice(0, split);
     const body = split === -1 ? '' : raw.slice(split + 4);
     const header = (name: string) =>
-      new RegExp(`^${name}:\\s*((?:.*)(?:\\r?\\n[ \\t].*)*)`, 'im').exec(headers)?.[1] ?? null;
+      new RegExp(`^${name}:\\s*((?:.*)(?:\\r?\\n[ \\t].*)*)`, 'im').exec(
+        headers,
+      )?.[1] ?? null;
     this.messages.push({
       from,
       to,

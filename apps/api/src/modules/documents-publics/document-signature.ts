@@ -10,5 +10,7 @@ export const DOCUMENT_MIME_TYPE = 'application/pdf';
  * se vérifie pas à partir des seuls premiers octets.
  */
 export function isPdf(buffer: Buffer): boolean {
-  return buffer.length >= 5 && buffer.subarray(0, 5).toString('latin1') === '%PDF-';
+  return (
+    buffer.length >= 5 && buffer.subarray(0, 5).toString('latin1') === '%PDF-'
+  );
 }

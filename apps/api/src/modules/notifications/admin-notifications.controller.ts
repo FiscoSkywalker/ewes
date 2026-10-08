@@ -9,7 +9,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiPropertyOptional,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, Matches, Max, Min } from 'class-validator';
@@ -64,6 +69,8 @@ export class AdminNotificationsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rejouer un envoi non abouti' })
   async retry(@Param('id', ParseUUIDPipe) id: string) {
-    return this.notifications.view(await this.notifications.retryNotification(id));
+    return this.notifications.view(
+      await this.notifications.retryNotification(id),
+    );
   }
 }

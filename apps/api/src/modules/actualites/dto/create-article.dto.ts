@@ -49,7 +49,9 @@ export class CreateArticleDto {
   @IsString()
   excerptEn?: string;
 
-  @ApiPropertyOptional({ description: 'Lieu, client ou contexte (ligne courte).' })
+  @ApiPropertyOptional({
+    description: 'Lieu, client ou contexte (ligne courte).',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(200)

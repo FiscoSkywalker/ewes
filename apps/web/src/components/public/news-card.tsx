@@ -1,7 +1,11 @@
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { ArrowUpRight } from 'lucide-react';
-import { NEWS_FALLBACK_IMAGE, formatNewsDate, type NewsItem } from '@/data/news';
+import {
+  NEWS_FALLBACK_IMAGE,
+  formatNewsDate,
+  type NewsItem,
+} from '@/data/news';
 import { Link } from '@/i18n/navigation';
 
 /** Rubrique + date + contexte d'une actualité. */

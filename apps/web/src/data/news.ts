@@ -41,7 +41,8 @@ export const NEWS_IMAGES: Record<string, string> = {
   'inspecteurs-2023': '/assets/images/ewes-environment-field.png',
 };
 
-export const NEWS_FALLBACK_IMAGE = '/assets/images/ewes-environment-fallback.png';
+export const NEWS_FALLBACK_IMAGE =
+  '/assets/images/ewes-environment-fallback.png';
 
 /** Date lisible selon sa précision (« 2025 », « mars 2025 », « 12 mars 2025 »). */
 export function formatNewsDate(date: string, locale: string) {

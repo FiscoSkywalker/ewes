@@ -1,9 +1,22 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ContactMessageStatus } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
-export const CONTACT_SORT_FIELDS = ['createdAt', 'name', 'organization'] as const;
+export const CONTACT_SORT_FIELDS = [
+  'createdAt',
+  'name',
+  'organization',
+] as const;
 export type ContactSortField = (typeof CONTACT_SORT_FIELDS)[number];
 
 export class ListContactsDto {
@@ -28,11 +41,14 @@ export class ListContactsDto {
   status?: ContactMessageStatus;
 
   @ApiPropertyOptional({
-    description: 'Recherche (sans casse) dans le nom, l’organisation, l’e-mail, le téléphone et le message.',
+    description:
+      'Recherche (sans casse) dans le nom, l’organisation, l’e-mail, le téléphone et le message.',
     maxLength: 100,
   })
   @IsOptional()
-  @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   @IsString()
   @MaxLength(100)
   q?: string;

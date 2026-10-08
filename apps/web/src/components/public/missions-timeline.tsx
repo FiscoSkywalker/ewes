@@ -54,8 +54,14 @@ export function MissionsTimeline({
   const selected = year ?? null;
   const headline =
     selected !== null
-      ? { value: matchCount(selected), label: t('inYear', { year: String(selected) }) }
-      : { value: matches.size, label: t('total', { from: String(minYear), to: String(maxYear) }) };
+      ? {
+          value: matchCount(selected),
+          label: t('inYear', { year: String(selected) }),
+        }
+      : {
+          value: matches.size,
+          label: t('total', { from: String(minYear), to: String(maxYear) }),
+        };
 
   return (
     <figure
@@ -87,7 +93,9 @@ export function MissionsTimeline({
       {/* Frise */}
       <div
         className="relative mt-10 grid items-end gap-1 sm:gap-2"
-        style={{ gridTemplateColumns: `repeat(${years.length}, minmax(0, 1fr))` }}
+        style={{
+          gridTemplateColumns: `repeat(${years.length}, minmax(0, 1fr))`,
+        }}
       >
         {years.map((y, columnIndex) => {
           const list = byYear.get(y) ?? [];
@@ -112,7 +120,10 @@ export function MissionsTimeline({
                 type="button"
                 disabled={!list.length}
                 aria-pressed={active}
-                aria-label={t('yearButton', { year: String(y), count: list.length })}
+                aria-label={t('yearButton', {
+                  year: String(y),
+                  count: list.length,
+                })}
                 onClick={() => onYear(active ? null : y)}
                 className={`absolute inset-0 rounded-card transition-colors disabled:cursor-default ${
                   active ? 'bg-on-night/10' : 'enabled:hover:bg-on-night/5'
@@ -124,7 +135,10 @@ export function MissionsTimeline({
                   const match = matches.has(project.id) && !dimmedColumn;
                   const option = categoryById.get(project.category);
                   return (
-                    <li key={project.id} className="group/dot relative flex w-full justify-center">
+                    <li
+                      key={project.id}
+                      className="group/dot relative flex w-full justify-center"
+                    >
                       <button
                         type="button"
                         onClick={() => onOpen(project)}
@@ -174,7 +188,10 @@ export function MissionsTimeline({
       </div>
 
       {/* Ligne de base + légende */}
-      <div className="pointer-events-none relative -mt-7 mb-7 h-px bg-on-night/15" aria-hidden="true" />
+      <div
+        className="pointer-events-none relative -mt-7 mb-7 h-px bg-on-night/15"
+        aria-hidden="true"
+      />
       <div className="relative mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-on-night/10 pt-5 font-mono text-[10px] uppercase tracking-[0.12em]">
         <span className="inline-flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-malachite-bright" />

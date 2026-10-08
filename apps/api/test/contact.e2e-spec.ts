@@ -34,7 +34,7 @@ describe('Contact (e2e)', () => {
   /** Une adresse d'expéditeur distincte par test, retrouvable pour le nettoyage. */
   const sender = () => `${tag}-s${++seq}@ewes.example`;
   /** IP distincte par requête (proxy de confiance) : la limite par IP ne gêne pas les autres tests. */
-  const ip = () => `10.${(seq >> 8) & 255}.${seq & 255}.${(++seq) & 255}`;
+  const ip = () => `10.${(seq >> 8) & 255}.${seq & 255}.${++seq & 255}`;
   let tAdmin: string;
 
   const body = (over: Record<string, unknown> = {}) => ({
@@ -43,7 +43,8 @@ describe('Contact (e2e)', () => {
     email: sender(),
     phone: '+243 81 000 00 00',
     sector: 'ENVIRONNEMENT',
-    message: 'Nous souhaitons une étude d’impact environnemental pour notre projet.',
+    message:
+      'Nous souhaitons une étude d’impact environnemental pour notre projet.',
     locale: 'fr',
     ...over,
   });
@@ -54,21 +55,30 @@ describe('Contact (e2e)', () => {
       .set({ 'X-Forwarded-For': ip(), ...headers })
       .send(payload);
 
-  const waitFor = async <T>(read: () => Promise<T>, done: (v: T) => boolean, ms = 8_000) => {
+  const waitFor = async <T>(
+    read: () => Promise<T>,
+    done: (v: T) => boolean,
+    ms = 8_000,
+  ) => {
     const start = Date.now();
     for (;;) {
       const value = await read();
       if (done(value)) return value;
-      if (Date.now() - start > ms) throw new Error(`Condition non atteinte : ${JSON.stringify(value)}`);
+      if (Date.now() - start > ms)
+        throw new Error(`Condition non atteinte : ${JSON.stringify(value)}`);
       await new Promise((r) => setTimeout(r, 50));
     }
   };
   const notificationsFor = (recipient: string) =>
-    prisma.notification.findMany({ where: { recipientEmail: recipient }, orderBy: { createdAt: 'asc' } });
+    prisma.notification.findMany({
+      where: { recipientEmail: recipient },
+      orderBy: { createdAt: 'asc' },
+    });
   const settle = (recipient: string, count: number) =>
     waitFor(
       () => notificationsFor(recipient),
-      (rows) => rows.length >= count && rows.every((n) => n.sentAt || n.failedAt),
+      (rows) =>
+        rows.length >= count && rows.every((n) => n.sentAt || n.failedAt),
     );
 
   /** Attend la fin de tous les envois en cours : un test ne doit pas hériter des envois d'un autre. */
@@ -77,7 +87,10 @@ describe('Contact (e2e)', () => {
       () =>
         prisma.notification.count({
           where: {
-            OR: [{ recipientEmail: { startsWith: tag } }, { recipientEmail: teamAddress }],
+            OR: [
+              { recipientEmail: { startsWith: tag } },
+              { recipientEmail: teamAddress },
+            ],
             sentAt: null,
             failedAt: null,
           },
@@ -115,10 +128,20 @@ describe('Contact (e2e)', () => {
     prisma = app.get(PrismaService);
     const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
     await prisma.user.create({
-      data: { email: adminEmail, passwordHash, fullName: 'E2E Contact Admin', role: Role.ADMINISTRATEUR },
+      data: {
+        email: adminEmail,
+        passwordHash,
+        fullName: 'E2E Contact Admin',
+        role: Role.ADMINISTRATEUR,
+      },
     });
     await prisma.user.create({
-      data: { email: userEmail, passwordHash, fullName: 'E2E Contact User', role: Role.UTILISATEUR },
+      data: {
+        email: userEmail,
+        passwordHash,
+        fullName: 'E2E Contact User',
+        role: Role.UTILISATEUR,
+      },
     });
     const login = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
@@ -128,12 +151,23 @@ describe('Contact (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.contactMessage.deleteMany({ where: { email: { startsWith: tag } } });
-    await prisma.notification.deleteMany({
-      where: { OR: [{ recipientEmail: { startsWith: tag } }, { recipientEmail: teamAddress }] },
+    await prisma.contactMessage.deleteMany({
+      where: { email: { startsWith: tag } },
     });
-    await prisma.session.deleteMany({ where: { user: { email: { in: [adminEmail, userEmail] } } } });
-    await prisma.user.deleteMany({ where: { email: { in: [adminEmail, userEmail] } } });
+    await prisma.notification.deleteMany({
+      where: {
+        OR: [
+          { recipientEmail: { startsWith: tag } },
+          { recipientEmail: teamAddress },
+        ],
+      },
+    });
+    await prisma.session.deleteMany({
+      where: { user: { email: { in: [adminEmail, userEmail] } } },
+    });
+    await prisma.user.deleteMany({
+      where: { email: { in: [adminEmail, userEmail] } },
+    });
     for (const instance of apps) await instance.close();
     await sink.stop();
   });
@@ -147,7 +181,9 @@ describe('Contact (e2e)', () => {
     // Rien de l'enregistrement interne ne fuit vers un visiteur.
     expect(JSON.stringify(res.body)).not.toMatch(/id|hash|key/i);
 
-    const stored = await prisma.contactMessage.findUniqueOrThrow({ where: { submissionKey: key } });
+    const stored = await prisma.contactMessage.findUniqueOrThrow({
+      where: { submissionKey: key },
+    });
     expect(stored).toMatchObject({
       name: 'Aimé Kalala',
       organization: 'Société Minière du Katanga',
@@ -161,13 +197,19 @@ describe('Contact (e2e)', () => {
     const acks = await settle(payload.email as string, 1);
     expect(acks[0].sentAt).not.toBeNull();
 
-    const team = sink.messages.find((m) => m.to.includes(teamAddress) && m.body.includes(stored.id))!;
-    expect(team.subject).toBe('[Site EWES] Nouveau message de Aimé Kalala — Étude d’impact / audit');
+    const team = sink.messages.find(
+      (m) => m.to.includes(teamAddress) && m.body.includes(stored.id),
+    )!;
+    expect(team.subject).toBe(
+      '[Site EWES] Nouveau message de Aimé Kalala — Étude d’impact / audit',
+    );
     expect(team.replyTo).toContain(payload.email as string);
     expect(team.body).toContain('Nous souhaitons une étude d’impact');
     expect(team.body).toContain(`Référence : ${stored.id}`);
 
-    const ack = sink.messages.find((m) => m.to.includes(payload.email as string))!;
+    const ack = sink.messages.find((m) =>
+      m.to.includes(payload.email as string),
+    )!;
     expect(ack.subject).toBe('Nous avons bien reçu votre message — EWES');
     expect(ack.body).toContain('Bonjour Aimé Kalala');
     expect(ack.body).toContain(stored.id);
@@ -180,7 +222,9 @@ describe('Contact (e2e)', () => {
     const payload = body({ locale: 'en', name: 'Jane Doe' });
     await post(payload).expect(201);
     await settle(payload.email as string, 1);
-    const ack = sink.messages.find((m) => m.to.includes(payload.email as string))!;
+    const ack = sink.messages.find((m) =>
+      m.to.includes(payload.email as string),
+    )!;
     expect(ack.subject).toBe('We have received your message — EWES');
     expect(ack.body).toContain('Hello Jane Doe');
   });
@@ -202,13 +246,24 @@ describe('Contact (e2e)', () => {
     expect(noKey.body.duplicate).toBe(true);
 
     await new Promise((r) => setTimeout(r, 300));
-    expect(await prisma.contactMessage.count({ where: { email: payload.email as string } })).toBe(1);
+    expect(
+      await prisma.contactMessage.count({
+        where: { email: payload.email as string },
+      }),
+    ).toBe(1);
     expect(await notificationsFor(payload.email as string)).toHaveLength(1);
     expect(sink.messages.length).toBe(sentBefore);
 
     // Un message différent du même expéditeur est bien un nouveau message.
-    await post({ ...payload, message: 'Un tout autre besoin : analyses d’eau potable, svp.' }).expect(201);
-    expect(await prisma.contactMessage.count({ where: { email: payload.email as string } })).toBe(2);
+    await post({
+      ...payload,
+      message: 'Un tout autre besoin : analyses d’eau potable, svp.',
+    }).expect(201);
+    expect(
+      await prisma.contactMessage.count({
+        where: { email: payload.email as string },
+      }),
+    ).toBe(2);
 
     // Clé simultanée : un seul enregistrement malgré deux requêtes concurrentes.
     const racePayload = body();
@@ -217,8 +272,14 @@ describe('Contact (e2e)', () => {
       post(racePayload, { 'Idempotency-Key': raceKey }),
       post(racePayload, { 'Idempotency-Key': raceKey }),
     ]);
-    expect(results.map((r) => r.status).sort((a, b) => a - b)).toEqual([200, 201]);
-    expect(await prisma.contactMessage.count({ where: { email: racePayload.email as string } })).toBe(1);
+    expect(results.map((r) => r.status).sort((a, b) => a - b)).toEqual([
+      200, 201,
+    ]);
+    expect(
+      await prisma.contactMessage.count({
+        where: { email: racePayload.email as string },
+      }),
+    ).toBe(1);
     await new Promise((r) => setTimeout(r, 300));
     expect(await notificationsFor(racePayload.email as string)).toHaveLength(1);
   });
@@ -236,7 +297,11 @@ describe('Contact (e2e)', () => {
   it('rejects invalid input with usable field details and stores nothing', async () => {
     const cases: [string, Record<string, unknown>, string][] = [
       ['name', { name: '' }, 'name'],
-      ['name (saut de ligne : injection d’en-tête)', { name: 'Eve\r\nBcc: victime@example.com' }, 'name'],
+      [
+        'name (saut de ligne : injection d’en-tête)',
+        { name: 'Eve\r\nBcc: victime@example.com' },
+        'name',
+      ],
       ['organization', { organization: '   ' }, 'organization'],
       ['email', { email: 'pas-un-email' }, 'email'],
       ['message trop court', { message: 'Trop court' }, 'message'],
@@ -251,7 +316,10 @@ describe('Contact (e2e)', () => {
       const res = await post(body(over));
       expect(res.status, label).toBe(400);
       expect(res.body.code, label).toBe('BAD_REQUEST');
-      expect(res.body.details.map((d: { field: string }) => d.field), label).toContain(field);
+      expect(
+        res.body.details.map((d: { field: string }) => d.field),
+        label,
+      ).toContain(field);
       expect(res.body.details[0].messages.length, label).toBeGreaterThan(0);
     }
     const badKey = await post(body(), { 'Idempotency-Key': 'pas-un-uuid' });
@@ -267,7 +335,11 @@ describe('Contact (e2e)', () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/contact')
         .set('X-Forwarded-For', fixed)
-        .send(body({ message: `Demande numéro ${i} : étude d’impact et audit environnemental.` }));
+        .send(
+          body({
+            message: `Demande numéro ${i} : étude d’impact et audit environnemental.`,
+          }),
+        );
       statuses.push(res.status);
     }
     expect(statuses.slice(0, 5)).toEqual([201, 201, 201, 201, 201]);
@@ -279,7 +351,10 @@ describe('Contact (e2e)', () => {
     const payload = body();
     sink.failNext = 2;
     await post(payload).expect(201);
-    const team = await settle(teamAddress, (await notificationsFor(teamAddress)).length);
+    const team = await settle(
+      teamAddress,
+      (await notificationsFor(teamAddress)).length,
+    );
     const acks = await settle(payload.email as string, 1);
     expect(acks[0].sentAt).not.toBeNull();
     expect(acks[0].failedAt).toBeNull();
@@ -302,14 +377,26 @@ describe('Contact (e2e)', () => {
     expect(failedAck.failedAt).not.toBeNull();
     expect(failedAck.attempts).toBe(3);
     expect(failedAck.lastError).toMatch(/451|temporary/i);
-    expect(await prisma.contactMessage.count({ where: { email: payload.email as string } })).toBe(1);
+    expect(
+      await prisma.contactMessage.count({
+        where: { email: payload.email as string },
+      }),
+    ).toBe(1);
 
     const failed = await request(app.getHttpServer())
-      .get('/api/v1/admin/notifications?status=failed&type=CONTACT_ACKNOWLEDGEMENT&limit=100')
+      .get(
+        '/api/v1/admin/notifications?status=failed&type=CONTACT_ACKNOWLEDGEMENT&limit=100',
+      )
       .set('Authorization', `Bearer ${tAdmin}`)
       .expect(200);
-    const listed = failed.body.data.find((n: { id: string }) => n.id === failedAck.id);
-    expect(listed).toMatchObject({ status: 'failed', attempts: 3, recipientEmail: payload.email });
+    const listed = failed.body.data.find(
+      (n: { id: string }) => n.id === failedAck.id,
+    );
+    expect(listed).toMatchObject({
+      status: 'failed',
+      attempts: 3,
+      recipientEmail: payload.email,
+    });
     expect(listed.subject).toBe('Nous avons bien reçu votre message — EWES');
     // Le texte (données personnelles) n'est pas exposé dans la liste.
     expect(JSON.stringify(failed.body)).not.toContain('Bonjour');
@@ -321,12 +408,17 @@ describe('Contact (e2e)', () => {
       .expect(200);
     expect(replay.body.status).toBe('sent');
     expect(replay.body.attempts).toBe(4);
-    expect(sink.messages.some((m) => m.to.includes(payload.email as string))).toBe(true);
+    expect(
+      sink.messages.some((m) => m.to.includes(payload.email as string)),
+    ).toBe(true);
   });
 
   it('records a not-configured mail setup as a visible failure instead of faking success', async () => {
     await idle();
-    const saved = { host: process.env.SMTP_HOST, team: process.env.CONTACT_NOTIFICATION_EMAIL };
+    const saved = {
+      host: process.env.SMTP_HOST,
+      team: process.env.CONTACT_NOTIFICATION_EMAIL,
+    };
     process.env.SMTP_HOST = '';
     process.env.CONTACT_NOTIFICATION_EMAIL = '';
     try {
@@ -352,22 +444,34 @@ describe('Contact (e2e)', () => {
   it('caps acknowledgements per address while still notifying the team', async () => {
     const address = sender();
     for (let i = 0; i < 4; i++) {
-      await post(body({ email: address, message: `Message distinct numéro ${i} concernant une étude d’impact.` })).expect(201);
+      await post(
+        body({
+          email: address,
+          message: `Message distinct numéro ${i} concernant une étude d’impact.`,
+        }),
+      ).expect(201);
     }
     const acks = await waitFor(
       () => notificationsFor(address),
       (rows) => rows.length >= 3 && rows.every((n) => n.sentAt || n.failedAt),
     );
     await new Promise((r) => setTimeout(r, 300));
-    expect(await prisma.contactMessage.count({ where: { email: address } })).toBe(4);
+    expect(
+      await prisma.contactMessage.count({ where: { email: address } }),
+    ).toBe(4);
     expect((await notificationsFor(address)).length).toBe(3);
     expect(acks.every((n) => n.type === 'CONTACT_ACKNOWLEDGEMENT')).toBe(true);
   });
 
   it('lets staff follow messages up, changes only the status, and audits it', async () => {
-    await request(app.getHttpServer()).get('/api/v1/admin/contacts').expect(401);
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/contacts')
+      .expect(401);
     const userToken = (
-      await request(app.getHttpServer()).post('/api/v1/auth/login').send({ email: userEmail, password }).expect(200)
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({ email: userEmail, password })
+        .expect(200)
     ).body.accessToken as string;
     await request(app.getHttpServer())
       .get('/api/v1/admin/contacts')
@@ -385,8 +489,14 @@ describe('Contact (e2e)', () => {
       .get('/api/v1/admin/contacts?status=NOUVEAU&limit=100')
       .set(auth)
       .expect(200);
-    const found = list.body.data.find((m: { email: string }) => m.email === payload.email);
-    expect(found).toMatchObject({ organization: 'Entreprise Suivi', status: 'NOUVEAU', locale: 'fr' });
+    const found = list.body.data.find(
+      (m: { email: string }) => m.email === payload.email,
+    );
+    expect(found).toMatchObject({
+      organization: 'Entreprise Suivi',
+      status: 'NOUVEAU',
+      locale: 'fr',
+    });
     expect(JSON.stringify(list.body)).not.toMatch(/contentHash|submissionKey/);
 
     const done = await request(app.getHttpServer())
@@ -407,10 +517,18 @@ describe('Contact (e2e)', () => {
       .set(auth)
       .send({ message: 'réécrit' })
       .expect(404);
-    expect((await prisma.contactMessage.findUniqueOrThrow({ where: { id: found.id } })).message).toBe(payload.message);
+    expect(
+      (
+        await prisma.contactMessage.findUniqueOrThrow({
+          where: { id: found.id },
+        })
+      ).message,
+    ).toBe(payload.message);
 
     const audit = await request(app.getHttpServer())
-      .get(`/api/v1/admin/audit-logs?action=CONTACT_STATUS_CHANGED&entityId=${found.id}`)
+      .get(
+        `/api/v1/admin/audit-logs?action=CONTACT_STATUS_CHANGED&entityId=${found.id}`,
+      )
       .set(auth)
       .expect(200);
     expect(audit.body.data[0]).toMatchObject({
@@ -429,7 +547,12 @@ describe('Contact (e2e)', () => {
   });
   it('searches without regard to case or wildcards, sorts with a stable order, and rejects bad parameters', async () => {
     const needle = `srch${stamp}`;
-    const row = (name: string, organization: string | null, minutesAgo: number, message = 'Message de test pour la recherche.') =>
+    const row = (
+      name: string,
+      organization: string | null,
+      minutesAgo: number,
+      message = 'Message de test pour la recherche.',
+    ) =>
       prisma.contactMessage.create({
         data: {
           name: `${name} ${needle}`,
@@ -444,8 +567,11 @@ describe('Contact (e2e)', () => {
     await row('Alice', null, 20);
     await row('Bob', 'Zeta', 10, 'Remise de 100%_exacte demandée.');
     const get = (query: string) =>
-      request(app.getHttpServer()).get(`/api/v1/admin/contacts?${query}`).set('Authorization', `Bearer ${tAdmin}`);
-    const names = (res: request.Response) => (res.body.data as { name: string }[]).map((m) => m.name.split(' ')[0]);
+      request(app.getHttpServer())
+        .get(`/api/v1/admin/contacts?${query}`)
+        .set('Authorization', `Bearer ${tAdmin}`);
+    const names = (res: request.Response) =>
+      (res.body.data as { name: string }[]).map((m) => m.name.split(' ')[0]);
 
     // Insensible à la casse ; le total reflète la recherche, pas la table entière.
     const found = await get(`q=${needle.toUpperCase()}`).expect(200);
@@ -455,24 +581,48 @@ describe('Contact (e2e)', () => {
 
     // `%` et `_` sont cherchés littéralement, jamais comme jokers.
     const literal = await get('q=%25').expect(200);
-    expect((literal.body.data as { message: string }[]).every((m) => m.message.includes('%'))).toBe(true);
+    expect(
+      (literal.body.data as { message: string }[]).every((m) =>
+        m.message.includes('%'),
+      ),
+    ).toBe(true);
     expect(names(literal)).toContain('Bob');
     expect((await get('q=100%25_exacte').expect(200)).body.meta.total).toBe(1);
     expect((await get('q=100%25Xexacte').expect(200)).body.meta.total).toBe(0);
 
     // Tri : par nom, par organisation (sans organisation toujours en dernier), dans les deux sens.
-    expect(names(await get(`q=${needle}&sort=name&order=asc`).expect(200))).toEqual(['Alice', 'Bob', 'Zoé']);
-    expect(names(await get(`q=${needle}&sort=name&order=desc`).expect(200))).toEqual(['Zoé', 'Bob', 'Alice']);
-    expect(names(await get(`q=${needle}&sort=organization&order=asc`).expect(200))).toEqual(['Zoé', 'Bob', 'Alice']);
-    expect(names(await get(`q=${needle}&sort=organization&order=desc`).expect(200))).toEqual(['Bob', 'Zoé', 'Alice']);
-    expect(names(await get(`q=${needle}&sort=createdAt&order=asc`).expect(200))).toEqual(['Zoé', 'Alice', 'Bob']);
+    expect(
+      names(await get(`q=${needle}&sort=name&order=asc`).expect(200)),
+    ).toEqual(['Alice', 'Bob', 'Zoé']);
+    expect(
+      names(await get(`q=${needle}&sort=name&order=desc`).expect(200)),
+    ).toEqual(['Zoé', 'Bob', 'Alice']);
+    expect(
+      names(await get(`q=${needle}&sort=organization&order=asc`).expect(200)),
+    ).toEqual(['Zoé', 'Bob', 'Alice']);
+    expect(
+      names(await get(`q=${needle}&sort=organization&order=desc`).expect(200)),
+    ).toEqual(['Bob', 'Zoé', 'Alice']);
+    expect(
+      names(await get(`q=${needle}&sort=createdAt&order=asc`).expect(200)),
+    ).toEqual(['Zoé', 'Alice', 'Bob']);
 
     // Tri + pagination : chaque ligne apparaît une fois.
-    const page = (n: number) => get(`q=${needle}&sort=name&order=asc&limit=1&page=${n}`).expect(200);
-    expect([names(await page(1)), names(await page(2)), names(await page(3))]).toEqual([['Alice'], ['Bob'], ['Zoé']]);
+    const page = (n: number) =>
+      get(`q=${needle}&sort=name&order=asc&limit=1&page=${n}`).expect(200);
+    expect([
+      names(await page(1)),
+      names(await page(2)),
+      names(await page(3)),
+    ]).toEqual([['Alice'], ['Bob'], ['Zoé']]);
 
     // Paramètres refusés avec le champ fautif ; aucune injection par le champ de tri.
-    for (const bad of ['sort=email', 'sort=name;drop', 'order=sideways', `q=${'x'.repeat(101)}`]) {
+    for (const bad of [
+      'sort=email',
+      'sort=name;drop',
+      'order=sideways',
+      `q=${'x'.repeat(101)}`,
+    ]) {
       const res = await get(bad).expect(400);
       expect(res.body.details[0].field).toBe(bad.split('=')[0]);
     }
@@ -497,35 +647,56 @@ describe('Contact (e2e)', () => {
     // Un visiteur malveillant tente une formule : elle doit sortir inerte.
     await row('Zoé', { message: '=HYPERLINK("http://evil.example","clic")' });
     const exportUrl = (query = '') => `/api/v1/admin/contacts/export${query}`;
-    const get = (query: string) => request(app.getHttpServer()).get(exportUrl(query)).set('Authorization', `Bearer ${tAdmin}`);
+    const get = (query: string) =>
+      request(app.getHttpServer())
+        .get(exportUrl(query))
+        .set('Authorization', `Bearer ${tAdmin}`);
 
     // Réservé à l'équipe.
     await request(app.getHttpServer()).get(exportUrl()).expect(401);
     const userToken = (
-      await request(app.getHttpServer()).post('/api/v1/auth/login').send({ email: userEmail, password }).expect(200)
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({ email: userEmail, password })
+        .expect(200)
     ).body.accessToken as string;
-    await request(app.getHttpServer()).get(exportUrl()).set('Authorization', `Bearer ${userToken}`).expect(403);
+    await request(app.getHttpServer())
+      .get(exportUrl())
+      .set('Authorization', `Bearer ${userToken}`)
+      .expect(403);
 
-    const res = await get(`?q=${needle}&sort=name&order=asc`).buffer(true).expect(200);
+    const res = await get(`?q=${needle}&sort=name&order=asc`)
+      .buffer(true)
+      .expect(200);
     expect(res.headers['content-type']).toMatch(/^text\/csv; charset=utf-8/);
-    expect(res.headers['content-disposition']).toMatch(/^attachment; filename="messages-contact-\d{4}-\d{2}-\d{2}\.csv"$/);
+    expect(res.headers['content-disposition']).toMatch(
+      /^attachment; filename="messages-contact-\d{4}-\d{2}-\d{2}\.csv"$/,
+    );
     expect(res.headers['cache-control']).toBe('private, no-store');
     const text = res.text;
     expect(text.startsWith('﻿Date de réception;Nom;')).toBe(true);
     const lines = text.trimEnd().split('\r\n');
     expect(lines).toHaveLength(4);
     // Même tri que la liste ; séparateurs et guillemets protégés.
-    expect(lines.slice(1).map((l) => l.split(';')[1].split(' ')[0])).toEqual(['Alice', 'Bob', 'Zoé']);
+    expect(lines.slice(1).map((l) => l.split(';')[1].split(' ')[0])).toEqual([
+      'Alice',
+      'Bob',
+      'Zoé',
+    ]);
     expect(lines[1]).toContain('"Org; ""Export"""');
     expect(lines[1]).toContain('Eau (adduction, traitement, épuration)');
     expect(lines[1]).toContain(';À traiter;');
     expect(lines[2]).toContain(';Traité;');
     // Formule neutralisée, aucune donnée interne.
-    expect(lines[3]).toContain(`"'=HYPERLINK(""http://evil.example"",""clic"")"`);
+    expect(lines[3]).toContain(
+      `"'=HYPERLINK(""http://evil.example"",""clic"")"`,
+    );
     expect(text).not.toMatch(/contentHash|submissionKey/);
 
     // Les filtres de la liste s'appliquent ; un paramètre inconnu est refusé.
-    const handled = (await get(`?q=${needle}&status=TRAITE`).expect(200)).text.trimEnd().split('\r\n');
+    const handled = (await get(`?q=${needle}&status=TRAITE`).expect(200)).text
+      .trimEnd()
+      .split('\r\n');
     expect(handled).toHaveLength(2);
     expect(handled[1]).toContain('Bob');
     await get('?sort=email').expect(400);
@@ -541,6 +712,8 @@ describe('Contact (e2e)', () => {
       entityType: 'ContactMessage',
       afterData: { count: 1, status: 'TRAITE', searched: true },
     });
-    expect(JSON.stringify(audit.body)).not.toMatch(/HYPERLINK|Message de test pour l’export/);
+    expect(JSON.stringify(audit.body)).not.toMatch(
+      /HYPERLINK|Message de test pour l’export/,
+    );
   });
 });

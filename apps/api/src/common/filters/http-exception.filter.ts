@@ -63,7 +63,8 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
 
     return {
       code: this.statusToCode(status),
-      message: typeof payload === 'string' ? payload : 'Une erreur est survenue.',
+      message:
+        typeof payload === 'string' ? payload : 'Une erreur est survenue.',
       details: [],
     };
   }

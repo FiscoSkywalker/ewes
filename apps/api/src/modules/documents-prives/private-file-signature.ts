@@ -20,10 +20,18 @@ const OOXML_MIME = {
  * un visiteur anonyme : toujours en téléchargement authentifié, `nosniff`.
  */
 export function detectPrivateFile(buffer: Buffer): DetectedPrivateFile | null {
-  if (buffer.length >= 5 && buffer.subarray(0, 5).toString('latin1') === '%PDF-') {
+  if (
+    buffer.length >= 5 &&
+    buffer.subarray(0, 5).toString('latin1') === '%PDF-'
+  ) {
     return { mimeType: 'application/pdf', extension: 'pdf' };
   }
-  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+  if (
+    buffer.length >= 3 &&
+    buffer[0] === 0xff &&
+    buffer[1] === 0xd8 &&
+    buffer[2] === 0xff
+  ) {
     return { mimeType: 'image/jpeg', extension: 'jpg' };
   }
   if (

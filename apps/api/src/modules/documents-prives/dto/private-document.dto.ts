@@ -15,20 +15,35 @@ import {
 } from 'class-validator';
 
 /** Tris proposés par la liste (colonne Prisma). */
-export const DOCUMENT_SORT_FIELDS = ['createdAt', 'updatedAt', 'name', 'fileSizeBytes'] as const;
+export const DOCUMENT_SORT_FIELDS = [
+  'createdAt',
+  'updatedAt',
+  'name',
+  'fileSizeBytes',
+] as const;
 export type DocumentSortField = (typeof DOCUMENT_SORT_FIELDS)[number];
 
 /** Familles de fichiers proposées en filtre de recherche. */
-export const DOCUMENT_TYPE_FAMILIES = ['pdf', 'image', 'word', 'excel', 'powerpoint'] as const;
+export const DOCUMENT_TYPE_FAMILIES = [
+  'pdf',
+  'image',
+  'word',
+  'excel',
+  'powerpoint',
+] as const;
 export type DocumentTypeFamily = (typeof DOCUMENT_TYPE_FAMILIES)[number];
 
 /** Champs du formulaire multipart de téléversement (le fichier est le champ `file`). */
 export class UploadPrivateDocumentDto {
-  @ApiProperty({ description: 'Dossier de destination (droit d’écriture requis).' })
+  @ApiProperty({
+    description: 'Dossier de destination (droit d’écriture requis).',
+  })
   @IsUUID()
   folderId!: string;
 
-  @ApiPropertyOptional({ description: 'Par défaut : nom du fichier sans extension.' })
+  @ApiPropertyOptional({
+    description: 'Par défaut : nom du fichier sans extension.',
+  })
   @IsOptional()
   @IsString()
   @IsNotEmpty()
@@ -75,7 +90,8 @@ export class UpdatePrivateDocumentDto {
   confidentiality?: ConfidentialityLevel | null;
 
   @ApiPropertyOptional({
-    description: 'Déplacer vers un autre dossier (droit d’écriture sur les deux).',
+    description:
+      'Déplacer vers un autre dossier (droit d’écriture sur les deux).',
   })
   @IsOptional()
   @IsUUID()
@@ -129,7 +145,10 @@ export class ListPrivateDocumentsDto {
 }
 
 export class SearchPrivateDocumentsDto {
-  @ApiProperty({ description: 'Termes recherchés (nom, description, catégorie, projet, département).' })
+  @ApiProperty({
+    description:
+      'Termes recherchés (nom, description, catégorie, projet, département).',
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)

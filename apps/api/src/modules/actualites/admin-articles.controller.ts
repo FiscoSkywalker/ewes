@@ -53,12 +53,17 @@ export class AdminArticlesController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateArticleDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateArticleDto,
+  ) {
     return this.actualitesService.update(id, dto);
   }
 
   @Put(':id/cover')
-  @ApiOperation({ summary: 'Définir le visuel de couverture (média téléversé)' })
+  @ApiOperation({
+    summary: 'Définir le visuel de couverture (média téléversé)',
+  })
   setCover(@Param('id', ParseUUIDPipe) id: string, @Body() dto: SetCoverDto) {
     return this.actualitesService.setCover(id, dto);
   }
@@ -71,7 +76,9 @@ export class AdminArticlesController {
 
   @Post(':id/publish')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Publier explicitement (date facultative, y compris future)' })
+  @ApiOperation({
+    summary: 'Publier explicitement (date facultative, y compris future)',
+  })
   publish(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,

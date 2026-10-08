@@ -104,7 +104,9 @@ describe('Tableau de bord (e2e)', () => {
     await prisma.contactMessage.deleteMany({
       where: { email: { startsWith: tag } },
     });
-    await prisma.realisation.deleteMany({ where: { slug: { startsWith: tag } } });
+    await prisma.realisation.deleteMany({
+      where: { slug: { startsWith: tag } },
+    });
     await prisma.article.deleteMany({ where: { slug: { startsWith: tag } } });
     await prisma.publicDocument.deleteMany({
       where: { slug: { startsWith: tag } },
@@ -122,7 +124,9 @@ describe('Tableau de bord (e2e)', () => {
   });
 
   it('exige un jeton, et refuse le rôle Utilisateur', async () => {
-    await request(app.getHttpServer()).get('/api/v1/admin/dashboard').expect(401);
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/dashboard')
+      .expect(401);
     await dashboard(user).expect(403);
   });
 
@@ -146,7 +150,11 @@ describe('Tableau de bord (e2e)', () => {
       data: [
         { slug: `${tag}-r1`, titleFr: 'Brouillon' },
         // Publié et supprimé : hors compteur.
-        { slug: `${tag}-r2`, titleFr: 'Publié', status: ContentStatus.PUBLISHED },
+        {
+          slug: `${tag}-r2`,
+          titleFr: 'Publié',
+          status: ContentStatus.PUBLISHED,
+        },
         { slug: `${tag}-r3`, titleFr: 'Supprimé', deletedAt: new Date() },
       ],
     });

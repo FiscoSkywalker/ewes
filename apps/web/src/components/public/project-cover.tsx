@@ -3,18 +3,34 @@ import type { Project, ProjectCategory } from '@/data/projects';
 
 /** Teinte de la couverture générée, par type de mission (fonds nuit). */
 const COVER_TONE: Record<ProjectCategory, { accent: string; glow: string }> = {
-  EIES: { accent: 'var(--color-malachite-bright)', glow: 'var(--color-malachite)' },
+  EIES: {
+    accent: 'var(--color-malachite-bright)',
+    glow: 'var(--color-malachite)',
+  },
   AUDIT: { accent: 'var(--color-copper-bright)', glow: 'var(--color-copper)' },
-  MONITORING: { accent: 'var(--color-water-bright)', glow: 'var(--color-primary)' },
-  AGREMENT: { accent: 'var(--color-water-bright)', glow: 'var(--color-primary-deep)' },
-  FORMATION: { accent: 'var(--color-malachite-bright)', glow: 'var(--color-primary)' },
-  ETUDE: { accent: 'var(--color-copper-bright)', glow: 'var(--color-malachite)' },
+  MONITORING: {
+    accent: 'var(--color-water-bright)',
+    glow: 'var(--color-primary)',
+  },
+  AGREMENT: {
+    accent: 'var(--color-water-bright)',
+    glow: 'var(--color-primary-deep)',
+  },
+  FORMATION: {
+    accent: 'var(--color-malachite-bright)',
+    glow: 'var(--color-primary)',
+  },
+  ETUDE: {
+    accent: 'var(--color-copper-bright)',
+    glow: 'var(--color-malachite)',
+  },
 };
 
 /** Générateur pseudo-aléatoire déterministe (même rendu serveur et client). */
 function seeded(id: string) {
   let h = 2166136261;
-  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  for (let i = 0; i < id.length; i++)
+    h = Math.imul(h ^ id.charCodeAt(i), 16777619);
   return () => {
     h = Math.imul(h ^ (h >>> 15), 2246822507);
     h = Math.imul(h ^ (h >>> 13), 3266489909);

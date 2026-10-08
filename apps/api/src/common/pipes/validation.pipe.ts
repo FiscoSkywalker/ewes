@@ -1,4 +1,8 @@
-import { BadRequestException, ValidationError, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  ValidationError,
+  ValidationPipe,
+} from '@nestjs/common';
 
 export interface FieldIssue {
   /** Chemin du champ (ex. `email`, `items.0.name`). */

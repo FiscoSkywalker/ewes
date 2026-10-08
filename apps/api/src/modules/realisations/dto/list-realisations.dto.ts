@@ -48,7 +48,12 @@ export class ListRealisationsDto {
   location?: string;
 }
 
-export const REALISATION_SORT_FIELDS = ['titleFr', 'year', 'projectType', 'updatedAt'] as const;
+export const REALISATION_SORT_FIELDS = [
+  'titleFr',
+  'year',
+  'projectType',
+  'updatedAt',
+] as const;
 export type RealisationSortField = (typeof REALISATION_SORT_FIELDS)[number];
 
 /** Statut, recherche et tri, réservés à l'administration. */
@@ -59,11 +64,14 @@ export class ListAdminRealisationsDto extends ListRealisationsDto {
   status?: ContentStatus;
 
   @ApiPropertyOptional({
-    description: 'Recherche (sans casse) dans le titre, le client, le lieu et le slug.',
+    description:
+      'Recherche (sans casse) dans le titre, le client, le lieu et le slug.',
     maxLength: 100,
   })
   @IsOptional()
-  @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   @IsString()
   @MaxLength(100)
   q?: string;

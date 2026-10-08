@@ -4,9 +4,7 @@ import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 import { RolesGuard } from './roles.guard.js';
 
-function makeContext(
-  user: { role: Role } | undefined,
-): ExecutionContext {
+function makeContext(user: { role: Role } | undefined): ExecutionContext {
   return {
     switchToHttp: () => ({
       getRequest: () => ({ user }),
@@ -33,9 +31,9 @@ describe('RolesGuard', () => {
     };
     const guard = new RolesGuard(reflector as unknown as Reflector);
 
-    expect(
-      guard.canActivate(makeContext({ role: Role.ADMINISTRATEUR })),
-    ).toBe(true);
+    expect(guard.canActivate(makeContext({ role: Role.ADMINISTRATEUR }))).toBe(
+      true,
+    );
   });
 
   it('rejects access when the user role is not in the required list', () => {

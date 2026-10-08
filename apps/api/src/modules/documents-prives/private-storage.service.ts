@@ -21,7 +21,8 @@ export interface UploadedPrivateFile {
 }
 
 /** Forme d'un nom stocké : uuid + extension autorisée (protège du path traversal). */
-const STORED_NAME_PATTERN = /^[0-9a-f-]{36}\.(pdf|png|jpg|webp|docx|xlsx|pptx)$/;
+const STORED_NAME_PATTERN =
+  /^[0-9a-f-]{36}\.(pdf|png|jpg|webp|docx|xlsx|pptx)$/;
 
 /**
  * Stockage disque des documents privés sous `PRIVATE_STORAGE_PATH`, hors de
@@ -59,8 +60,7 @@ export class PrivateStorageService {
     if (!detected) {
       throw new UnsupportedMediaTypeException({
         code: 'DOCUMENT_TYPE_NOT_ALLOWED',
-        message:
-          'Formats acceptés : PDF, JPEG, PNG, WebP, DOCX, XLSX et PPTX.',
+        message: 'Formats acceptés : PDF, JPEG, PNG, WebP, DOCX, XLSX et PPTX.',
         details: [],
       });
     }

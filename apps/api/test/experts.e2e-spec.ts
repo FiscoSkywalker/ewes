@@ -373,9 +373,11 @@ describe('Experts (e2e)', () => {
     });
 
     // Une nouvelle photo sans point focal : l'ancien visait l'ancienne image, retour au cadrage par défaut.
-    expect(
-      (await patch({ photoUrl: second }).expect(200)).body,
-    ).toMatchObject({ photoUrl: second, photoFocalX: null, photoFocalY: null });
+    expect((await patch({ photoUrl: second }).expect(200)).body).toMatchObject({
+      photoUrl: second,
+      photoFocalX: null,
+      photoFocalY: null,
+    });
     // Nouvelle photo avec son propre point focal : gardé.
     expect(
       (
@@ -388,9 +390,7 @@ describe('Experts (e2e)', () => {
     ).toMatchObject({ photoUrl: first, photoFocalX: 70, photoFocalY: 20 });
     // Remise explicite au cadrage par défaut, puis retrait de la photo.
     expect(
-      (
-        await patch({ photoFocalX: null, photoFocalY: null }).expect(200)
-      ).body,
+      (await patch({ photoFocalX: null, photoFocalY: null }).expect(200)).body,
     ).toMatchObject({ photoFocalX: null, photoFocalY: null });
     await patch({ photoFocalX: 60, photoFocalY: 60 }).expect(200);
     expect((await patch({ photoUrl: null }).expect(200)).body).toMatchObject({

@@ -288,7 +288,9 @@ describe('Documents publics (e2e)', () => {
 
     // Sans compte ou sans rôle de personnel : refusé.
     await request(app.getHttpServer()).get(fileUrl).expect(401);
-    await read({ Authorization: `Bearer ${await login(userEmail)}` }).expect(403);
+    await read({ Authorization: `Bearer ${await login(userEmail)}` }).expect(
+      403,
+    );
 
     await post(`/api/v1/admin/documents-publics/${id}/publish`).expect(200);
     await post(`/api/v1/admin/documents-publics/${id}/publish`).expect(200); // déjà publié : aucun changement
@@ -320,20 +322,37 @@ describe('Documents publics (e2e)', () => {
 
   it('searches, sorts and counts the admin library per status without leaking filters between them', async () => {
     const needle = `srch${stamp}`;
-    const doc = (name: string, category: string, extra: Record<string, string> = {}) =>
-      create(`${needle}-${name.toLowerCase()}`, pdf(name), { titleFr: `${name} ${needle}`, category, ...extra }).expect(201);
+    const doc = (
+      name: string,
+      category: string,
+      extra: Record<string, string> = {},
+    ) =>
+      create(`${needle}-${name.toLowerCase()}`, pdf(name), {
+        titleFr: `${name} ${needle}`,
+        category,
+        ...extra,
+      }).expect(201);
     const charlie = await doc('Charlie', 'GUIDE', { year: '2023' });
     const alpha = await doc('Alpha', 'REPORT');
-    const bravo = await doc('Bravo', 'GUIDE', { year: '2025', excerptFr: 'Remise de 100%_exacte demandee.' });
+    const bravo = await doc('Bravo', 'GUIDE', {
+      year: '2025',
+      excerptFr: 'Remise de 100%_exacte demandee.',
+    });
     // Alpha est publié en dernier : c'est aussi le plus récemment modifié.
-    await post(`/api/v1/admin/documents-publics/${alpha.body.id}/publish`).expect(200);
+    await post(
+      `/api/v1/admin/documents-publics/${alpha.body.id}/publish`,
+    ).expect(200);
     void charlie;
     void bravo;
 
     const get = (query: string) =>
-      request(app.getHttpServer()).get(`/api/v1/admin/documents-publics?${query}`).set(auth);
+      request(app.getHttpServer())
+        .get(`/api/v1/admin/documents-publics?${query}`)
+        .set(auth);
     const titles = (res: request.Response) =>
-      (res.body.data as { titleFr: string }[]).map((d) => d.titleFr.split(' ')[0]);
+      (res.body.data as { titleFr: string }[]).map(
+        (d) => d.titleFr.split(' ')[0],
+      );
 
     // Recherche insensible à la casse (slug compris) ; compteurs par statut.
     const found = await get(`q=${needle.toUpperCase()}&limit=100`).expect(200);
@@ -351,7 +370,9 @@ describe('Documents publics (e2e)', () => {
     // `%` et `_` sont cherchés littéralement, jamais comme jokers.
     const literal = await get('q=%25').expect(200);
     expect(
-      (literal.body.data as { excerptFr: string | null }[]).every((d) => d.excerptFr?.includes('%')),
+      (literal.body.data as { excerptFr: string | null }[]).every((d) =>
+        d.excerptFr?.includes('%'),
+      ),
     ).toBe(true);
     expect(titles(literal)).toContain('Bravo');
     expect((await get('q=100%25_exacte').expect(200)).body.meta.total).toBe(1);
@@ -360,8 +381,16 @@ describe('Documents publics (e2e)', () => {
     // Tri : titre, année (sans année toujours en dernier), catégorie, date de modification.
     const sorted = async (sort: string, order: string) =>
       titles(await get(`q=${needle}&sort=${sort}&order=${order}`).expect(200));
-    expect(await sorted('titleFr', 'asc')).toEqual(['Alpha', 'Bravo', 'Charlie']);
-    expect(await sorted('titleFr', 'desc')).toEqual(['Charlie', 'Bravo', 'Alpha']);
+    expect(await sorted('titleFr', 'asc')).toEqual([
+      'Alpha',
+      'Bravo',
+      'Charlie',
+    ]);
+    expect(await sorted('titleFr', 'desc')).toEqual([
+      'Charlie',
+      'Bravo',
+      'Alpha',
+    ]);
     expect(await sorted('year', 'asc')).toEqual(['Charlie', 'Bravo', 'Alpha']);
     expect(await sorted('year', 'desc')).toEqual(['Bravo', 'Charlie', 'Alpha']);
     expect((await sorted('category', 'asc'))[0]).toBe('Alpha');
@@ -371,11 +400,24 @@ describe('Documents publics (e2e)', () => {
 
     // Tri + pagination : chaque ligne apparaît une fois.
     const page = async (n: number) =>
-      titles(await get(`q=${needle}&sort=titleFr&order=asc&limit=1&page=${n}`).expect(200));
-    expect([await page(1), await page(2), await page(3)]).toEqual([['Alpha'], ['Bravo'], ['Charlie']]);
+      titles(
+        await get(
+          `q=${needle}&sort=titleFr&order=asc&limit=1&page=${n}`,
+        ).expect(200),
+      );
+    expect([await page(1), await page(2), await page(3)]).toEqual([
+      ['Alpha'],
+      ['Bravo'],
+      ['Charlie'],
+    ]);
 
     // Paramètres refusés avec le champ fautif ; aucune injection par le champ de tri.
-    for (const bad of ['sort=slug', 'sort=year;drop', 'order=up', `q=${'x'.repeat(101)}`]) {
+    for (const bad of [
+      'sort=slug',
+      'sort=year;drop',
+      'order=up',
+      `q=${'x'.repeat(101)}`,
+    ]) {
       const res = await get(bad).expect(400);
       expect(JSON.stringify(res.body)).toContain(bad.split('=')[0]);
     }

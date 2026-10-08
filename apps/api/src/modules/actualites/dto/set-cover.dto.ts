@@ -2,7 +2,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class SetCoverDto {
-  @ApiProperty({ description: 'Identifiant d’un média téléversé (POST /admin/media).' })
+  @ApiProperty({
+    description: 'Identifiant d’un média téléversé (POST /admin/media).',
+  })
   @IsUUID()
   mediaId!: string;
 

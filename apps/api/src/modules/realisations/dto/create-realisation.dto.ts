@@ -48,7 +48,8 @@ export class CreateRealisationDto {
   clientName?: string;
 
   @ApiPropertyOptional({
-    description: 'Le client n’est exposé publiquement que si ce champ est vrai.',
+    description:
+      'Le client n’est exposé publiquement que si ce champ est vrai.',
   })
   @IsOptional()
   @IsBoolean()
@@ -67,7 +68,9 @@ export class CreateRealisationDto {
   @Max(2100)
   year?: number;
 
-  @ApiPropertyOptional({ description: 'Année de fin pour une mission pluriannuelle.' })
+  @ApiPropertyOptional({
+    description: 'Année de fin pour une mission pluriannuelle.',
+  })
   @IsOptional()
   @IsInt()
   @Min(1900)
@@ -109,12 +112,16 @@ export class CreateRealisationDto {
   @IsString()
   resultsEn?: string;
 
-  @ApiPropertyOptional({ description: 'Service (domaine) rattaché, facultatif.' })
+  @ApiPropertyOptional({
+    description: 'Service (domaine) rattaché, facultatif.',
+  })
   @IsOptional()
   @IsUUID()
   serviceId?: string;
 
-  @ApiPropertyOptional({ description: 'Mise en avant sur l’Accueil (nombre limité).' })
+  @ApiPropertyOptional({
+    description: 'Mise en avant sur l’Accueil (nombre limité).',
+  })
   @IsOptional()
   @IsBoolean()
   isFeatured?: boolean;

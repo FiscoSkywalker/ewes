@@ -45,7 +45,16 @@ export const SERVICE_POLES: Record<ServicePole, PoleConfig> = {
     namespace: 'Environment',
     listKey: 'services',
     image: POLE_DEFAULT_IMAGES.env,
-    icons: [FileCheck, ClipboardCheck, Droplets, Trash2, Activity, Wind, Microscope, Leaf],
+    icons: [
+      FileCheck,
+      ClipboardCheck,
+      Droplets,
+      Trash2,
+      Activity,
+      Wind,
+      Microscope,
+      Leaf,
+    ],
     background: 'bg-paper',
   },
   eau: {
@@ -53,7 +62,16 @@ export const SERVICE_POLES: Record<ServicePole, PoleConfig> = {
     namespace: 'Water',
     listKey: 'services',
     image: POLE_DEFAULT_IMAGES.eau,
-    icons: [FileSearch, Recycle, Waves, Filter, Droplets, FlaskConical, GraduationCap, Factory],
+    icons: [
+      FileSearch,
+      Recycle,
+      Waves,
+      Filter,
+      Droplets,
+      FlaskConical,
+      GraduationCap,
+      Factory,
+    ],
     background: 'bg-white',
   },
   ing: {
@@ -125,7 +143,10 @@ export function ServiceChapter({
       aria-labelledby={`${pole}-title`}
       className={`pole-${pole} relative scroll-mt-20 ${config.background}`}
     >
-      <div className="pattern-swatch h-2.5 border-y border-border-subtle" aria-hidden="true" />
+      <div
+        className="pattern-swatch h-2.5 border-y border-border-subtle"
+        aria-hidden="true"
+      />
 
       <div className="mx-auto grid w-full max-w-[1440px] gap-12 px-6 py-20 md:px-16 md:py-28 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
         {/* Introduction du pôle */}
@@ -135,7 +156,10 @@ export function ServiceChapter({
               {String(index).padStart(2, '0')}
             </span>
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-elevated py-1 pl-1 pr-3 font-mono text-[11px] font-bold tracking-[0.12em] text-pole">
-              <span className="pattern-swatch h-5 w-5 rounded-full border border-border-subtle" aria-hidden="true" />
+              <span
+                className="pattern-swatch h-5 w-5 rounded-full border border-border-subtle"
+                aria-hidden="true"
+              />
               {config.code}
             </span>
           </div>
@@ -148,29 +172,42 @@ export function ServiceChapter({
             {data?.name ?? t(`poles.${pole}`)}
           </h2>
           {(data ? data.tagline : tPole('title')) && (
-            <p className="mt-5 font-heading text-xl font-semibold leading-snug text-pole" data-reveal>
+            <p
+              className="mt-5 font-heading text-xl font-semibold leading-snug text-pole"
+              data-reveal
+            >
               {data ? data.tagline : tPole('title')}
             </p>
           )}
-          <p className="mt-4 max-w-xl text-sm leading-7 text-sand/72 sm:text-base" data-reveal>
+          <p
+            className="mt-4 max-w-xl text-sm leading-7 text-sand/72 sm:text-base"
+            data-reveal
+          >
             {data?.description ?? tPole('description')}
           </p>
 
-          <figure className="relative mt-10 aspect-[4/3] overflow-hidden rounded-sheet" data-image-reveal>
+          <figure
+            className="relative mt-10 aspect-[4/3] overflow-hidden rounded-sheet"
+            data-image-reveal
+          >
             <Image
               src={data?.image?.src ?? config.image}
               alt={
-                data?.image
-                  ? (data.image.alt ?? data.name)
-                  : tPole('imageAlt')
+                data?.image ? (data.image.alt ?? data.name) : tPole('imageAlt')
               }
               fill
               sizes="(min-width: 1024px) 38vw, 100vw"
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-linear-to-t from-night/60 via-transparent to-transparent" aria-hidden="true" />
+            <div
+              className="absolute inset-0 bg-linear-to-t from-night/60 via-transparent to-transparent"
+              aria-hidden="true"
+            />
             <figcaption className="absolute bottom-4 left-4 flex items-center gap-3 rounded-card bg-white/90 px-4 py-3 backdrop-blur-md">
-              <span className="h-2.5 w-2.5 rounded-full bg-pole" aria-hidden="true" />
+              <span
+                className="h-2.5 w-2.5 rounded-full bg-pole"
+                aria-hidden="true"
+              />
               <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-sand">
                 {count}
               </span>

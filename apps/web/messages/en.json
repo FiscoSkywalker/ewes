@@ -689,12 +689,7 @@
           "role": "Hydrogeologist",
           "pole": "eau",
           "years": 14,
-          "specialties": [
-            "Hydrogeology",
-            "Boreholes",
-            "Water quality",
-            "GIS"
-          ],
+          "specialties": ["Hydrogeology", "Boreholes", "Water quality", "GIS"],
           "bio": "Leads water resource studies and supports water catchment and drinking water supply projects."
         },
         {
@@ -703,12 +698,7 @@
           "role": "Head of training",
           "pole": "env",
           "years": 18,
-          "specialties": [
-            "Training",
-            "CSR",
-            "E&S inspections",
-            "Mine closure"
-          ],
+          "specialties": ["Training", "CSR", "E&S inspections", "Mine closure"],
           "bio": "Designs and delivers capacity-building programmes for managers, technicians and public services."
         },
         {
@@ -717,11 +707,7 @@
           "role": "Environmental engineer",
           "pole": "env",
           "years": 9,
-          "specialties": [
-            "Monitoring",
-            "Air quality",
-            "Waste management"
-          ],
+          "specialties": ["Monitoring", "Air quality", "Waste management"],
           "bio": "Handles environmental monitoring of sites and writes the periodic reports for operators."
         },
         {
@@ -743,11 +729,7 @@
           "role": "Civil engineer",
           "pole": "ing",
           "years": 11,
-          "specialties": [
-            "Hydraulic structures",
-            "CAD",
-            "Site supervision"
-          ],
+          "specialties": ["Hydraulic structures", "CAD", "Site supervision"],
           "bio": "Designs structures and supervises works, from the digital model to final acceptance."
         }
       ]
@@ -1113,10 +1095,7 @@
     "chapterLink": "Explore this area",
     "detailLink": "Full details",
     "allLink": "All our services",
-    "relations": [
-      "informs",
-      "guides"
-    ],
+    "relations": ["informs", "guides"],
     "audiencesTitle": "Who we work for"
   },
   "Method": {

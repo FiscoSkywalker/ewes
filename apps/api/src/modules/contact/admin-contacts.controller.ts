@@ -44,7 +44,10 @@ export class AdminContactsController {
   constructor(private readonly contact: ContactService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Messages de contact reçus (recherche `q`, tri `sort`/`order` ; plus récents d’abord par défaut)' })
+  @ApiOperation({
+    summary:
+      'Messages de contact reçus (recherche `q`, tri `sort`/`order` ; plus récents d’abord par défaut)',
+  })
   list(@Query() query: ListContactsDto) {
     return this.contact.list(query);
   }
