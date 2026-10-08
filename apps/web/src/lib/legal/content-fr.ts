@@ -263,16 +263,16 @@ export const buildLegalFr: LegalBuilder = (ctx) => {
                   'Même durée que le message de contact.',
                 ],
                 [
-                  'Vous avez un compte sur le portail ou l’espace documentaire privé (sur invitation)',
-                  'Nom, adresse e-mail, rôle, photo (facultative), mot de passe (conservé sous forme chiffrée irréversible, jamais en clair), sessions de connexion (navigateur, adresse IP)',
+                  'Vous avez un compte sur le portail ou l’espace documentaire privé',
+                  'Nom, adresse e-mail, rôle, photo (facultative), mot de passe (conservé de façon sécurisée), données de connexion (navigateur, adresse IP)',
                   'Gérer votre accès et sécuriser l’espace (art. 219 et 221).',
-                  'Pendant la durée du compte ; les sessions expirent au bout de 7 jours au plus.',
+                  'Pendant la durée du compte ; les données de connexion sont conservées pour une durée limitée.',
                 ],
                 [
                   'Vous utilisez le portail ou l’espace documentaire privé',
-                  'Journal des actions sensibles : connexion, échecs de connexion, consultation et modification de documents, changements de droits',
-                  'Protéger les documents, prouver qui a fait quoi, détecter un usage anormal (art. 219-14).',
-                  '5 ans. Ce journal est inaltérable par conception.',
+                  'Journal d’activité de l’espace : connexions et opérations effectuées sur les documents',
+                  'Protéger les documents et garder la trace des opérations effectuées (art. 219).',
+                  '5 ans.',
                 ],
                 [
                   'Vous visitez le site',
@@ -329,10 +329,9 @@ export const buildLegalFr: LegalBuilder = (ctx) => {
             {
               type: 'list',
               items: [
-                'Connexion chiffrée (HTTPS) sur l’ensemble du site.',
-                'Mots de passe conservés sous forme chiffrée irréversible (Argon2id) ; verrouillage temporaire après plusieurs échecs de connexion.',
-                'Droits d’accès par rôle, toujours vérifiés par le serveur ; l’espace documentaire privé est strictement séparé du site public et n’est jamais référencé par les moteurs de recherche.',
-                'Journal d’audit inaltérable des actions sensibles, et sauvegardes protégées (art. 219-15).',
+                'Échanges chiffrés entre votre navigateur et le site.',
+                'Accès aux données limité aux seules personnes habilitées.',
+                'Autres mesures techniques et organisationnelles appropriées à la sensibilité des données (art. 219 et 221).',
               ],
             },
             {
@@ -415,16 +414,16 @@ export const buildLegalFr: LegalBuilder = (ctx) => {
               head: ['Nom', 'Où', 'À quoi il sert', 'Durée'],
               rows: [
                 [
-                  '`NEXT_LOCALE`',
+                  'Préférence de langue',
                   'Site public',
                   'Se souvenir de la langue (français ou anglais) que vous avez choisie. Déposé seulement si elle diffère de celle de votre navigateur.',
                   'Session : effacé à la fermeture du navigateur.',
                 ],
                 [
-                  '`ewes_access_token`, `ewes_refresh_token`',
+                  'Session de connexion',
                   'Portail et espace documentaire privé, après connexion',
-                  'Vous maintenir connecté. Ces cookies sont inaccessibles aux scripts de la page (httpOnly) et ne contiennent qu’un jeton de session.',
-                  '7 jours au plus ; supprimés à la déconnexion.',
+                  'Vous maintenir connecté pendant votre visite.',
+                  'Durée limitée ; supprimés à la déconnexion.',
                 ],
                 [
                   'Stockage local (thème, barre latérale, mode d’affichage)',
@@ -527,7 +526,7 @@ export const buildLegalFr: LegalBuilder = (ctx) => {
                 'votre compte est **personnel** : ne partagez ni votre mot de passe ni votre session ;',
                 'vous ne consultez et ne diffusez que les documents auxquels vous avez droit, et respectez leur niveau de confidentialité ;',
                 'vous prévenez EWES sans délai si vous soupçonnez un accès non autorisé à votre compte ;',
-                'vos actions sensibles (connexion, consultation, modification) sont enregistrées dans un journal inaltérable, comme l’explique la [politique de confidentialité](/confidentialite).',
+                'vos connexions et vos opérations sur les documents peuvent être enregistrées à des fins de sécurité, comme l’explique la [politique de confidentialité](/confidentialite).',
               ],
             },
             {

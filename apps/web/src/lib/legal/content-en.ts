@@ -253,16 +253,16 @@ export const buildLegalEn: LegalBuilder = (ctx) => {
                   'Same as the contact message.',
                 ],
                 [
-                  'You have an account on the portal or the private document space (by invitation)',
-                  'Name, e-mail address, role, photo (optional), password (stored in irreversibly encrypted form, never in clear), login sessions (browser, IP address)',
+                  'You have an account on the portal or the private document space',
+                  'Name, e-mail address, role, photo (optional), password (stored securely), connection data (browser, IP address)',
                   'To manage your access and secure the space (Art. 219 and 221).',
-                  'For the life of the account; sessions expire after 7 days at most.',
+                  'For the life of the account; connection data is kept for a limited period.',
                 ],
                 [
                   'You use the portal or the private document space',
-                  'Log of sensitive actions: sign-in, failed sign-ins, viewing and editing documents, changes of access rights',
-                  'To protect documents, prove who did what and detect abnormal use (Art. 219-14).',
-                  '5 years. This log is tamper-proof by design.',
+                  'Activity log of the space: sign-ins and operations carried out on documents',
+                  'To protect documents and keep a record of the operations carried out (Art. 219).',
+                  '5 years.',
                 ],
                 [
                   'You visit the site',
@@ -319,10 +319,9 @@ export const buildLegalEn: LegalBuilder = (ctx) => {
             {
               type: 'list',
               items: [
-                'Encrypted connection (HTTPS) across the whole site.',
-                'Passwords stored in irreversibly encrypted form (Argon2id); temporary lockout after repeated failed sign-ins.',
-                'Role-based access rights, always checked by the server; the private document space is strictly separated from the public site and never indexed by search engines.',
-                'Tamper-proof audit log of sensitive actions, and protected backups (Art. 219-15).',
+                'Encrypted exchanges between your browser and the site.',
+                'Access to data limited to authorised people only.',
+                'Other technical and organisational measures appropriate to the sensitivity of the data (Art. 219 and 221).',
               ],
             },
             {
@@ -405,16 +404,16 @@ export const buildLegalEn: LegalBuilder = (ctx) => {
               head: ['Name', 'Where', 'What it is for', 'Duration'],
               rows: [
                 [
-                  '`NEXT_LOCALE`',
+                  'Language preference',
                   'Public site',
                   'Remember the language (French or English) you chose. Set only if it differs from your browser’s language.',
                   'Session: erased when you close the browser.',
                 ],
                 [
-                  '`ewes_access_token`, `ewes_refresh_token`',
+                  'Sign-in session',
                   'Portal and private document space, after sign-in',
-                  'Keep you signed in. These cookies cannot be read by page scripts (httpOnly) and hold only a session token.',
-                  '7 days at most; removed when you sign out.',
+                  'Keep you signed in during your visit.',
+                  'Limited duration; removed when you sign out.',
                 ],
                 [
                   'Local storage (theme, sidebar, display mode)',
@@ -517,7 +516,7 @@ export const buildLegalEn: LegalBuilder = (ctx) => {
                 'your account is **personal**: do not share your password or your session;',
                 'view and share only the documents you are entitled to, and respect their confidentiality level;',
                 'tell EWES without delay if you suspect unauthorised access to your account;',
-                'your sensitive actions (sign-in, viewing, editing) are recorded in a tamper-proof log, as explained in the [privacy policy](/confidentialite).',
+                'your sign-ins and operations on documents may be recorded for security purposes, as explained in the [privacy policy](/confidentialite).',
               ],
             },
             {
