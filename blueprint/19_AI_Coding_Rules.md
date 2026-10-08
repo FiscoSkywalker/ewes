@@ -25,7 +25,7 @@ Suivre strictement `06_Application_Architecture.md` et `16_Rendering_State_Strat
 
 # 5. Règles de données et d'API
 
-Ne jamais faire confiance à un statut, un droit ou une confidentialité envoyés par le client : toute vérification RBAC/propriété/droit documentaire se fait côté serveur. Toute nouvelle route API nécessite : DTO, vérification RBAC/droit, mise à jour OpenAPI, contrat d'erreur cohérent, test pertinent. Tout changement de schéma Prisma nécessite une migration revue et testée. Le contenu multilingue (FR/EN) est porté par le modèle dès sa création — ne pas l'ajouter après coup.
+Ne jamais faire confiance à un statut, un droit ou une confidentialité envoyés par le client : toute vérification RBAC/propriété/droit documentaire se fait côté serveur. Toute nouvelle route API nécessite : DTO, vérification RBAC/droit, mise à jour OpenAPI, contrat d'erreur cohérent, test pertinent. Tout changement de schéma Prisma nécessite une migration revue et testée. Le contenu multilingue (FR/EN) est porté par le modèle dès sa création — ne pas l'ajouter après coup. Toute route de téléversement déclare ses options Multer via `singleFileUploadOptions` (`apps/api/src/common/http/upload-options.ts`) : sans cela, les noms de fichiers accentués sont décodés en latin1 et corrompus.
 
 # 6. Règles Git
 

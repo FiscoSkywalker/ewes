@@ -19,7 +19,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
@@ -28,6 +33,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { singleFileUploadOptions } from '../../common/http/upload-options.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { MAX_DOCUMENT_BYTES } from './document-signature.js';
 import type { UploadedDocument } from './document-storage.service.js';
@@ -37,9 +43,7 @@ import { UpdatePublicDocumentDto } from './dto/update-public-document.dto.js';
 import { ListAdminPublicDocumentsDto } from './dto/list-public-documents.dto.js';
 
 const uploadInterceptor = () =>
-  FileInterceptor('file', {
-    limits: { fileSize: MAX_DOCUMENT_BYTES, files: 1 },
-  });
+  FileInterceptor('file', singleFileUploadOptions(MAX_DOCUMENT_BYTES));
 
 function requireFile(file: UploadedDocument | undefined): UploadedDocument {
   if (!file) {
@@ -73,7 +77,8 @@ export class AdminDocumentsPublicsController {
 
   @Get(':id/file')
   @ApiOperation({
-    summary: 'Lire le PDF d’un document, brouillon compris (personnel uniquement)',
+    summary:
+      'Lire le PDF d’un document, brouillon compris (personnel uniquement)',
   })
   async file(
     @Param('id', ParseUUIDPipe) id: string,
@@ -96,7 +101,9 @@ export class AdminDocumentsPublicsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Créer un document (brouillon) avec son PDF, 20 Mo max' })
+  @ApiOperation({
+    summary: 'Créer un document (brouillon) avec son PDF, 20 Mo max',
+  })
   @ApiConsumes('multipart/form-data')
   // blueprint/10_Security.md §3 : taille/type limités, fréquence limitée.
   @Throttle({ default: { limit: 20, ttl: 60_000 } })

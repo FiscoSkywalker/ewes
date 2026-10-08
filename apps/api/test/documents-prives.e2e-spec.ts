@@ -278,6 +278,15 @@ describe('Documents privés (e2e)', () => {
     await revokeFolder(parentGrant);
   });
 
+  it('names a document after its file with accents intact (UTF-8, not latin1)', async () => {
+    const res = await upload(tAdmin, ids.root, pdf('accents'), {}, 'Rapport Ingénieurs – Pôle Eau.pdf');
+    expect(res.status).toBe(201);
+    expect(res.body.name).toBe('Rapport Ingénieurs – Pôle Eau');
+    // Le fichier stocké est retiré : les scénarios suivants comptent les fichiers du disque.
+    const row = await prisma.privateDocument.findUniqueOrThrow({ where: { id: res.body.id } });
+    await rm(join(storageDir, row.storedName), { force: true });
+  });
+
   it('validates uploads by real content and size, and never leaks storage details', async () => {
     const fake = await upload(tAdmin, ids.root, Buffer.from('MZ\x90\x00 pas un pdf'), {}, 'faux.pdf');
     expect(fake.status).toBe(415);

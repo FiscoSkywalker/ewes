@@ -158,6 +158,21 @@ describe('Media (e2e)', () => {
     expect(await readdir(mediaDir)).toHaveLength(0);
   });
 
+  it('keeps accents in the original file name (UTF-8, not latin1)', async () => {
+    const name = `e2e-accents-${Date.now()}-Pôle Eau – Ingénieurs.png`;
+    const res = await upload(PNG_1X1, name);
+    expect(res.status).toBe(201);
+    const stored = await prisma.media.findUniqueOrThrow({
+      where: { id: res.body.id },
+    });
+    expect(stored.originalName).toBe(name);
+
+    await request(app.getHttpServer())
+      .delete(`/api/v1/admin/media/${res.body.id}`)
+      .set(auth)
+      .expect(204);
+  });
+
   it('stores a valid image under a random name and serves it safely', async () => {
     const res = await upload(PNG_1X1, '../../évil name.png');
     expect(res.status).toBe(201);

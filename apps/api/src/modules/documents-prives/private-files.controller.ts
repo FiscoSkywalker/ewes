@@ -32,6 +32,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { singleFileUploadOptions } from '../../common/http/upload-options.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import {
   ListPrivateDocumentsDto,
@@ -79,9 +80,7 @@ export class PrivateFilesController {
   @ApiConsumes('multipart/form-data')
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: MAX_PRIVATE_FILE_BYTES, files: 1 },
-    }),
+    FileInterceptor('file', singleFileUploadOptions(MAX_PRIVATE_FILE_BYTES)),
   )
   upload(
     @CurrentUser() user: AuthenticatedUser,
@@ -115,9 +114,7 @@ export class PrivateFilesController {
   @ApiConsumes('multipart/form-data')
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: MAX_PRIVATE_FILE_BYTES, files: 1 },
-    }),
+    FileInterceptor('file', singleFileUploadOptions(MAX_PRIVATE_FILE_BYTES)),
   )
   replaceFile(
     @CurrentUser() user: AuthenticatedUser,

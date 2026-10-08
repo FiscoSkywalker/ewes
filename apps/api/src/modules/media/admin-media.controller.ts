@@ -28,6 +28,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { singleFileUploadOptions } from '../../common/http/upload-options.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import { MAX_IMAGE_BYTES } from './image-signature.js';
 import { DeleteManyMediaDto } from './dto/delete-many-media.dto.js';
@@ -52,9 +53,7 @@ export class AdminMediaController {
   // 40/min : l'écran envoie plusieurs images d'un coup (une requête par image).
   @Throttle({ default: { limit: 40, ttl: 60_000 } })
   @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: MAX_IMAGE_BYTES, files: 1 },
-    }),
+    FileInterceptor('file', singleFileUploadOptions(MAX_IMAGE_BYTES)),
   )
   upload(
     @UploadedFile() file: UploadedImage | undefined,

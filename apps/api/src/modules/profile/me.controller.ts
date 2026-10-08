@@ -28,6 +28,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { singleFileUploadOptions } from '../../common/http/upload-options.js';
 import { MAX_IMAGE_BYTES } from '../media/image-signature.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type.js';
 import type { UploadedAvatar } from '../users/avatar-storage.service.js';
@@ -135,9 +136,7 @@ export class MeController {
   @ApiConsumes('multipart/form-data')
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: MAX_IMAGE_BYTES, files: 1 },
-    }),
+    FileInterceptor('file', singleFileUploadOptions(MAX_IMAGE_BYTES)),
   )
   setAvatar(
     @CurrentUser() actor: AuthenticatedUser,
