@@ -32,6 +32,7 @@ describe('Conservation des données (e2e)', () => {
   const letters = String(stamp).replace(/\d/g, (d) => 'ABCDEFGHIJ'[Number(d)]);
   const OLD = `RETENTION_OLD_${letters}`;
   const RECENT = `RETENTION_RECENT_${letters}`;
+  const PURGE = `RETENTION_PURGE_${letters}`;
   let adminId: string;
   let tAdmin: { Authorization: string };
   const contactIds: string[] = [];
@@ -224,6 +225,58 @@ describe('Conservation des données (e2e)', () => {
         prisma.$queryRaw`SELECT audit_logs_archive_before(${ago(11).toISOString()}::timestamptz, 10)`,
       ).rejects.toThrow(/plus de 12 mois/);
       expect(await prisma.auditLog.count({ where: { id: live.id } })).toBe(1);
+    });
+
+    it('purges the archive 5 years after the event, and only then', async () => {
+      const addArchived = (createdAt: Date) =>
+        prisma.auditLogArchive.create({
+          data: {
+            id: randomUUID(),
+            action: PURGE,
+            entityType: 'E2eRetention',
+            createdAt,
+          },
+        });
+      const expired = await addArchived(ago(60, 1));
+      const longGone = await addArchived(ago(90));
+      const justInside = await addArchived(ago(60, -1));
+      const recentlyArchived = await addArchived(ago(20));
+
+      const report = await retention.sweep(now);
+      expect(report.auditPurged).toBeGreaterThanOrEqual(2);
+
+      const left = await prisma.auditLogArchive.findMany({
+        where: { action: PURGE },
+        select: { id: true },
+      });
+      expect(left.map((row) => row.id).sort()).toEqual(
+        [justInside.id, recentlyArchived.id].sort(),
+      );
+      expect(left.map((row) => row.id)).not.toContain(expired.id);
+      expect(left.map((row) => row.id)).not.toContain(longGone.id);
+
+      const trace = await prisma.auditLog.findFirst({
+        where: { action: 'RETENTION_AUDIT_PURGED' },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(trace).toMatchObject({ actorId: null, entityType: 'AuditLog' });
+      expect(Object.keys(trace!.afterData as object).sort()).toEqual([
+        'count',
+        'olderThan',
+      ]);
+    });
+
+    it('refuses to purge the archive earlier than 5 years, and the live journal at any age', async () => {
+      await expect(
+        prisma.$queryRaw`SELECT audit_logs_archive_purge_before(${ago(59).toISOString()}::timestamptz, 10)`,
+      ).rejects.toThrow(/plus de 5 ans/);
+      const old = await addAudit(RECENT, ago(70));
+      await expect(
+        prisma.auditLog.delete({ where: { id: old.id } }),
+      ).rejects.toThrow(/écriture seule/);
+      // L'archivage, lui, la déplace (jamais supprimée dans le journal courant).
+      await retention.sweep(now);
+      expect(await prisma.auditLog.count({ where: { id: old.id } })).toBe(0);
     });
 
     it('lets the Administrateur read the archive, with the same filters', async () => {

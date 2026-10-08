@@ -384,7 +384,8 @@ export function AuditJournal() {
         {archived ? (
           <p className="text-sm text-ink-muted">
             Entrées de plus de 12 mois, déplacées automatiquement du journal
-            courant. Elles restent inaltérables et consultables ici.
+            courant. Elles restent inaltérables et consultables ici pendant 5
+            ans.
           </p>
         ) : null}
       </div>

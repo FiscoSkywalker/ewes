@@ -16,6 +16,7 @@ import { AuditService } from '../audit/audit.service.js';
  * Volontairement en constantes et non en variables d'environnement.
  */
 export const AUDIT_ONLINE_MONTHS = 12;
+export const AUDIT_ARCHIVE_MONTHS = 60;
 export const CONTACT_RETENTION_MONTHS = 24;
 
 const AUDIT_BATCH = 5_000;
@@ -29,6 +30,7 @@ const FIRST_RUN_DELAY_MS = 60_000;
 
 export interface RetentionReport {
   auditArchived: number;
+  auditPurged: number;
   contactsPurged: number;
 }
 
@@ -39,6 +41,9 @@ export interface RetentionReport {
  *   dans `audit_logs_archive`. Le déplacement passe par la fonction SQL
  *   `audit_logs_archive_before()`, la seule voie que le déclencheur de
  *   `audit_logs` accepte ; elle refuse tout ce qui a moins de 12 mois.
+ * - **Archive d'audit** : supprimée 5 ans après la date de l'événement, par la
+ *   fonction SQL `audit_logs_archive_purge_before()` (seule voie acceptée par le
+ *   déclencheur de l'archive ; refuse tout ce qui a moins de 5 ans).
  * - **Messages de contact** : supprimés 24 mois après leur dernière mise à jour
  *   (création ou changement de statut), avec leurs e-mails (alerte à l'équipe et
  *   accusé de réception, qui portent le nom et l'adresse du visiteur).
@@ -102,10 +107,19 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
 
   /** Applique les deux durées. Chaque volet est indépendant : l'échec de l'un ne bloque pas l'autre. */
   async sweep(now = new Date()): Promise<RetentionReport> {
-    const report: RetentionReport = { auditArchived: 0, contactsPurged: 0 };
+    const report: RetentionReport = {
+      auditArchived: 0,
+      auditPurged: 0,
+      contactsPurged: 0,
+    };
     const failures: unknown[] = [];
     try {
       report.auditArchived = await this.archiveAudit(now);
+    } catch (error) {
+      failures.push(error);
+    }
+    try {
+      report.auditPurged = await this.purgeAuditArchive(now);
     } catch (error) {
       failures.push(error);
     }
@@ -140,6 +154,32 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       await this.audit.record({
         actorId: null,
         action: 'RETENTION_AUDIT_ARCHIVED',
+        entityType: 'AuditLog',
+        after: { count: total, olderThan: cutoff.toISOString().slice(0, 10) },
+      });
+    }
+    return total;
+  }
+
+  /** Supprime de l'archive les entrées d'audit de plus de 5 ans ; renvoie leur nombre. */
+  async purgeAuditArchive(now = new Date()): Promise<number> {
+    const cutoff = monthsBefore(now, AUDIT_ARCHIVE_MONTHS);
+    let total = 0;
+    for (let i = 0; i < MAX_BATCHES; i++) {
+      const [row] = await this.prisma.$queryRaw<{ purged: number }[]>(
+        Prisma.sql`SELECT audit_logs_archive_purge_before(${cutoff.toISOString()}::timestamptz, ${AUDIT_BATCH}::integer) AS purged`,
+      );
+      const purged = Number(row?.purged ?? 0);
+      total += purged;
+      if (purged < AUDIT_BATCH) break;
+    }
+    if (total > 0) {
+      this.logger.log(
+        `${total} entrée(s) de l'archive d'audit supprimée(s) (antérieures au ${cutoff.toISOString().slice(0, 10)}).`,
+      );
+      await this.audit.record({
+        actorId: null,
+        action: 'RETENTION_AUDIT_PURGED',
         entityType: 'AuditLog',
         after: { count: total, olderThan: cutoff.toISOString().slice(0, 10) },
       });

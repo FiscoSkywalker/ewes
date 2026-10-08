@@ -649,7 +649,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
           },
           {
             term: 'Journal d’audit',
-            text: 'La trace, en lecture seule et inaltérable, des actions sensibles : connexions et échecs, changements de rôle, droits, documents privés, publications. Chaque ligne indique qui, quoi, sur quoi, et le détail avant/après. Filtrez par catégorie, auteur, action ou période. Les entrées de plus de 12 mois passent automatiquement dans l’onglet **Archives** : toujours consultables, jamais supprimées.',
+            text: 'La trace, en lecture seule et inaltérable, des actions sensibles : connexions et échecs, changements de rôle, droits, documents privés, publications. Chaque ligne indique qui, quoi, sur quoi, et le détail avant/après. Filtrez par catégorie, auteur, action ou période. Les entrées de plus de 12 mois passent automatiquement dans l’onglet **Archives**, toujours consultables, puis sont supprimées 5 ans après les faits.',
           },
           {
             term: 'Paramètres › Général',

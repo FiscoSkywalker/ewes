@@ -94,6 +94,7 @@ export const ACTION_LABELS: Record<string, string> = {
   USER_SESSIONS_CLOSED: 'Appareils déconnectés',
   AUTH_TOKEN_REUSE_DETECTED: 'Jeton de session rejoué (session fermée)',
   RETENTION_AUDIT_ARCHIVED: 'Journal archivé (plus de 12 mois)',
+  RETENTION_AUDIT_PURGED: 'Archive purgée (plus de 5 ans)',
   RETENTION_CONTACTS_PURGED: 'Messages de contact supprimés (24 mois)',
 };
 
