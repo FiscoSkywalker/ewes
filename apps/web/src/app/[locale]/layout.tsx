@@ -10,6 +10,7 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
+import { getSiteUrl } from '@/lib/seo';
 import '../globals.css';
 import '@/styles/article-prose.css';
 
@@ -55,6 +56,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Base des URL relatives des métadonnées (images Open Graph, alternates).
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: 'EWES S.A.R.L. | Environnement, Eau et Services d’Ingénierie',
     template: '%s | EWES S.A.R.L.',

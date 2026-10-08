@@ -3,6 +3,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { getSiteSettings } from '@/lib/api/public-site-settings';
 import { getLegalDocument, type LegalSlug } from '@/lib/legal';
 import { LegalDocument } from '@/components/public/legal-document';
+import { pageSeo } from '@/lib/seo';
 
 /** Métadonnées d'un document légal : titre d'onglet et description dans la langue de la page. */
 export async function legalMetadata(
@@ -11,7 +12,11 @@ export async function legalMetadata(
 ): Promise<Metadata> {
   const { locale } = await params;
   const document = getLegalDocument(slug, locale, await getSiteSettings());
-  return { title: document.eyebrow, description: document.description };
+  return {
+    title: document.eyebrow,
+    description: document.description,
+    ...pageSeo(locale, `/${slug}`),
+  };
 }
 
 /**

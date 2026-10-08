@@ -12,6 +12,7 @@ import { buttonClass } from '@/components/public/ui';
 import { resolvePageHeader } from '@/lib/api/public-pages';
 import { getSiteSettings } from '@/lib/api/public-site-settings';
 import { addressFor } from '@/lib/site-settings';
+import { pageSeo } from '@/lib/seo';
 
 /**
  * Page Contact (blueprint/15_Public_Site_Pages.md) — page statique, point
@@ -29,7 +30,11 @@ export async function generateMetadata({
     title: t('title'),
     intro: t('description'),
   });
-  return { title: t('eyebrow'), description: header.description };
+  return {
+    title: t('eyebrow'),
+    description: header.description,
+    ...pageSeo(locale, '/contact'),
+  };
 }
 
 interface ChannelProps {

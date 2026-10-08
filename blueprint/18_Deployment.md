@@ -14,6 +14,8 @@ VPS Ubuntu, Docker Compose avec : reverse proxy Nginx (TLS obligatoire), applica
 
 L'API doit pouvoir joindre le site Next (`WEB_REVALIDATE_URL`, adresse interne, jamais publiée) : outre la revalidation à chaque publication, elle sert à la **parution programmée** — un minuteur interne (`PUBLICATION_WATCH_INTERVAL_SECONDS`, 60 s par défaut) revalide le cache du site à l'instant où la date d'un contenu est atteinte (voir `16_Rendering_State_Strategy.md` §2). Une seule instance de l'API est prévue (en lancer plusieurs ne casserait rien : revalider deux fois est inoffensif) ; si l'API est arrêtée à cet instant, le rattrapage se fait au redémarrage (jusqu'à 65 min en arrière).
 
+Le site Next doit connaître son adresse publique : `NEXT_PUBLIC_SITE_URL` (HTTPS définitif, sans barre finale) alimente les adresses canoniques, les `hreflang`, `sitemap.xml` et `robots.txt` (voir `15_Public_Site_Pages.md` §4). Variable lue **à la construction** de l'image (préfixe `NEXT_PUBLIC_`) : la fixer avant le build de production, sans quoi le sitemap annoncerait `http://localhost:3000`. Après la mise en ligne, déclarer le sitemap dans la Google Search Console.
+
 # 3. Pipeline de livraison
 
 Sur chaque changement : formatage, lint, vérification de types, tests pertinents, build. À la mise en production : sauvegarde de la base de données avant migration, exécution de la migration Prisma revue, déploiement des images, vérification de santé (health check), surveillance post-déploiement. Un rollback restaure l'image applicative précédente ; toute migration non réversible nécessite un plan de restauration testé au préalable.

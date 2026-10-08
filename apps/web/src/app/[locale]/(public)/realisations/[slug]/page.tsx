@@ -19,6 +19,7 @@ import { ProjectCard } from '@/components/public/project-card';
 import { ProjectCover } from '@/components/public/project-cover';
 import { ShareLinks } from '@/components/public/share-links';
 import { TextLink } from '@/components/public/ui';
+import { pageAlternates, pageOpenGraph } from '@/lib/seo';
 
 /**
  * Fiche d'une réalisation (`/realisations/{slug}`) — Server Component, SSG
@@ -49,14 +50,15 @@ export async function generateMetadata({
   return {
     title: project.mission,
     description: description || undefined,
-    openGraph: {
+    alternates: pageAlternates(locale, `/realisations/${slug}`),
+    openGraph: pageOpenGraph(locale, `/realisations/${slug}`, {
       type: 'article',
       title: project.mission,
       description: description || undefined,
       images: project.image
         ? [{ url: project.image, alt: project.imageAlt }]
         : [],
-    },
+    }),
   };
 }
 

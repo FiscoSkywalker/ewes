@@ -11,6 +11,7 @@ import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
 import { getAllNews, getNewsItem, readingMinutes } from '@/lib/news';
 import { TextLink } from '@/components/public/ui';
+import { pageAlternates, pageOpenGraph } from '@/lib/seo';
 
 /**
  * Page d'une actualité (`/actualites/{id}`) — Server Component, SSG : une
@@ -39,13 +40,14 @@ export async function generateMetadata({
   return {
     title: item.title,
     description: item.excerpt,
-    openGraph: {
+    alternates: pageAlternates(locale, `/actualites/${slug}`),
+    openGraph: pageOpenGraph(locale, `/actualites/${slug}`, {
       type: 'article',
       title: item.title,
       description: item.excerpt,
       publishedTime: item.date,
       images: item.image ? [{ url: item.image, alt: item.imageAlt }] : [],
-    },
+    }),
   };
 }
 

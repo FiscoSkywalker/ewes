@@ -19,6 +19,7 @@ import {
   type ServicePole,
 } from '@/components/public/service-chapter';
 import { ButtonLink } from '@/components/public/ui';
+import { pageSeo } from '@/lib/seo';
 
 /**
  * Page Nos services (blueprint/15_Public_Site_Pages.md) — SSG/ISR, Server
@@ -36,7 +37,11 @@ export async function generateMetadata({
     title: t('title'),
     intro: t('description'),
   });
-  return { title: t('eyebrow'), description: header.description };
+  return {
+    title: t('eyebrow'),
+    description: header.description,
+    ...pageSeo(locale, '/services'),
+  };
 }
 
 const AUDIENCE_ICONS = [Pickaxe, Landmark, GraduationCap, FlaskConical];

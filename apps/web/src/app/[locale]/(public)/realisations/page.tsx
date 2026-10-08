@@ -5,6 +5,7 @@ import type { ProjectCategoryOption } from '@/data/projects';
 import { RealisationsGallery } from '@/components/public/realisations-gallery';
 import { SectionHeading } from '@/components/public/section-heading';
 import { resolvePageHeader } from '@/lib/api/public-pages';
+import { pageSeo } from '@/lib/seo';
 
 /**
  * Page Nos réalisations (blueprint/12_Realisations_Portfolio_System.md) —
@@ -20,7 +21,11 @@ export async function generateMetadata({
     title: t('title'),
     intro: t('description'),
   });
-  return { title: t('eyebrow'), description: header.description };
+  return {
+    title: t('eyebrow'),
+    description: header.description,
+    ...pageSeo(locale, '/realisations'),
+  };
 }
 
 export default async function RealisationsPage({

@@ -15,6 +15,7 @@ import { getExperts } from '@/lib/api/public-experts';
 import { getSiteSettings } from '@/lib/api/public-site-settings';
 import { addressFor } from '@/lib/site-settings';
 import { ButtonLink } from '@/components/public/ui';
+import { pageSeo } from '@/lib/seo';
 
 /**
  * Page À propos (blueprint/15_Public_Site_Pages.md) — SSG/ISR, Server
@@ -31,7 +32,11 @@ export async function generateMetadata({
     title: t('title'),
     intro: t('description'),
   });
-  return { title: t('eyebrow'), description: header.description };
+  return {
+    title: t('eyebrow'),
+    description: header.description,
+    ...pageSeo(locale, '/a-propos'),
+  };
 }
 
 export default async function AboutPage({

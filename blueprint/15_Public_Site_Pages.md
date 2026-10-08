@@ -28,6 +28,12 @@ Chaque page à données définit ses états : chargement, vide, erreur. La page 
 
 Accueil, À propos, Nos services : SSG/ISR à revalidation longue (contenu stable). Nos réalisations, Actualités & publications : ISR à revalidation courte ou SSR selon la fraîcheur requise (voir `16_Rendering_State_Strategy.md`). Documents (liste publique) : ISR. Contact : page statique avec formulaire en composant client isolé.
 
+## Référencement (SEO)
+
+Source unique : `apps/web/src/lib/seo.ts`. Chaque page publique déclare dans ses métadonnées une adresse **canonique** (auto-référente, par langue), les liens **`hreflang`** `fr` / `en` / `x-default` (FR) et les balises **Open Graph** (adresse, nom du site, langue ; type `article` pour les fiches de réalisation et les actualités). Une rubrique filtrée de `/actualites` renvoie vers la liste complète ; les pages suivantes (`?page=N`) sont canoniques pour elles-mêmes. L'URL publique du site vient de `NEXT_PUBLIC_SITE_URL` (base de `metadataBase`, du sitemap et du robots) : à fixer sur l'adresse HTTPS définitive en production.
+
+`/sitemap.xml` (`app/sitemap.ts`) liste les pages fixes, **toutes les fiches de réalisations publiées** et les actualités publiées, dans chaque langue avec leurs alternates ; brouillons, archivés et supprimés en sont absents. Il se rafraîchit à la demande avec les étiquettes de cache `realisations` et `articles` (sinon toutes les heures). `/robots.txt` (`app/robots.ts`) ouvre le site public aux robots, exclut `/api/` et renvoie vers le sitemap ; le portail d'administration n'y est pas nommé (il porte `noindex` dans son layout), pour ne pas en afficher l'adresse.
+
 # 5. Routes protégées
 
 L'accès à l'espace documentaire privé depuis la page Documents redirige vers l'authentification si l'utilisateur n'est pas connecté, puis vers le portail documentaire (zone client-side, hors SEO). Une session expirée ramène vers une route sûre sans exposer de contenu mis en cache localement.

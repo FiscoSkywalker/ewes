@@ -4,6 +4,7 @@ import { getPublicDocuments } from '@/lib/api/public-documents';
 import { DocumentsLibrary } from '@/components/public/documents-library';
 import { SectionHeading } from '@/components/public/section-heading';
 import { resolvePageHeader } from '@/lib/api/public-pages';
+import { pageSeo } from '@/lib/seo';
 
 /**
  * Page Documents (blueprint/15_Public_Site_Pages.md §5) — Server Component
@@ -19,7 +20,11 @@ export async function generateMetadata({
     title: t('title'),
     intro: t('description'),
   });
-  return { title: t('eyebrow'), description: header.description };
+  return {
+    title: t('eyebrow'),
+    description: header.description,
+    ...pageSeo(locale, '/documents'),
+  };
 }
 
 export default async function DocumentsPage({

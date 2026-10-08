@@ -14,6 +14,7 @@ import {
   FilterChip,
   Pagination,
 } from '@/components/public/ui';
+import { pageAlternates, pageOpenGraph } from '@/lib/seo';
 
 /**
  * Page Actualités & publications (blueprint/15_Public_Site_Pages.md) —
@@ -31,14 +32,21 @@ export async function generateMetadata({
   searchParams: SearchParams;
 }): Promise<Metadata> {
   const t = await getTranslations('NewsPage');
-  const header = await resolvePageHeader('actualites', await getLocale(), {
+  const locale = await getLocale();
+  const header = await resolvePageHeader('actualites', locale, {
     title: t('title'),
     intro: t('description'),
   });
-  const page = parsePage((await searchParams).page);
+  const { page: rawPage, categorie } = await searchParams;
+  const page = parsePage(rawPage);
+  // Une rubrique filtrée est une vue de la liste : elle renvoie vers la liste
+  // complète ; les pages suivantes sont canoniques pour elles-mêmes.
+  const search = page > 1 && !parseCategory(categorie) ? `?page=${page}` : '';
   return {
     title: page > 1 ? t('pageTitle', { page }) : t('eyebrow'),
     description: header.description,
+    alternates: pageAlternates(locale, '/actualites', search),
+    openGraph: pageOpenGraph(locale, '/actualites', {}),
   };
 }
 

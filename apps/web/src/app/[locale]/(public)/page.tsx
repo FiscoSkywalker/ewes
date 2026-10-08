@@ -5,6 +5,7 @@ import { getProjects } from '@/lib/api/public-realisations';
 import { getPoleServices } from '@/lib/api/public-services';
 import { HomeExperience } from '@/components/home/home-experience';
 import { getHomeNews } from '@/lib/news';
+import { pageSeo } from '@/lib/seo';
 
 /**
  * Accueil — blueprint/15_Public_Site_Pages.md. Server Component pour les
@@ -25,6 +26,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: 'Hero' });
   return {
     description: t('lead'),
+    ...pageSeo(locale, ''),
   };
 }
 
