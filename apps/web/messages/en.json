@@ -43,11 +43,15 @@
     "training": "Training",
     "backToTop": "Back to top"
   },
+  "HomePage": {
+    "eyebrow": "Home",
+    "title": "EWES S.A.R.L. | Environment, Water and Engineering Services",
+    "description": "Impact studies, environmental audits, water resources and engineering works for the mining, oil and public sectors in the Democratic Republic of Congo."
+  },
   "Hero": {
     "eyebrow": "Environment, water and engineering works",
     "titleLine1": "Field data for\n",
     "titleHighlight": "lasting decisions.",
-    "lead": "Impact studies, environmental audits, water resources and engineering works for the mining, oil and public sectors in the Democratic Republic of Congo.",
     "shieldLabel": "Congolese & international experts",
     "locationLabel": "Lubumbashi · DR Congo",
     "scrollLabel": "Scroll down",

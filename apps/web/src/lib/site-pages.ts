@@ -6,10 +6,14 @@
  * (`messages/*.json`) que le site affiche tant que la page n'est pas publiée
  * depuis le portail.
  *
- * L'Accueil n'en fait pas partie : sa mise en scène (décor WebGL, sections
- * animées) est composée à part, voir `16_Rendering_State_Strategy.md` §2.
+ * L'Accueil en fait partie pour deux textes seulement : le paragraphe d'accroche
+ * du premier écran et le titre d'onglet / la description de référencement.
+ * Sa mise en scène (titre composé du hero, décor WebGL, sections animées) est
+ * composée à part, voir `16_Rendering_State_Strategy.md` §2 : les autres
+ * sections restent dans `messages/`.
  */
 export type SitePageSlug =
+  | 'accueil'
   | 'a-propos'
   | 'services'
   | 'realisations'
@@ -25,6 +29,7 @@ export interface SitePage {
   href: string;
   /** Espace de noms des textes d'origine dans `messages/*.json`. */
   namespace:
+    | 'HomePage'
     | 'AboutPage'
     | 'ServicesPage'
     | 'RealisationsPage'
@@ -33,9 +38,40 @@ export interface SitePage {
     | 'ContactPage';
   /** Ce que la page présente, pour situer l'écran de modification. */
   purpose: string;
+  /**
+   * Accueil : le « titre » n'est pas affiché en grand (le titre du hero est
+   * composé à part) mais devient le titre d'onglet et de résultat de recherche,
+   * et l'« introduction » le paragraphe d'accroche. Libellés du formulaire
+   * adaptés en conséquence.
+   */
+  header?: {
+    cardDescription: string;
+    titleLabel: string;
+    titleHint: string;
+    introLabel: string;
+    introHint: string;
+  };
 }
 
 export const SITE_PAGES: readonly SitePage[] = [
+  {
+    slug: 'accueil',
+    label: 'Accueil',
+    href: '/',
+    namespace: 'HomePage',
+    purpose:
+      'Le premier écran du site : accroche, titre d’onglet et référencement. Le reste de l’Accueil (décor, sections) n’est pas modifiable ici.',
+    header: {
+      cardDescription:
+        'Le titre de l’onglet du navigateur et le paragraphe d’accroche sous le grand titre du site. Le grand titre lui-même ne se modifie pas ici.',
+      titleLabel: 'Titre de l’onglet et des résultats de recherche',
+      titleHint:
+        'Le nom du site tel qu’il apparaît dans l’onglet du navigateur et dans Google, en une ligne.',
+      introLabel: 'Texte d’accroche',
+      introHint:
+        'Une à deux phrases sous le grand titre du premier écran : ce qu’EWES fait, pour qui.',
+    },
+  },
   {
     slug: 'a-propos',
     label: 'À propos',

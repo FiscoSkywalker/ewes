@@ -209,7 +209,7 @@ function PageDetail({ sitePage }: { sitePage: SitePage }) {
                 updatedAt={record.updatedAt}
                 slug={record.slug}
                 noun={{ label: 'page', feminine: true }}
-                checklist={checklist(record)}
+                checklist={checklist(record, sitePage)}
                 publicHref={`/fr${sitePage.href}`}
                 allowArchive={false}
                 allowDelete={false}
@@ -218,8 +218,16 @@ function PageDetail({ sitePage }: { sitePage: SitePage }) {
               />
               <TranslationCard
                 pairs={[
-                  ['Titre', record.titleFr, record.titleEn],
-                  ['Introduction', record.contentFr, record.contentEn],
+                  [
+                    sitePage.header ? 'Titre de l’onglet' : 'Titre',
+                    record.titleFr,
+                    record.titleEn,
+                  ],
+                  [
+                    sitePage.header?.introLabel ?? 'Introduction',
+                    record.contentFr,
+                    record.contentEn,
+                  ],
                   [
                     'Description pour les moteurs de recherche',
                     record.metaDescriptionFr,
@@ -254,12 +262,19 @@ function PageDetail({ sitePage }: { sitePage: SitePage }) {
 }
 
 /** Prérequis de publication : mêmes que l'API (titre et introduction en français). */
-function checklist(page: AdminPage): ChecklistItem[] {
+function checklist(page: AdminPage, sitePage: SitePage): ChecklistItem[] {
   return [
     { label: 'Titre en français', done: page.titleFr.trim() !== '' },
-    { label: 'Introduction en français', done: page.contentFr.trim() !== '' },
     {
-      label: 'Version anglaise du titre et de l’introduction',
+      label: sitePage.header
+        ? 'Texte d’accroche en français'
+        : 'Introduction en français',
+      done: page.contentFr.trim() !== '',
+    },
+    {
+      label: sitePage.header
+        ? 'Version anglaise du titre et de l’accroche'
+        : 'Version anglaise du titre et de l’introduction',
       done: Boolean(page.titleEn?.trim() && page.contentEn?.trim()),
       optional: true,
       hint: 'Sans elle, le site en anglais affiche le texte français.',

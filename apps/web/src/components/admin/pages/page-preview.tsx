@@ -46,6 +46,8 @@ export function PagePreview({
   const [locale, setLocale] = useState<Locale>('fr');
   const current = shown(values, locale);
   const eyebrow = texts?.[locale].eyebrow ?? sitePage.label;
+  // Accueil : le titre est celui de l'onglet, pas un titre affiché en grand.
+  const titleIsTabTitle = Boolean(sitePage.header);
 
   return (
     <Card
@@ -92,21 +94,26 @@ export function PagePreview({
             <span aria-hidden="true" className="h-px w-5 bg-brand" />
             {eyebrow}
           </p>
-          <p
-            className={cx(
-              'text-balance text-[22px] font-semibold leading-[1.15] tracking-tight',
-              current.title ? 'text-ink' : 'text-ink-subtle',
-            )}
-          >
-            {current.title || 'Titre de la page'}
-          </p>
+          {!titleIsTabTitle && (
+            <p
+              className={cx(
+                'text-balance text-[22px] font-semibold leading-[1.15] tracking-tight',
+                current.title ? 'text-ink' : 'text-ink-subtle',
+              )}
+            >
+              {current.title || 'Titre de la page'}
+            </p>
+          )}
           <p
             className={cx(
               'mt-3 line-clamp-6 text-[13px] leading-relaxed',
               current.intro ? 'text-ink-muted' : 'text-ink-subtle',
             )}
           >
-            {current.intro || 'L’introduction apparaîtra ici.'}
+            {current.intro ||
+              (titleIsTabTitle
+                ? 'Le texte d’accroche apparaîtra ici.'
+                : 'L’introduction apparaîtra ici.')}
           </p>
         </div>
       </div>
@@ -129,7 +136,9 @@ export function PagePreview({
             {sitePage.href}
           </p>
           <p className="mt-0.5 text-[15.5px] leading-snug text-brand">
-            {eyebrow} | EWES S.A.R.L.
+            {titleIsTabTitle
+              ? current.title || 'Titre de l’onglet'
+              : `${eyebrow} | EWES S.A.R.L.`}
           </p>
           <p
             className={cx(

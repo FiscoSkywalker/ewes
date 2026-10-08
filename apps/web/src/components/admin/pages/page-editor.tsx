@@ -121,13 +121,19 @@ export function PageEditor({
 
         <Card
           title="En-tête de la page"
-          description={`Le titre et l’introduction affichés en haut de la page « ${sitePage.label} ».`}
+          description={
+            sitePage.header?.cardDescription ??
+            `Le titre et l’introduction affichés en haut de la page « ${sitePage.label} ».`
+          }
         >
           <div className="space-y-6">
             <BilingualField
-              label="Titre"
+              label={sitePage.header?.titleLabel ?? 'Titre'}
               requiredLocales={['fr']}
-              hint="La phrase d’accroche en grand : une idée, en une ligne ou deux."
+              hint={
+                sitePage.header?.titleHint ??
+                'La phrase d’accroche en grand : une idée, en une ligne ou deux.'
+              }
               filled={{
                 fr: Boolean(values.titleFr),
                 en: Boolean(values.titleEn),
@@ -146,9 +152,12 @@ export function PageEditor({
             </BilingualField>
 
             <BilingualField
-              label="Introduction"
+              label={sitePage.header?.introLabel ?? 'Introduction'}
               requiredLocales={['fr']}
-              hint="Deux à quatre phrases sous le titre : pour qui, pour quoi."
+              hint={
+                sitePage.header?.introHint ??
+                'Deux à quatre phrases sous le titre : pour qui, pour quoi.'
+              }
               filled={{
                 fr: Boolean(values.contentFr),
                 en: Boolean(values.contentEn),

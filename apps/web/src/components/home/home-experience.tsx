@@ -18,7 +18,10 @@ import { scrollToElement } from '@/lib/smooth-scroll';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useWebglAvailable } from '@/hooks/useWebglAvailable';
-import type { PoleContent, ServicePole } from '@/components/public/service-chapter';
+import type {
+  PoleContent,
+  ServicePole,
+} from '@/components/public/service-chapter';
 import type { ShowcaseDocument } from '@/components/public/documents-showcase';
 import type { Project } from '@/data/projects';
 import type { HomeNews } from '@/lib/news';
@@ -36,11 +39,14 @@ import type { HomeNews } from '@/lib/news';
  * documents → contact.
  */
 export function HomeExperience({
+  lead,
   news,
   poles,
   projects,
   documents,
 }: {
+  /** Paragraphe d'accroche du hero (page « accueil » du portail, sinon texte d'origine). */
+  lead: string;
   news: HomeNews;
   /** Références publiées (API, repli sur les messages). */
   projects: Project[];
@@ -57,7 +63,7 @@ export function HomeExperience({
 
   return (
     <div className="relative bg-background text-sand selection:bg-primary selection:text-white">
-      <Hero onExplore={() => scrollToElement(aboutRef.current)} />
+      <Hero lead={lead} onExplore={() => scrollToElement(aboutRef.current)} />
 
       <ClientsMarquee />
 

@@ -6,11 +6,13 @@ import { useSectionActivity } from '@/hooks/useSectionActivity';
 import { ButtonLink } from '@/components/public/ui';
 
 interface HeroProps {
+  /** Paragraphe d'accroche, piloté depuis le portail (page « accueil »). */
+  lead: string;
   onExplore: () => void;
 }
 
 /** Premier écran de l'Accueil — homepage uniquement. */
-export function Hero({ onExplore }: HeroProps) {
+export function Hero({ lead, onExplore }: HeroProps) {
   const t = useTranslations('Hero');
   const { ref, active } = useSectionActivity<HTMLElement>();
 
@@ -48,7 +50,7 @@ export function Hero({ onExplore }: HeroProps) {
           <h1 className="hero-title text-sand">
             {t('titleLine1')} <em>{t('titleHighlight')}</em>
           </h1>
-          <p className="hero-lead mt-7 text-sand/75">{t('lead')}</p>
+          <p className="hero-lead mt-7 text-sand/75">{lead}</p>
 
           <div className="pointer-events-auto mt-8 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/contact" icon={ArrowUpRight}>

@@ -43,11 +43,15 @@
     "training": "Formation",
     "backToTop": "Retour en haut"
   },
+  "HomePage": {
+    "eyebrow": "Accueil",
+    "title": "EWES S.A.R.L. | Environnement, Eau et Services d’Ingénierie",
+    "description": "Études d’impact, audits environnementaux, ressources en eau et travaux d’ingénierie pour les secteurs minier, pétrolier et public en République Démocratique du Congo."
+  },
   "Hero": {
     "eyebrow": "Environnement, eau et travaux d’ingénierie",
     "titleLine1": "Des données de\nterrain pour des\n",
     "titleHighlight": "décisions durables.",
-    "lead": "Études d’impact, audits environnementaux, ressources en eau et travaux d’ingénierie pour les secteurs minier, pétrolier et public en République Démocratique du Congo.",
     "shieldLabel": "Experts congolais & étrangers",
     "locationLabel": "Lubumbashi · RD Congo",
     "scrollLabel": "Faire défiler",
