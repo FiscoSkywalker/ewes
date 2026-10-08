@@ -3,7 +3,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import * as argon2 from 'argon2';
-import { AuthService } from './auth.service.js';
+import { AuthService, MAX_ACTIVE_SESSIONS } from './auth.service.js';
 
 vi.mock('argon2', () => ({
   verify: vi.fn(),
@@ -47,6 +47,7 @@ describe('AuthService', () => {
     session: {
       create: ReturnType<typeof vi.fn>;
       findUnique: ReturnType<typeof vi.fn>;
+      findMany: ReturnType<typeof vi.fn>;
       update: ReturnType<typeof vi.fn>;
       updateMany: ReturnType<typeof vi.fn>;
     };
@@ -79,6 +80,7 @@ describe('AuthService', () => {
       session: {
         create: vi.fn(async ({ data }) => ({ ...data, revokedAt: null })),
         findUnique: vi.fn(),
+        findMany: vi.fn(async () => []),
         update: vi.fn(),
         updateMany: vi.fn(),
       },
@@ -491,6 +493,77 @@ describe('AuthService', () => {
     it('is idempotent for an already-invalid token', async () => {
       await expect(service.logout('garbage')).resolves.toBeUndefined();
       expect(prisma.session.updateMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('sessions of one browser or one person', () => {
+    const logIn = (replaces?: string) => {
+      usersService.findByEmail.mockResolvedValue(makeUser());
+      vi.mocked(argon2.verify).mockResolvedValue(true);
+      return service.login(
+        'admin@ewes.example',
+        'correct-password',
+        CTX,
+        replaces,
+      );
+    };
+
+    it('closes the session the browser still held once the new one is open', async () => {
+      const first = await logIn();
+      const firstSession = prisma.session.create.mock.calls[0][0].data;
+      prisma.session.updateMany.mockClear();
+
+      await logIn(first.refreshToken);
+
+      expect(prisma.session.create).toHaveBeenCalledTimes(2);
+      expect(prisma.session.updateMany).toHaveBeenCalledWith({
+        where: { id: firstSession.id, revokedAt: null },
+        data: { revokedAt: expect.any(Date) },
+      });
+    });
+
+    it('ignores a garbage replaced token and still logs in', async () => {
+      const result = await logIn('garbage');
+
+      expect(result.accessToken).toEqual(expect.any(String));
+      expect(prisma.session.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('still logs in when the replaced session cannot be closed', async () => {
+      const first = await logIn();
+      prisma.session.updateMany.mockRejectedValue(new Error('db down'));
+
+      await expect(logIn(first.refreshToken)).resolves.toMatchObject({
+        accessToken: expect.any(String),
+      });
+    });
+
+    it('keeps at most MAX_ACTIVE_SESSIONS: the older ones are closed, the new one never', async () => {
+      prisma.session.findMany.mockResolvedValue([
+        { id: 'old-1' },
+        { id: 'old-2' },
+      ]);
+
+      await logIn();
+
+      const query = prisma.session.findMany.mock.calls[0][0];
+      expect(query.where).toMatchObject({ userId: 'user-1', revokedAt: null });
+      expect(query.orderBy).toEqual({ createdAt: 'desc' });
+      expect(query.skip).toBe(MAX_ACTIVE_SESSIONS);
+      expect(prisma.session.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['old-1', 'old-2'] } },
+        data: { revokedAt: expect.any(Date) },
+      });
+    });
+
+    it('closes nothing while under the limit, and still logs in if the limit cannot be applied', async () => {
+      await logIn();
+      expect(prisma.session.updateMany).not.toHaveBeenCalled();
+
+      prisma.session.findMany.mockRejectedValue(new Error('db down'));
+      await expect(logIn()).resolves.toMatchObject({
+        accessToken: expect.any(String),
+      });
     });
   });
 });

@@ -32,6 +32,9 @@ export interface IssuedTokens {
   refreshToken: string;
 }
 
+/** Sessions actives par personne (appareils connectés) ; la plus ancienne cède la place à la suivante. */
+export const MAX_ACTIVE_SESSIONS = 5;
+
 const INVALID_CREDENTIALS = {
   code: 'INVALID_CREDENTIALS',
   // blueprint/10_Security.md §1 : ne jamais révéler si le compte existe.
@@ -60,7 +63,16 @@ export class AuthService {
     private readonly lockedNotifier: AccountLockedNotifier,
   ) {}
 
-  async login(email: string, password: string, ctx: RequestContext) {
+  /**
+   * `replacesRefreshToken` : le jeton que le navigateur détient encore, dont la
+   * session est fermée une fois la nouvelle ouverte (voir `closeReplacedSession`).
+   */
+  async login(
+    email: string,
+    password: string,
+    ctx: RequestContext,
+    replacesRefreshToken?: string,
+  ) {
     // Verrouillage d'abord : tant qu'il dure, même le bon mot de passe est refusé
     // (sinon on pourrait continuer à deviner). Même réponse pour une adresse
     // inconnue : le verrouillage ne révèle pas l'existence d'un compte.
@@ -107,6 +119,7 @@ export class AuthService {
 
     const tokens = await this.issueTokens(user.id, user.role, ctx);
     await this.traceLoginSuccess(user.id, 'password');
+    await this.closeReplacedSession(replacesRefreshToken);
     await this.forgetFailures(email);
     return {
       ...tokens,
@@ -129,10 +142,16 @@ export class AuthService {
    * session : celui qui détient le lien secret vient de prouver sa
    * possession de la boîte e-mail, comme pour une connexion.
    */
-  async acceptInvitation(token: string, password: string, ctx: RequestContext) {
+  async acceptInvitation(
+    token: string,
+    password: string,
+    ctx: RequestContext,
+    replacesRefreshToken?: string,
+  ) {
     const { user } = await this.invitations.accept(token, password);
     const tokens = await this.issueTokens(user.id, user.role, ctx);
     await this.traceLoginSuccess(user.id, 'invitation');
+    await this.closeReplacedSession(replacesRefreshToken);
     await this.forgetFailures(user.email);
     return { ...tokens, user };
   }
@@ -192,6 +211,47 @@ export class AuthService {
       where: { id: payload.sid, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+  }
+
+  /**
+   * Une reconnexion sur le même navigateur remplace le cookie de session : sans
+   * cela, l'ancienne session resterait « active » jusqu'à son expiration, sans
+   * plus aucun jeton pour la fermer. Détenir le jeton suffit à la fermer, comme
+   * pour la déconnexion ; un jeton invalide ou déjà fermé est ignoré, et une
+   * panne ne doit pas faire échouer une connexion déjà réussie.
+   */
+  private async closeReplacedSession(refreshToken: string | undefined) {
+    if (!refreshToken) return;
+    try {
+      await this.logout(refreshToken);
+    } catch (error) {
+      this.logger.error(`Ancienne session non fermée : ${String(error)}`);
+    }
+  }
+
+  /**
+   * Plafond de sessions actives par personne : à l'ouverture de la suivante, les
+   * plus anciennes au-delà de `MAX_ACTIVE_SESSIONS` sont fermées. Couvre les
+   * cookies perdus ou effacés, qu'aucune reconnexion ne peut rattacher à leur
+   * session. Sans effet sur la réponse en cas de panne : la nouvelle session est
+   * déjà ouverte.
+   */
+  private async capActiveSessions(userId: string) {
+    try {
+      const surplus = await this.prisma.session.findMany({
+        where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+        orderBy: { createdAt: 'desc' },
+        skip: MAX_ACTIVE_SESSIONS,
+        select: { id: true },
+      });
+      if (surplus.length === 0) return;
+      await this.prisma.session.updateMany({
+        where: { id: { in: surplus.map((session) => session.id) } },
+        data: { revokedAt: new Date() },
+      });
+    } catch (error) {
+      this.logger.error(`Plafond de sessions non appliqué : ${String(error)}`);
+    }
   }
 
   /**
@@ -326,6 +386,7 @@ export class AuthService {
         ipAddress: ctx.ipAddress,
       },
     });
+    await this.capActiveSessions(userId);
 
     return { accessToken, refreshToken };
   }

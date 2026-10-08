@@ -117,6 +117,13 @@ Blocages : <dépendance non résolue, question ouverte pour EWES ou Planning Eve
 Prochaine étape : <action concrète et immédiatement actionnable pour la prochaine session>
 ```
 
+### Session — 2026-10-08 (57) — Claude Code
+Fait : **appareils connectés en double dans « Mon profil »** (3 sessions Chrome pour un seul poste). Cause : une connexion ouvrait toujours une session sans fermer celle du navigateur, dont le cookie était écrasé ; l’ancienne restait active 7 jours. Correctifs : (1) `login` et `acceptInvitation` acceptent `replacesRefreshToken` (DTO optionnel, 2048 car. max) et ferment cette session via `logout` une fois la nouvelle ouverte (au mieux) ; les routes BFF `api/auth/login` et `api/auth/invitation` le lisent dans le cookie de rafraîchissement ; (2) `issueTokens` applique un plafond `MAX_ACTIVE_SESSIONS` = 5 (les plus anciennes au-delà sont fermées, au mieux).
+Vérifié : 5 tests unitaires et 3 tests e2e (remplacement, jeton inutilisable ignoré, 7 connexions → 5 sessions et la plus récente se renouvelle) ; suite e2e complète (215) et unitaires du module auth verts ; oxlint et eslint propres. `tsc` signale deux erreurs déjà présentes et sans lien (`test/support/smtp-sink.ts` : `closeAllConnections`, types `.next` obsolètes).
+Décisions : le plafond de 5 est un choix de cette session, à valider avec EWES (constante dans `auth.service.ts`). Fermetures non tracées dans l’audit. Les sessions déjà orphelines en base ne sont pas rattrapées : elles expirent seules (7 j) ou se ferment par « Fermer les autres sessions ».
+Blocages : aucun.
+Prochaine étape : inchangée (voir session (55)).
+
 ### Session — 2026-10-08 (56) — Claude Code
 Fait : **noms de fichiers accentués corrompus** (« PÃ´le Eau.png », « IngÃ©nieurs… » dans la médiathèque). Cause : Multer/busboy décode par défaut le nom d'un fichier téléversé en latin1, alors que le navigateur l'envoie en UTF-8. Correctif à la source : `common/http/upload-options.ts` (`singleFileUploadOptions`, `defParamCharset: 'utf8'`) utilisé par les 5 routes d'upload (médiathèque, photo de profil, documents privés — envoi et remplacement —, documents publics). Le nom d'un document privé est dérivé du nom de fichier : il était touché aussi. Migration `20261008120000_repair_mojibake_file_names` : répare `media.originalName` et `private_documents.name` (ré-encodage latin1→UTF-8, valeur réécrite seulement si le résultat est de l'UTF-8 valide ; un nom correct n'est jamais modifié). Appliquée en base de dev : 9 images réparées, aucun cas ambigu restant.
 Vérifié : deux tests e2e de régression (médiathèque, documents privés) — en échec sur l'ancien code avec exactement la valeur corrompue, verts après ; suites e2e média, documents privés, documents publics, profil et unitaires (118) vertes.

@@ -34,7 +34,12 @@ export class AuthController {
   // blueprint/10_Security.md §3 : les endpoints d'authentification sont limités en fréquence.
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   login(@Body() dto: LoginDto, @Req() req: Request): Promise<AuthTokensDto> {
-    return this.authService.login(dto.email, dto.password, requestContext(req));
+    return this.authService.login(
+      dto.email,
+      dto.password,
+      requestContext(req),
+      dto.replacesRefreshToken,
+    );
   }
 
   @Post('refresh')
@@ -74,6 +79,7 @@ export class AuthController {
       dto.token,
       dto.password,
       requestContext(req),
+      dto.replacesRefreshToken,
     );
   }
 

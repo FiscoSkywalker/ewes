@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import {
   InvitationTokenDto,
   PASSWORD_MAX_LENGTH,
@@ -18,4 +18,13 @@ export class AcceptInvitationDto extends InvitationTokenDto {
   })
   @MaxLength(PASSWORD_MAX_LENGTH)
   password!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Jeton de rafraîchissement que le navigateur détient encore : sa session est fermée une fois la nouvelle ouverte.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  replacesRefreshToken?: string;
 }

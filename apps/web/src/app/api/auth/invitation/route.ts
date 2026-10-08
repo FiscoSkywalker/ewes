@@ -52,6 +52,9 @@ export async function POST(request: Request) {
     return NextResponse.json(BAD_REQUEST, { status: 400 });
   }
 
+  const jar = await cookies();
+  const replacesRefreshToken = jar.get(REFRESH_TOKEN_COOKIE)?.value;
+
   let apiRes: Response;
   try {
     apiRes = await fetch(`${API_URL}/auth/invitations/${action}`, {
@@ -62,7 +65,11 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify(
         action === 'accept'
-          ? { token: body.token, password: body.password }
+          ? {
+              token: body.token,
+              password: body.password,
+              replacesRefreshToken,
+            }
           : { token: body.token },
       ),
       cache: 'no-store',
@@ -93,7 +100,6 @@ export async function POST(request: Request) {
 
   if (action === 'inspect') return NextResponse.json(data);
 
-  const jar = await cookies();
   const options = authCookieOptions();
   jar.set(ACCESS_TOKEN_COOKIE, data.accessToken, options);
   jar.set(REFRESH_TOKEN_COOKIE, data.refreshToken, options);

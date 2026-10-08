@@ -128,6 +128,101 @@ describe('Auth (e2e)', () => {
     expect(refreshRes.body.code).toBe('TOKEN_INVALID');
   });
 
+  describe('sessions actives', () => {
+    let ownerId: string;
+    const ownerEmail = `e2e-auth-sessions-${Date.now()}@ewes.example`;
+    let seq = 0;
+    /** IP distincte par requête : la limite de 5 connexions/min par IP ne gêne pas ces tests. */
+    const logIn = (extra: object = {}) =>
+      request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .set('X-Forwarded-For', `10.78.${(seq >> 8) & 255}.${++seq & 255}`)
+        .send({ email: ownerEmail, password, ...extra });
+    const active = () =>
+      prisma.session.count({
+        where: {
+          userId: ownerId,
+          revokedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+      });
+
+    beforeAll(async () => {
+      const owner = await prisma.user.create({
+        data: {
+          email: ownerEmail,
+          passwordHash: await argon2.hash(password, { type: argon2.argon2id }),
+          fullName: 'E2E Sessions',
+          role: Role.UTILISATEUR,
+        },
+      });
+      ownerId = owner.id;
+    });
+
+    afterAll(async () => {
+      await prisma.user.delete({ where: { id: ownerId } });
+    });
+
+    it('replaces the session of the browser on a new login instead of piling up', async () => {
+      const first = await logIn().expect(200);
+      expect(await active()).toBe(1);
+
+      const second = await logIn({
+        replacesRefreshToken: first.body.refreshToken,
+      }).expect(200);
+
+      expect(await active()).toBe(1);
+      // L'ancienne session ne se renouvelle plus ; la nouvelle, si.
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: first.body.refreshToken })
+        .expect(401);
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: second.body.refreshToken })
+        .expect(200);
+      await prisma.session.deleteMany({ where: { userId: ownerId } });
+    });
+
+    it('leaves the other sessions alone and does not fail on an unusable replaced token', async () => {
+      const kept = await logIn().expect(200);
+      await logIn({ replacesRefreshToken: 'pas-un-jeton' }).expect(200);
+      await logIn({ replacesRefreshToken: 'x'.repeat(2049) }).expect(400);
+
+      expect(await active()).toBe(2);
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: kept.body.refreshToken })
+        .expect(200);
+      await prisma.session.deleteMany({ where: { userId: ownerId } });
+    });
+
+    it('keeps at most 5 active sessions: the oldest is closed, the newest stays usable', async () => {
+      const opened: string[] = [];
+      for (let i = 0; i < 7; i++) {
+        const res = await logIn().expect(200);
+        opened.push(res.body.refreshToken);
+        // `createdAt` distincts : l'ordre des ouvertures est celui de l'ancienneté.
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      }
+
+      expect(await active()).toBe(5);
+      // Les deux plus anciennes sont fermées, la plus récente fonctionne.
+      for (const refreshToken of opened.slice(0, 2)) {
+        await request(app.getHttpServer())
+          .post('/api/v1/auth/refresh')
+          .send({ refreshToken })
+          .expect(401);
+      }
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: opened[6] })
+        .expect(200);
+      // Une rotation ne grossit pas la liste.
+      expect(await active()).toBe(5);
+    });
+  });
+
   describe('audit des connexions', () => {
     const agent = 'e2e-audit-agent/1.0';
     let seq = 0;

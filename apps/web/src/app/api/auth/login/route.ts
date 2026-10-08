@@ -28,13 +28,22 @@ export async function POST(request: Request) {
     );
   }
 
+  const jar = await cookies();
+  // La session que ce navigateur détient encore est fermée par l'API une fois la
+  // nouvelle ouverte : une reconnexion ne laisse pas d'appareil fantôme.
+  const replacesRefreshToken = jar.get(REFRESH_TOKEN_COOKIE)?.value;
+
   const apiRes = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(await clientContextHeaders()),
     },
-    body: JSON.stringify({ email: body.email, password: body.password }),
+    body: JSON.stringify({
+      email: body.email,
+      password: body.password,
+      replacesRefreshToken,
+    }),
   });
   const data = await apiRes.json().catch(() => null);
 
@@ -49,7 +58,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const jar = await cookies();
   const options = authCookieOptions();
   jar.set(ACCESS_TOKEN_COOKIE, data.accessToken, options);
   jar.set(REFRESH_TOKEN_COOKIE, data.refreshToken, options);
