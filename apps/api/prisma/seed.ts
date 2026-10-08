@@ -442,6 +442,15 @@ async function main() {
     process.env.SEED_ADMIN_EMAIL ?? 'admin@ewes.example'
   ).toLowerCase();
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'change-me-now';
+  // Un compte Administrateur au mot de passe d'exemple en production = porte ouverte.
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (password.length < 12 || /change-?me|example/i.test(password))
+  ) {
+    throw new Error(
+      'SEED_ADMIN_PASSWORD doit être défini (12 caractères au moins, hors valeur d’exemple) pour amorcer la production.',
+    );
+  }
 
   const prisma = new PrismaClient({
     adapter: new PrismaPg({

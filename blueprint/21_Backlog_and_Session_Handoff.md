@@ -72,7 +72,8 @@ Ce document est le point d'entrée opérationnel de chaque session de travail, q
 - [x] Export CSV des contacts (« exporter si nécessaire », `02` §3) — livré le 2026-10-08 (52) : `GET /admin/contacts/export` + bouton « Exporter en CSV » des listes de messages, audité
 - [x] Sauvegardes automatiques (script + cron VPS) — livré le 2026-10-08 (53) : `ops/backup/` (base + documents privés + médias et documents publics, chiffrées GPG, rétention, restauration testée) ; reste à l'installer sur le VPS (Phase 05)
 - [x] Revue de sécurité : séparation public/privé à deux niveaux (`10_Security.md` §5) — faite le 2026-10-08 (54) : séparation conforme, 8 constats notés en fin de `10_Security.md`
-- [ ] Correctifs de la revue (`10_Security.md`, constats 1 à 6 et 8) : Next 16.4.0 ; en-têtes de sécurité ; refus des secrets d'exemple en production ; Swagger désactivé en production ; recherche documentaire filtrée par droit en SQL ; PostgreSQL de développement sur 127.0.0.1 ; rôle PostgreSQL d'exécution séparé (Phase 05)
+- [x] Correctifs de la revue de sécurité (`10_Security.md`, constats 1 à 6) — faits le 2026-10-08 (55) : Next 16.4.0, en-têtes de sécurité, garde-fou sur les secrets en production, Swagger hors production, recherche documentaire filtrée par droit en SQL, PostgreSQL de développement sur 127.0.0.1
+- [ ] Rôle PostgreSQL d'exécution distinct du rôle des migrations (constat 8, à faire avec le Compose de production) ; contrôler la CSP en `next build` et dans le portail (aperçu PDF, photo de profil)
 
 ## Phase 05 — Tests & mise en production
 - [ ] Exécuter les cas de régression obligatoires (`17_Testing_Strategy.md` §3)
@@ -115,6 +116,13 @@ Décisions : <choix techniques ou métier tranchés, et pourquoi>
 Blocages : <dépendance non résolue, question ouverte pour EWES ou Planning Events>
 Prochaine étape : <action concrète et immédiatement actionnable pour la prochaine session>
 ```
+
+### Session — 2026-10-08 (55) — Claude Code
+Fait : **correctifs de la revue de sécurité** (constats 1 à 6, voir la note de correctifs en fin de `10_Security.md`). Next 16.4.0 ; en-têtes de sécurité et CSP (site) + en-têtes de l'API ; refus de démarrer en production avec des secrets d'exemple/faibles (`common/config/production-secrets.ts`, 7 tests) et refus d'amorcer la production avec le mot de passe d'exemple ; Swagger hors production ; recherche documentaire : périmètre appliqué en SQL, champs du dossier ignorés pour un dossier non lisible (test e2e ajouté, vérifié en échec sur l'ancien code) ; PostgreSQL de développement sur 127.0.0.1.
+Vérifié : suite unitaire de l'API (118), suite e2e des documents privés (20), `tsc`, oxlint ; instance réelle de l'API (build temporaire, supprimé) : en-têtes présents, `X-Powered-By` absent, démarrage **refusé** en production avec le `.env` de développement (cinq problèmes listés sans valeur), démarrage accepté avec des secrets solides, `/api/docs` et `/api/docs-json` en 404 en production ; site relancé sur Next 16.4.0 : en-têtes présents sur `/fr` et `/admin/login`, quatre pages chargées dans Edge sans violation de CSP (hydratation et scène WebGL comprises).
+Décisions : CSP avec `'unsafe-inline'` (un nonce forcerait le rendu à la demande et ruinerait le SSG/ISR) ; pas de Helmet (en-têtes posés à la main, pas de dépendance de plus) ; HSTS seulement en production et sans `includeSubDomains`/`preload` ; `object-src 'self' blob:` plutôt que `'none'` pour ne pas risquer l'aperçu PDF ; contact (constat 7) laissé tel quel.
+Blocages : non vérifié — `next build` de production, la CSP dans le portail connecté (aperçu PDF en `blob:`, photo de profil), la suite e2e complète (seule celle des documents privés a été relancée). Le serveur de développement du site (port 3000) a été arrêté et relancé par moi pour passer à Next 16.4.0 ; l'API de développement (port 3001) tourne toujours sur l'ancien build : la relancer pour disposer des en-têtes. Next réécrit `apps/web/AGENTS.md` (niveau de titre) à chaque démarrage.
+Prochaine étape : relancer l'API ; ouvrir dans un navigateur le portail (document privé > aperçu PDF, photo de profil) et surveiller la console pour la CSP ; lancer `next build` ; puis Phase 05 (Compose de production + Nginx selon les exigences de la note de revue, rôle PostgreSQL d'exécution séparé, installation des sauvegardes).
 
 ### Session — 2026-10-08 (54) — Claude Code
 Fait : **revue de sécurité de la séparation public/privé** (`10_Security.md` §5), rapport en fin de `10_Security.md`. Relecture des guards, des services et du stockage documentaires, du BFF et du proxy Next ; balayage en direct de l'API (129 routes gardées : 129 réponses 401 sans jeton ; 21 routes publiques = celles voulues) ; `npm audit` ; recherche de secrets (arbre et historique Git : aucun).
