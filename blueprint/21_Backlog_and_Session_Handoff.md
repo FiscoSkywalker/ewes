@@ -71,7 +71,8 @@ Ce document est le point d'entrée opérationnel de chaque session de travail, q
 - [x] Gestion des utilisateurs / rôles / droits documentaires (Administrateur) — **écrans des droits documentaires livrés** le 2026-10-05 (38) (`/admin/documents/droits` par dossier, `/admin/documents/droits/documents` par document) ; API des droits documentaires livrée (`/admin/access-grants/*`) ; **utilisateurs, invitations par e-mail, changement de rôle audité et désactivation livrés** (API + écrans) le 2026-10-03 (32)- [x] Journal d'audit (modèle + écriture sur actions sensibles + écran de consultation) — écriture inaltérable (déclencheurs PostgreSQL) et `GET /admin/audit-logs` livrés le 2026-10-02 (11), audit des droits et des documents privés fait ; connexions, échecs d'authentification, changements de rôle, invitations et désactivations audités (sessions (32) et (35)) ; publication/dépublication des documents publics, réalisations, articles, pages, services et experts audités (sessions (20), (22), (27) et (31)) ; écran de consultation livré (34). La publication planifiée automatique n'est volontairement pas auditée (action automatique, sans effet de sécurité)
 - [x] Export CSV des contacts (« exporter si nécessaire », `02` §3) — livré le 2026-10-08 (52) : `GET /admin/contacts/export` + bouton « Exporter en CSV » des listes de messages, audité
 - [x] Sauvegardes automatiques (script + cron VPS) — livré le 2026-10-08 (53) : `ops/backup/` (base + documents privés + médias et documents publics, chiffrées GPG, rétention, restauration testée) ; reste à l'installer sur le VPS (Phase 05)
-- [ ] Revue de sécurité : séparation public/privé à deux niveaux (`10_Security.md` §5)
+- [x] Revue de sécurité : séparation public/privé à deux niveaux (`10_Security.md` §5) — faite le 2026-10-08 (54) : séparation conforme, 8 constats notés en fin de `10_Security.md`
+- [ ] Correctifs de la revue (`10_Security.md`, constats 1 à 6 et 8) : Next 16.4.0 ; en-têtes de sécurité ; refus des secrets d'exemple en production ; Swagger désactivé en production ; recherche documentaire filtrée par droit en SQL ; PostgreSQL de développement sur 127.0.0.1 ; rôle PostgreSQL d'exécution séparé (Phase 05)
 
 ## Phase 05 — Tests & mise en production
 - [ ] Exécuter les cas de régression obligatoires (`17_Testing_Strategy.md` §3)
@@ -114,6 +115,12 @@ Décisions : <choix techniques ou métier tranchés, et pourquoi>
 Blocages : <dépendance non résolue, question ouverte pour EWES ou Planning Events>
 Prochaine étape : <action concrète et immédiatement actionnable pour la prochaine session>
 ```
+
+### Session — 2026-10-08 (54) — Claude Code
+Fait : **revue de sécurité de la séparation public/privé** (`10_Security.md` §5), rapport en fin de `10_Security.md`. Relecture des guards, des services et du stockage documentaires, du BFF et du proxy Next ; balayage en direct de l'API (129 routes gardées : 129 réponses 401 sans jeton ; 21 routes publiques = celles voulues) ; `npm audit` ; recherche de secrets (arbre et historique Git : aucun).
+Décisions : aucun correctif appliqué pendant la revue (rapport d'abord, l'utilisateur choisit) ; les alertes `prisma`/`mysql2`/`source-map-js` sont jugées sans effet à l'exécution et `npm audit fix --force` est à proscrire (rétrograde Prisma).
+Blocages : non vérifié — les droits par rôle en conditions réelles (couverts par les tests e2e existants, non relancés ici car ils écrivent dans la base), la configuration Nginx (inexistante), l'effet de la mise à jour de Next.
+Prochaine étape : traiter les correctifs de la revue dans l'ordre de gravité — **Next 16.4.0**, en-têtes de sécurité, garde-fou sur les secrets — puis la recherche documentaire (constat 5) ; Phase 05 : Compose de production et Nginx (exigences listées en fin de la note de revue), installation des sauvegardes.
 
 ### Session — 2026-10-08 (53) — Claude Code
 Fait : **sauvegardes automatiques** (`ops/backup/`). `backup.sh` (base `pg_dump` via `docker exec`, archives des documents privés et des médias/documents publics, chiffrement GPG à clé publique, empreintes, rétention, copie rsync facultative, verrou, statut, `--check`), `restore.sh` (`verify`, `test`, `restore-db`, `restore-files`), `backup.env.example`, `ewes-backup.cron`, `README.md` (clé, installation, supervision, test et restauration réelle). `.gitattributes` force les fins de ligne LF des `.sh`. Docs : `18` §5 (note « Sauvegardes (implémentation) »), pointeur dans `.env.example`.
