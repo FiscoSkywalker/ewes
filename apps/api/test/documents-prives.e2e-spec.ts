@@ -512,6 +512,26 @@ describe('Documents privés (e2e)', () => {
     await revokeFolder(grant);
   });
 
+  it('does not let a document shared on its own reveal its folder through search', async () => {
+    const word = `kaboulchat${stamp}`;
+    const folderId = await makeFolder(`Dossier ${word}`);
+    const doc = await upload(tAdmin, folderId, pdf('iso'), { name: `${tag} piece isolee` }).expect(201);
+    const grant = await grantDocument(doc.body.id, ids.user2);
+    const search = async (token: string, q: string) =>
+      ((await get(token, `/documents-prives/search?q=${encodeURIComponent(q)}`).expect(200)).body.data as { id: string }[]).map((d) => d.id);
+
+    // Le document se retrouve par son propre nom ...
+    expect(await search(tUser2, `${tag} piece isolee`)).toEqual([doc.body.id]);
+    // ... mais le nom de son dossier, qu'il ne voit pas, ne s'interroge pas (mot entier, fragment, avec ou sans nom du document).
+    expect(await search(tUser2, word)).toEqual([]);
+    expect(await search(tUser2, word.slice(0, 8))).toEqual([]);
+    expect(await search(tUser2, `${tag} piece ${word}`)).toEqual([]);
+    // L'Administrateur, lui, voit le dossier : la recherche par dossier fonctionne.
+    expect(await search(tAdmin, word)).toEqual([doc.body.id]);
+
+    await revokeDocument(grant);
+  });
+
   it('counts, sorts and filters without ever widening the scope', async () => {
     const marker = `quartz${stamp}`;
     const folder = (

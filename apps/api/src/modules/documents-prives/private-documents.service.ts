@@ -464,25 +464,52 @@ export class PrivateDocumentsService {
     const term = query.q.trim();
     const like = `%${term.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 
+    // Le périmètre est appliqué DÈS la requête (et non après un plafond de
+    // candidats) : sinon, un périmètre étroit finirait par ne plus voir ses
+    // propres résultats noyés dans ceux des autres. Les champs du DOSSIER
+    // (nom, catégorie, projet, département) ne comptent que pour un dossier
+    // lisible : un document partagé isolément ne doit pas laisser deviner, par
+    // sondage, le dossier qui le contient. Le filtre exact (surcharge de
+    // confidentialité) est réappliqué en base ensuite.
+    const readableFolders = [...scope.readableFolderIds];
+    const grantedDocuments = [...scope.grantedDocumentIds];
+    const inScope = scope.isAdmin
+      ? Prisma.sql`TRUE`
+      : Prisma.sql`(
+          d."folderId"::text = ANY(${readableFolders}::text[])
+          OR d.id::text = ANY(${grantedDocuments}::text[])
+        )`;
+    const folderVisible = scope.isAdmin
+      ? Prisma.sql`TRUE`
+      : Prisma.sql`f.id::text = ANY(${readableFolders}::text[])`;
+
     const candidates = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
       SELECT d.id
       FROM private_documents d
       JOIN folders f ON f.id = d."folderId"
       WHERE d."deletedAt" IS NULL
+        AND ${inScope}
         AND (
           to_tsvector('simple',
             coalesce(d.name, '') || ' ' || coalesce(d.description, '') || ' ' ||
-            coalesce(f.name, '') || ' ' || coalesce(f.category, '') || ' ' ||
-            coalesce(f."subCategory", '') || ' ' || coalesce(f."projectRef", '') || ' ' ||
-            coalesce(f.department, ''))
+            CASE WHEN ${folderVisible} THEN
+              coalesce(f.name, '') || ' ' || coalesce(f.category, '') || ' ' ||
+              coalesce(f."subCategory", '') || ' ' || coalesce(f."projectRef", '') || ' ' ||
+              coalesce(f.department, '')
+            ELSE '' END)
           @@ websearch_to_tsquery('simple', ${term})
           OR d.name ILIKE ${like}
           OR d.description ILIKE ${like}
-          OR f.name ILIKE ${like}
-          OR f.category ILIKE ${like}
-          OR f."subCategory" ILIKE ${like}
-          OR f."projectRef" ILIKE ${like}
-          OR f.department ILIKE ${like}
+          OR (
+            ${folderVisible}
+            AND (
+              f.name ILIKE ${like}
+              OR f.category ILIKE ${like}
+              OR f."subCategory" ILIKE ${like}
+              OR f."projectRef" ILIKE ${like}
+              OR f.department ILIKE ${like}
+            )
+          )
         )
       ORDER BY ts_rank(
           to_tsvector('simple', coalesce(d.name, '') || ' ' || coalesce(d.description, '')),
