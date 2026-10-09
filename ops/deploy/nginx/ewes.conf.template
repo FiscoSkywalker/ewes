@@ -4,6 +4,7 @@
 #
 # Règles de ce fichier :
 #  - HTTP redirige vers HTTPS (sauf le défi Let's Encrypt) ;
+#  - www.${DOMAIN} redirige vers ${DOMAIN} (même certificat, voir init-tls.sh) ;
 #  - le site Next est la seule porte d'entrée ; l'API n'est PAS exposée, à une exception
 #    près : POST /api/v1/contact (le formulaire public l'appelle depuis le navigateur) ;
 #  - /api/revalidate (invalidation du cache, déjà protégée par secret) n'est jamais publique ;
@@ -13,7 +14,7 @@
 server {
     listen 80;
     listen [::]:80;
-    server_name ${DOMAIN};
+    server_name ${DOMAIN} www.${DOMAIN};
 
     server_tokens off;
 
@@ -24,6 +25,21 @@ server {
     location / {
         return 301 https://$host$request_uri;
     }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name www.${DOMAIN};
+
+    server_tokens off;
+
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+
+    return 301 https://${DOMAIN}$request_uri;
 }
 
 server {

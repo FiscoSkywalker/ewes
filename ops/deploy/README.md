@@ -33,11 +33,14 @@ Sur le VPS, cinq conteneurs : `nginx` (seul à ouvrir les ports 80/443), `web` (
 
 ## Étape 2 — DNS
 
-Chez le registrar : un enregistrement **A** `votre-domaine → IP du VPS` (et **AAAA** si le VPS a une IPv6). Vérifier avant de continuer (la propagation peut prendre de quelques minutes à quelques heures) :
+Chez le registrar : un enregistrement **A** `votre-domaine → IP du VPS`, un **A** (ou CNAME) `www.votre-domaine` vers le même domaine (et **AAAA** si le VPS a une IPv6). Nginx redirige `www` vers le domaine nu ; le certificat couvre les deux. Vérifier avant de continuer (la propagation peut prendre de quelques minutes à quelques heures) :
 
 ```bash
-nslookup votre-domaine        # doit afficher l'IP du VPS
+nslookup votre-domaine        # doit afficher l'IP du VPS (sans « https:// » ni « / »)
+nslookup www.votre-domaine
 ```
+
+> **Si le domaine héberge déjà un site et de la messagerie** : la messagerie dépend souvent du domaine nu (MX, `mail.`, `smtp.`, `imap.`, `webmail.`, `autodiscover.` en CNAME vers lui). Avant de changer le A, transformer ces CNAME en enregistrements **A vers l'ancienne IP** et faire pointer le MX vers `mail.votre-domaine`, sinon les e-mails s'arrêtent au basculement. Abaisser le TTL du A actuel (300 s) 24 h à l'avance.
 
 Let's Encrypt (étape 7) échoue tant que ce n'est pas le cas.
 
@@ -224,7 +227,7 @@ cat .deploy-history                         # historique des déploiements
 - **Le site est construit sans l'API** (elle n'existe pas dans la CI) : ses pages sont pré-rendues avec les textes de repli, puis `deploy.sh` invalide leurs caches pour qu'elles lisent l'API dès le déploiement.
 - **Deux rôles PostgreSQL** (constat 8 de `blueprint/10_Security.md`) : `ewes` (propriétaire, migrations, sauvegardes) et `ewes_app` (l'API ; lecture/écriture des lignes seulement, donc incapable de retirer les déclencheurs d'inaltérabilité du journal d'audit).
 - **L'API n'est pas exposée**, à une exception : `POST /api/v1/contact` (le formulaire public l'appelle depuis le navigateur). `/api/revalidate` est bloqué par Nginx. PostgreSQL et l'API n'ont aucun port publié.
-- **Dépôt public** : le code et `raw/` (contrat) y sont lisibles par tous. Les secrets, eux, n'y sont jamais.
+- **Dépôt public** : le code y est lisible par tous. `raw/` (contrat) n'est plus suivi par Git, et les secrets n'y sont jamais.
 
 ## Dépannage
 

@@ -5,6 +5,9 @@
 #
 #   ./ops/deploy/init-tls.sh <adresse-email-pour-les-alertes-d-expiration>
 #
+# Le certificat couvre DOMAIN et www.DOMAIN (Nginx redirige www vers DOMAIN). Pour un domaine
+# sans www (ex. un sous-domaine), lancer avec NO_WWW=1.
+#
 # Principe : Nginx ne démarre pas sans certificat, et Let's Encrypt a besoin de Nginx pour
 # valider le domaine. On crée donc un certificat provisoire auto-signé, on démarre Nginx
 # seul, on obtient le vrai certificat par le défi « fichier », puis on recharge Nginx.
@@ -22,6 +25,9 @@ export IMAGE_REPO="${IMAGE_REPO:-init}" IMAGE_TAG="${IMAGE_TAG:-init}"
 
 DOMAIN="$(grep -E '^DOMAIN=' .env | head -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//')"
 [ -n "$DOMAIN" ] || { echo "DOMAIN est absent de .env." >&2; exit 1; }
+
+NAMES=(-d "$DOMAIN")
+[ -n "${NO_WWW:-}" ] || NAMES+=(-d "www.$DOMAIN")
 
 CONF=/srv/ewes/certbot/conf
 WWW=/srv/ewes/certbot/www
@@ -48,7 +54,7 @@ echo "==> Demande du vrai certificat à Let's Encrypt"
 rm -rf "$LIVE" "$CONF/archive/$DOMAIN" "$CONF/renewal/$DOMAIN.conf"
 $COMPOSE run --rm --no-deps --entrypoint certbot certbot certonly \
   --webroot -w /var/www/certbot \
-  -d "$DOMAIN" \
+  "${NAMES[@]}" \
   --email "$EMAIL" --agree-tos --no-eff-email --non-interactive
 
 echo "==> Rechargement de Nginx"
