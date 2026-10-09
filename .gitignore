@@ -42,3 +42,6 @@ coverage/
 
 # Prototype local (hors dépôt)
 prototype/
+
+# Contrat et annexes commerciales : conservés en local, jamais publiés (dépôt public)
+raw/
