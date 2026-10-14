@@ -345,9 +345,11 @@ describe('Conservation des données (e2e)', () => {
           .set('X-Forwarded-For', `10.7.${stamp % 250}.${(stamp >> 2) % 250}`)
           .send({ email: adminEmail, password })
           .expect(200);
-        expect(countOf(await facets(), 'AUTH_LOGIN_SUCCEEDED')).toBe(
-          before + 1,
-        );
+        // Les suites tournent en parallèle sur la même base : une autre peut se connecter
+        // entre les deux lectures. Un effectif périmé vaudrait exactement `before`.
+        expect(
+          countOf(await facets(), 'AUTH_LOGIN_SUCCEEDED'),
+        ).toBeGreaterThanOrEqual(before + 1);
         expect(calls).toBeGreaterThan(afterFirst);
       } finally {
         model.groupBy = original;
