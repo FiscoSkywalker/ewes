@@ -25,7 +25,9 @@ env_value() { # valeur d'une variable d'un fichier .env, sans l'exécuter
 [ -f .env ] || die "Fichier .env introuvable dans $(pwd) (voir ops/deploy/README.md)."
 DOMAIN="$(env_value DOMAIN .env)"
 [ -n "$DOMAIN" ] || die "DOMAIN est absent de .env."
-[ -f "/srv/ewes/certbot/conf/live/$DOMAIN/fullchain.pem" ] \
+# `live/<domaine>/fullchain.pem` est un lien vers `archive/`, dossier réservé à root par
+# Let's Encrypt : l'utilisateur de déploiement ne peut pas le lire. Docker, lui, le peut.
+docker run --rm -v /srv/ewes/certbot/conf:/certs:ro alpine test -f "/certs/live/$DOMAIN/fullchain.pem" \
   || die "Pas de certificat pour $DOMAIN : lancer d'abord ops/deploy/init-tls.sh."
 
 previous_tag="$(env_value IMAGE_TAG .image.env)"
