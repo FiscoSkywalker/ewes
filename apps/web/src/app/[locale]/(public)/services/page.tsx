@@ -240,7 +240,7 @@ export default async function ServicesPage({
             data-image-reveal
           >
             <Image
-              src="/assets/images/ewes-training-session.jpg"
+              src="/assets/images/ewes-photo-formation.jpg"
               alt={tTraining('imageAlt')}
               fill
               sizes="(min-width: 1024px) 45vw, 100vw"

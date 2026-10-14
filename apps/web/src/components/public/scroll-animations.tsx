@@ -156,7 +156,7 @@ export function ScrollAnimations() {
         const target = Number(element.dataset.counter ?? 0);
         const finalText = element.textContent ?? '';
         const plain = element.hasAttribute('data-counter-plain');
-        // Une année compte depuis un point proche (2008 → pas depuis 0).
+        // Une année compte depuis un point proche (2013 → pas depuis 0).
         const counter = { value: plain ? Math.floor(target * 0.985) : 0 };
         // Le texte serveur affiche déjà la valeur finale : on repart de 0
         // seulement au moment où le compteur entre à l'écran.

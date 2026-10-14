@@ -1,8 +1,9 @@
 import Image from 'next/image';
+import { POLE_DEFAULT_IMAGES } from '@/lib/poles';
 
 export type PoleKey = 'env' | 'eau' | 'ing';
 
-/** Bande d'illustration à gauche d'une ligne de pôle (remplace l'ancien motif de légende). */
+/** Bande photo à gauche d'une ligne de pôle (remplace l'ancien motif de légende). */
 export function PoleImage({ pole }: { pole: PoleKey }) {
   return (
     <span
@@ -10,7 +11,7 @@ export function PoleImage({ pole }: { pole: PoleKey }) {
       className="absolute inset-y-0 left-0 w-10 overflow-hidden border-r border-sand md:w-24"
     >
       <Image
-        src={`/assets/images/ewes-pole-${pole}.webp`}
+        src={POLE_DEFAULT_IMAGES[pole]}
         alt=""
         fill
         sizes="96px"

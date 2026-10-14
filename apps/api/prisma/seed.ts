@@ -197,7 +197,7 @@ interface ProjectMessage {
 }
 
 /**
- * Importe les 34 références du profil EWES (`Projects.items`), publiées.
+ * Importe les 30 références du profil EWES depuis 2013 (`Projects.items`), publiées.
  * Idempotent par slug. Les clients sont cités publiquement dans le profil :
  * `isClientPublic` est donc vrai. Pas de localisation ni d'image source.
  */
@@ -255,9 +255,9 @@ const NEWS_TYPES: Record<NewsMessage['category'], ArticleType> = {
 
 /** Visuels actuels du site (apps/web/public), en attendant le module `media`. */
 const NEWS_IMAGES: Record<string, string> = {
-  'barometre-rse-2025': '/assets/images/ewes-news-rse-survey.jpg',
-  'metalkol-carbone-2024': '/assets/images/ewes-laboratory-cinematic.png',
-  'inspecteurs-2023': '/assets/images/ewes-environment-field.png',
+  'barometre-rse-2025': '/assets/images/ewes-photo-enquete-communautaire.jpg',
+  'metalkol-carbone-2024': '/assets/images/ewes-photo-conference.jpg',
+  'inspecteurs-2023': '/assets/images/ewes-photo-vulgarisation-code-minier.jpg',
 };
 
 /** « 2025 », « 2025-03 » ou « 2025-03-12 » -> date + précision d'affichage. */

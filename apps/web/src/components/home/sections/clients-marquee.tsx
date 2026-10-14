@@ -1,14 +1,12 @@
 'use client';
 
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { EWES_CLIENTS } from '@/data/clients';
+import { EWES_PARTNERS } from '@/data/clients';
 import { useInView } from '@/hooks/useInView';
 
-/** Losange séparateur, aux couleurs des trois pôles en alternance. */
-const SEPARATOR_TONES = ['bg-malachite', 'bg-primary', 'bg-copper'];
-
 /**
- * Bandeau défilant des clients et partenaires — homepage uniquement. Liste
+ * Bandeau défilant des logos clients et partenaires — homepage uniquement. Liste
  * doublée pour une boucle continue ; la copie est masquée aux lecteurs
  * d'écran. Pause au survol et hors écran ; statique si l'utilisateur réduit
  * les animations.
@@ -19,14 +17,16 @@ export function ClientsMarquee() {
 
   const list = (hidden: boolean) => (
     <ul className="flex flex-none" aria-hidden={hidden || undefined}>
-      {EWES_CLIENTS.map((name, index) => (
-        <li
-          key={name}
-          className="flex items-center whitespace-nowrap pr-8 font-heading text-2xl font-semibold uppercase tracking-wide text-sand/80 sm:pr-14 sm:text-4xl"
-        >
-          {name}
-          <span
-            className={`ml-8 h-2 w-2 rotate-45 sm:ml-14 ${SEPARATOR_TONES[index % 3]}`}
+      {EWES_PARTNERS.map(({ name, logo }) => (
+        <li key={name} className="flex flex-none items-center pr-10 sm:pr-16">
+          <Image
+            src={logo}
+            alt={hidden ? '' : name}
+            title={name}
+            width={150}
+            height={150}
+            sizes="80px"
+            className="h-16 w-16 object-contain sm:h-20 sm:w-20"
           />
         </li>
       ))}

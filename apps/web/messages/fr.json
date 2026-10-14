@@ -55,7 +55,7 @@
     "shieldLabel": "Experts congolais & étrangers",
     "locationLabel": "Lubumbashi · RD Congo",
     "scrollLabel": "Faire défiler",
-    "imageAlt": "Infrastructure hydraulique intégrée dans un paysage fluvial",
+    "imageAlt": "Expert EWES en suivi environnemental sur un site minier",
     "ctaContact": "Discuter d’un projet"
   },
   "World": {
@@ -192,14 +192,15 @@
         "desc": "Gestion de l’eau dans les procédés industriels."
       }
     ],
-    "imageAlt": "Borne-fontaine publique distribuant de l’eau potable"
+    "imageAlt": "Expert EWES mesurant le débit d’un cours d’eau"
   },
   "Environment": {
     "eyebrow": "ENV · Environnement",
     "title": "Mesurer, évaluer, protéger.",
     "description": "Études, audits, surveillance et analyses : EWES accompagne les opérateurs industriels et les institutions dans la maîtrise de leur impact environnemental.",
     "imageCaption": "Mesurer · Comprendre · Agir",
-    "imageAlt": "Analyse de la qualité de l’eau sur le terrain",
+    "imageAlt": "Expert EWES examinant un affleurement minéralisé sur un site minier",
+    "sectionImageAlt": "Deux experts EWES en observation sur un site minier",
     "services": [
       {
         "title": "Étude d’impact environnemental",
@@ -258,7 +259,7 @@
         "text": "Des travaux d’ingénierie dans le domaine de l’électricité."
       }
     ],
-    "imageAlt": "Laboratoire d’analyse équipé d’appareils de mesure"
+    "imageAlt": "Techniciens EWES sur une station de traitement"
   },
   "Training": {
     "eyebrow": "Formation",
@@ -285,7 +286,7 @@
   "Projects": {
     "eyebrow": "03 · Nos réalisations",
     "title": "Le registre de nos missions.",
-    "description": "De la première étude d’impact en 2008 au Baromètre RSE de 2025. Filtrez par type de mission ou cliquez sur une année.",
+    "description": "De la création d’EWES en 2013 au Baromètre RSE de 2025. Filtrez par type de mission ou cliquez sur une année.",
     "histogramLabel": "Nombre de missions par année",
     "yearBar": "{year} : {count, plural, =0 {aucune mission} =1 {# mission} other {# missions}}",
     "filtersLabel": "Filtrer par type de mission",
@@ -573,43 +574,11 @@
         "yearEnd": 2014,
         "client": "Interface UNILU–Société",
         "mission": "Séminaire de formation en environnement minier"
-      },
-      {
-        "id": "ruashi-audit-2012",
-        "category": "AUDIT",
-        "year": 2012,
-        "yearEnd": null,
-        "client": "Ruashi Mining",
-        "mission": "Audit environnemental et social ; rapport annuel environnemental"
-      },
-      {
-        "id": "stl-eies-2011",
-        "category": "EIES",
-        "year": 2011,
-        "yearEnd": null,
-        "client": "STL",
-        "mission": "EIES-PGEP"
-      },
-      {
-        "id": "somika-audit-2010",
-        "category": "AUDIT",
-        "year": 2010,
-        "yearEnd": null,
-        "client": "SOMIKA",
-        "mission": "Audit environnemental et social ; rapport annuel environnemental"
-      },
-      {
-        "id": "kisenge-eies-2008",
-        "category": "EIES",
-        "year": 2008,
-        "yearEnd": null,
-        "client": "Kisenge Manganèse",
-        "mission": "EIES-PGEP"
       }
     ],
     "river": {
       "title": "Le fil de nos missions.",
-      "description": "De la première étude d’impact en 2008 au Baromètre RSE de 2025 : remontez le cours des missions menées par EWES. Chaque point est une mission ; chaque carte ouvre sa fiche.",
+      "description": "De la création d’EWES en 2013 au Baromètre RSE de 2025 : remontez le cours des missions menées par EWES. Chaque point est une mission ; chaque carte ouvre sa fiche.",
       "counter": "missions depuis {from}",
       "openLabel": "{client}, {year} : voir la fiche de la mission",
       "endTitle": "{count} missions, de {from} à {to}.",
@@ -645,10 +614,11 @@
         "subtext": "Collaboration avec des partenaires belges, français et canadiens"
       },
       {
-        "value": 17,
+        "value": 13,
+        "sinceYear": 2013,
         "suffix": " ans",
-        "label": "De références documentées",
-        "subtext": "De la première EIES-PGEP référencée (2008) à l’enquête RSE de 2025"
+        "label": "D’expérience sur le terrain",
+        "subtext": "Depuis la création d’EWES en 2013, jusqu’à l’enquête RSE de 2025"
       }
     ]
   },
@@ -1065,12 +1035,12 @@
     "timelineTitle": "Repères",
     "timeline": [
       {
-        "year": "2008",
-        "text": "Première étude d’impact référencée (EIES-PGEP), pour Kisenge Manganèse."
+        "year": "2013",
+        "text": "Création d’EWES S.A.R.L. et premier séminaire de formation en environnement minier, avec l’Interface UNILU–Société."
       },
       {
-        "year": "2013",
-        "text": "Premier séminaire de formation en environnement minier, avec l’Interface UNILU–Société."
+        "year": "2014",
+        "text": "Première étude d’impact environnemental et social, pour la Société de Surveillance Minière."
       },
       {
         "year": "2021",
@@ -1083,7 +1053,7 @@
     ],
     "objectivesTitle": "Nos objectifs de recherche",
     "stats": {
-      "firstStudy": "Première étude d’impact référencée",
+      "founded": "Création d’EWES",
       "missions": "Missions référencées",
       "operators": "Opérateurs miniers accompagnés",
       "poles": "Pôles d’expertise"
@@ -1147,7 +1117,7 @@
         "context": "Haut-Katanga & Lualaba",
         "title": "Baromètre national de la RSE des entreprises minières",
         "excerpt": "EWES a mené l’enquête du baromètre national de la responsabilité sociétale des entreprises minières dans les régions du Haut-Katanga et du Lualaba.",
-        "imageAlt": "Enquêteurs EWES échangeant avec des habitants d’une zone minière"
+        "imageAlt": "Enquêteur EWES en réunion d’échange avec des habitants d’une zone minière"
       },
       {
         "id": "metalkol-carbone-2024",
@@ -1157,7 +1127,7 @@
         "context": "Metalkol",
         "title": "Évaluation du carbone dans le domaine minier : mesurer, minimiser et intervenir pour le climat",
         "excerpt": "Une formation consacrée à l’évaluation du carbone dans les opérations minières, dispensée au sein de Metalkol.",
-        "imageAlt": "Laboratoire d’analyse environnementale"
+        "imageAlt": "Intervenant lors d’une conférence sur l’environnement minier"
       },
       {
         "id": "inspecteurs-2023",
@@ -1167,7 +1137,7 @@
         "context": "DPEM, ACE, FNPSS",
         "title": "Renforcement des capacités des inspecteurs en inspections environnementales et sociales",
         "excerpt": "Une session consacrée à la réalisation des inspections environnementales et sociales dans le secteur minier.",
-        "imageAlt": "Analyse de la qualité de l’eau sur le terrain"
+        "imageAlt": "Participants à une campagne de vulgarisation du code minier"
       }
     ],
     "indexLabel": "Dernières actualités",

@@ -32,7 +32,7 @@ export function AuthShell({
     >
       <div className="absolute inset-0" aria-hidden="true">
         <Image
-          src="/assets/images/ewes-hero-cinematic.webp"
+          src="/assets/images/ewes-photo-site-minier.jpg"
           alt=""
           fill
           priority

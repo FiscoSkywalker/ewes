@@ -24,41 +24,39 @@ originale d’Evan Wallace :
 L’implémentation du site est une adaptation indépendante écrite pour
 React Three Fiber ; aucun fichier source du projet de référence n’est embarqué.
 
-## Image de repli
+## Photographies d’EWES (ancien site ewes.cd)
 
-- `images/ewes-environment-fallback.png`
-- Image originale générée pour le prototype EWES à partir de la direction
-  artistique validée. Elle n’est pas issue du template Greenx.
+Photographies réelles fournies par EWES (archive des médias de l’ancien site,
+octobre 2026). Les originaux ne dépassent pas 500 px de large : ils sont
+agrandis ×2 (Lanczos + accentuation légère) pour limiter le flou. À remplacer
+par les fichiers haute définition dès qu’EWES les fournit (mêmes noms).
 
-## Photographies cinématiques du prototype
+| Fichier                                                               | Original                                                              | Emplacement                                      |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------ |
+| `images/ewes-photo-site-minier.jpg` (+ `-mobile`, recadrage vertical) | `2020/01/Management-de-lEnvironnement-et-Audit-Environnemental-1.jpg` | Hero de l’Accueil, écran de connexion du portail |
+| `images/ewes-photo-equipe-terrain.jpg`                                | `2021/12/apd.jpg`                                                     | « À propos » de l’Accueil, en-tête de /a-propos  |
+| `images/ewes-photo-environnement.jpg`                                 | `2021/12/ess.jpg`                                                     | Section Environnement de l’Accueil               |
+| `images/ewes-photo-prelevement-roche.jpg`                             | `2021/12/8.jpg`                                                       | Pôle Environnement (visuel par défaut)           |
+| `images/ewes-photo-eau-jaugeage.jpg`                                  | `2021/12/IMG-20210906-WA0084.jpg`                                     | Pôle Eau (visuel par défaut)                     |
+| `images/ewes-photo-station-traitement.jpg`                            | `2021/12/ariaewes17.jpg`                                              | Pôle Travaux d’ingénierie (visuel par défaut)    |
+| `images/ewes-photo-formation.jpg`                                     | `2021/12/GIZ18.jpg`                                                   | Section Formation (Accueil, /services)           |
+| `images/ewes-photo-enquete-communautaire.jpg`                         | `2021/12/3.jpg`                                                       | Actualité « Baromètre RSE 2025 »                 |
+| `images/ewes-photo-conference.jpg`                                    | `2021/12/jsf.jpg`                                                     | Actualité « Metalkol 2024 »                      |
+| `images/ewes-photo-vulgarisation-code-minier.jpg`                     | `2021/12/GIZ17.jpg`                                                   | Actualité « Inspecteurs 2023 »                   |
+| `images/ewes-photo-carriere.jpg`                                      | `2021/12/9.jpg`                                                       | Visuel de repli des actualités                   |
 
-- `images/ewes-hero-cinematic.webp`
-- `images/ewes-hero-mobile.webp`
-- `images/ewes-pole-env.webp`
-- `images/ewes-pole-eau.webp`
-- `images/ewes-pole-ing.webp`
-- `images/ewes-apropos-equipe.webp`
-- `images/ewes-environment-terrain.webp`
-- `images/ewes-about-field-team.png`
-- `images/ewes-environment-field.png`
-- `images/ewes-laboratory-cinematic.png`
-- `images/ewes-impact-community.png`
-- `images/ewes-engineer-cutout-clean.png`
+Les portraits nominatifs de l’archive (`2021/11/*.jpg`) ne sont pas utilisés :
+ils seront rattachés aux fiches d’experts depuis le portail, avec les fonctions
+réelles des personnes.
 
-Visuels originaux générés pour la maquette EWES avec une direction colorimétrique
-bleu acier. Ils ne proviennent pas du template Greenx et devront être remplacés
-par les photographies documentaires validées par le client lorsqu’elles seront
-disponibles.
+## Logos des clients et partenaires (`partners/`)
+
+Logos repris de l’ancien site ewes.cd (`2021/12/`), 150 × 150 px, bande
+« Ils nous ont fait confiance » de l’Accueil (`src/data/clients.ts`). Le logo
+de Kamoto Copper Company (`KCC.png`) et le doublon de l’Université de Kinshasa
+ne sont pas repris (KCC figure déjà avec son logo actuel).
 
 ## Visuels repris du prototype « storytelling » (`prototype/`)
 
-- `images/ewes-training-session.jpg` (formation en salle)
-- `images/ewes-news-rse-survey.jpg` (enquête de terrain, actualité RSE 2025)
-- `images/ewes-water-standpipe.jpg` (borne-fontaine, page Nos services)
 - `images/ewes-texture-malachite.jpg` (texture de fond de la section Formation)
 - `brand/ewes-logo-light.png` (logo officiel, lettres claires pour fonds sombres)
-
-Visuels générés pour la maquette, au même titre que les précédents : à
-remplacer par les photographies validées par EWES. Le visuel « ingénierie » du
-prototype n'a volontairement pas été repris (il montre un faux logo « EWS »
-sur les casques).

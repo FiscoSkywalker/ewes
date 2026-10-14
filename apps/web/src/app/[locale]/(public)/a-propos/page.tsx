@@ -62,10 +62,13 @@ export default async function AboutPage({
   // injoignable (une liste vide, elle, est respectée : tout est masqué).
   const figures: LocalizedFigure[] =
     (await getKeyFigures(locale)) ??
-    (tMetrics.raw('items') as ImpactMetric[]).map((metric) => ({
-      ...metric,
-      suffix: metric.suffix.trim(),
-    }));
+    (tMetrics.raw('items') as ImpactMetric[]).map(
+      ({ sinceYear, ...metric }) => ({
+        ...metric,
+        value: sinceYear ? new Date().getFullYear() - sinceYear : metric.value,
+        suffix: metric.suffix.trim(),
+      }),
+    );
   const values = t.raw('values') as { title: string; text: string }[];
   const clients = t.raw('clients') as string[];
   const expertises = tExpertises.raw('items') as {
@@ -99,7 +102,7 @@ export default async function AboutPage({
           <figure className="relative" data-reveal>
             <div className="relative aspect-[4/3] overflow-hidden rounded-sheet">
               <Image
-                src="/assets/images/ewes-apropos-equipe.webp"
+                src="/assets/images/ewes-photo-equipe-terrain.jpg"
                 alt={t('imageAlt')}
                 fill
                 priority

@@ -39,7 +39,7 @@ export class CreateKeyFigureDto {
   @ApiPropertyOptional({
     description:
       'Année de départ de la source `YEARS_SINCE` (obligatoire pour elle) ; ignorée pour les autres.',
-    example: 2008,
+    example: 2013,
   })
   @IsOptional()
   @IsInt()

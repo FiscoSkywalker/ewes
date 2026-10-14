@@ -37,7 +37,7 @@ export function NewsGrid() {
               <Image
                 src={
                   NEWS_IMAGES[item.id] ??
-                  '/assets/images/ewes-environment-fallback.png'
+                  '/assets/images/ewes-photo-carriere.jpg'
                 }
                 alt={item.imageAlt}
                 fill

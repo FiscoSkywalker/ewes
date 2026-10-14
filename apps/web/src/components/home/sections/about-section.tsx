@@ -7,6 +7,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowUpRight } from 'lucide-react';
 import { SectionHeading } from '@/components/public/section-heading';
+import { FOUNDING_YEAR } from '@/data/metrics';
 import type { Project } from '@/data/projects';
 import { TextLink } from '@/components/public/ui';
 
@@ -25,7 +26,7 @@ interface Milestone {
  * 1. le récit d'origine s'écrit mot à mot (chaque mot passe d'estompé à net) ;
  * 2. la photo d'équipe s'ouvre comme un diaphragme jusqu'au plein cadre, et
  *    les chiffres clés s'y posent ;
- * 3. les repères (2008 → 2025) se lisent comme une règle graduée.
+ * 3. les repères (2013 → 2025) se lisent comme une règle graduée.
  * Contenus identiques à la page À propos (messages `HomeAbout`, `Research`,
  * `World`) ; les chiffres sont calculés à partir des données, jamais saisis.
  * Progression écrite en variables CSS (pas de re-rendu React) ; rendu serveur
@@ -42,11 +43,10 @@ export function AboutSection({ projects }: { projects: Project[] }) {
     text: string;
   }[];
   const operators = (tWorld.raw('clients') as string[]).length;
-  const firstYear = Math.min(...projects.map((p) => p.year));
   const words = t('lead').split(' ');
 
   const stats = [
-    { value: firstYear, label: t('stats.firstStudy'), plain: true },
+    { value: FOUNDING_YEAR, label: t('stats.founded'), plain: true },
     { value: projects.length, label: t('stats.missions') },
     { value: operators, label: t('stats.operators') },
     { value: 3, label: t('stats.poles') },
@@ -169,7 +169,7 @@ export function AboutSection({ projects }: { projects: Project[] }) {
       >
         <figure className="relative aspect-[4/3] overflow-hidden bg-night md:aspect-[21/9]">
           <Image
-            src="/assets/images/ewes-apropos-equipe.webp"
+            src="/assets/images/ewes-photo-equipe-terrain.jpg"
             alt={t('imageAlt')}
             fill
             sizes="100vw"

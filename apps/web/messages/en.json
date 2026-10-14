@@ -55,7 +55,7 @@
     "shieldLabel": "Congolese & international experts",
     "locationLabel": "Lubumbashi · DR Congo",
     "scrollLabel": "Scroll down",
-    "imageAlt": "Water infrastructure set in a river landscape",
+    "imageAlt": "EWES expert carrying out environmental monitoring at a mining site",
     "ctaContact": "Discuss a project"
   },
   "World": {
@@ -192,14 +192,15 @@
         "desc": "Water management within industrial processes."
       }
     ],
-    "imageAlt": "Public standpipe supplying drinking water"
+    "imageAlt": "EWES expert measuring the flow of a river"
   },
   "Environment": {
     "eyebrow": "ENV · Environment",
     "title": "Measure, assess, protect.",
     "description": "Studies, audits, monitoring and analyses: EWES supports industrial operators and institutions in controlling their environmental impact.",
     "imageCaption": "Measure · Understand · Act",
-    "imageAlt": "Field water quality analysis",
+    "imageAlt": "EWES expert examining a mineralised outcrop at a mining site",
+    "sectionImageAlt": "Two EWES experts surveying a mining site",
     "services": [
       {
         "title": "Environmental impact study",
@@ -258,7 +259,7 @@
         "text": "Engineering works in the field of electricity."
       }
     ],
-    "imageAlt": "Analysis laboratory equipped with measuring instruments"
+    "imageAlt": "EWES technicians at a treatment plant"
   },
   "Training": {
     "eyebrow": "Training",
@@ -285,7 +286,7 @@
   "Projects": {
     "eyebrow": "03 · Our projects",
     "title": "The register of our assignments.",
-    "description": "From the first impact assessment in 2008 to the 2025 CSR barometer. Filter by type of assignment or click a year.",
+    "description": "From the founding of EWES in 2013 to the 2025 CSR barometer. Filter by type of assignment or click a year.",
     "histogramLabel": "Number of assignments per year",
     "yearBar": "{year}: {count, plural, =0 {no assignments} =1 {# assignment} other {# assignments}}",
     "filtersLabel": "Filter by type of assignment",
@@ -573,43 +574,11 @@
         "yearEnd": 2014,
         "client": "UNILU–Society Interface",
         "mission": "Training seminar in mining environment"
-      },
-      {
-        "id": "ruashi-audit-2012",
-        "category": "AUDIT",
-        "year": 2012,
-        "yearEnd": null,
-        "client": "Ruashi Mining",
-        "mission": "Environmental and social audit; annual environmental report"
-      },
-      {
-        "id": "stl-eies-2011",
-        "category": "EIES",
-        "year": 2011,
-        "yearEnd": null,
-        "client": "STL",
-        "mission": "ESIA and environmental management plan (EIES-PGEP)"
-      },
-      {
-        "id": "somika-audit-2010",
-        "category": "AUDIT",
-        "year": 2010,
-        "yearEnd": null,
-        "client": "SOMIKA",
-        "mission": "Environmental and social audit; annual environmental report"
-      },
-      {
-        "id": "kisenge-eies-2008",
-        "category": "EIES",
-        "year": 2008,
-        "yearEnd": null,
-        "client": "Kisenge Manganèse",
-        "mission": "ESIA and environmental management plan (EIES-PGEP)"
       }
     ],
     "river": {
       "title": "The thread of our assignments.",
-      "description": "From the first impact assessment in 2008 to the 2025 CSR Barometer: follow the course of the assignments carried out by EWES. Each dot is an assignment; each card opens its sheet.",
+      "description": "From the founding of EWES in 2013 to the 2025 CSR Barometer: follow the course of the assignments carried out by EWES. Each dot is an assignment; each card opens its sheet.",
       "counter": "assignments since {from}",
       "openLabel": "{client}, {year}: view the assignment sheet",
       "endTitle": "{count} assignments, from {from} to {to}.",
@@ -645,10 +614,11 @@
         "subtext": "Collaboration with Belgian, French and Canadian partners"
       },
       {
-        "value": 17,
+        "value": 13,
+        "sinceYear": 2013,
         "suffix": " years",
-        "label": "Of documented references",
-        "subtext": "From the first referenced ESIA-PGEP (2008) to the 2025 CSR survey"
+        "label": "Of field experience",
+        "subtext": "Since EWES was founded in 2013, up to the 2025 CSR survey"
       }
     ]
   },
@@ -1052,12 +1022,12 @@
     "timelineTitle": "Milestones",
     "timeline": [
       {
-        "year": "2008",
-        "text": "First referenced impact assessment (EIES-PGEP), for Kisenge Manganèse."
+        "year": "2013",
+        "text": "EWES S.A.R.L. is founded and holds its first training seminar on the mining environment, with the UNILU–Society Interface."
       },
       {
-        "year": "2013",
-        "text": "First training seminar on the mining environment, with the UNILU–Society Interface."
+        "year": "2014",
+        "text": "First environmental and social impact assessment, for the Société de Surveillance Minière."
       },
       {
         "year": "2021",
@@ -1070,7 +1040,7 @@
     ],
     "objectivesTitle": "Our research objectives",
     "stats": {
-      "firstStudy": "First referenced impact assessment",
+      "founded": "EWES founded",
       "missions": "Referenced assignments",
       "operators": "Mining operators supported",
       "poles": "Areas of expertise"
@@ -1134,7 +1104,7 @@
         "context": "Haut-Katanga & Lualaba",
         "title": "National CSR barometer of mining companies",
         "excerpt": "EWES carried out the survey for the national barometer of mining companies’ corporate social responsibility in the Haut-Katanga and Lualaba regions.",
-        "imageAlt": "EWES surveyors talking with residents of a mining area"
+        "imageAlt": "EWES surveyor holding a discussion with residents of a mining area"
       },
       {
         "id": "metalkol-carbone-2024",
@@ -1144,7 +1114,7 @@
         "context": "Metalkol",
         "title": "Carbon assessment in mining: measure, minimise and act for the climate",
         "excerpt": "A training course on carbon assessment in mining operations, delivered at Metalkol.",
-        "imageAlt": "Environmental analysis laboratory"
+        "imageAlt": "Speaker at a conference on the mining environment"
       },
       {
         "id": "inspecteurs-2023",
@@ -1154,7 +1124,7 @@
         "context": "DPEM, ACE, FNPSS",
         "title": "Building inspectors’ capacity for environmental and social inspections",
         "excerpt": "A session on carrying out environmental and social inspections in the mining sector.",
-        "imageAlt": "Water quality analysis in the field"
+        "imageAlt": "Participants in an awareness campaign on the mining code"
       }
     ],
     "indexLabel": "Latest news",

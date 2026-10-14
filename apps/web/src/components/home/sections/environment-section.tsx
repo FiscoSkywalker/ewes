@@ -65,8 +65,8 @@ export function EnvironmentSection({ data }: { data?: PoleContent }) {
               >
                 <div className="hero-cinematic-image absolute inset-0">
                   <Image
-                    src="/assets/images/ewes-environment-terrain.webp"
-                    alt={t('imageAlt')}
+                    src="/assets/images/ewes-photo-environnement.jpg"
+                    alt={t('sectionImageAlt')}
                     fill
                     loading="eager"
                     sizes="(min-width: 1024px) 42vw, 100vw"
