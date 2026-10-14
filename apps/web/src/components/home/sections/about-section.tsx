@@ -169,7 +169,7 @@ export function AboutSection({ projects }: { projects: Project[] }) {
       >
         <figure className="relative aspect-[4/3] overflow-hidden bg-night md:aspect-[21/9]">
           <Image
-            src="/assets/images/ewes-apropos-equipe.webp"
+            src="/assets/images/ewes-photo-equipe-terrain.jpg"
             alt={t('imageAlt')}
             fill
             sizes="100vw"

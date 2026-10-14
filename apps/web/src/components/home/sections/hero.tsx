@@ -26,10 +26,10 @@ export function Hero({ lead, onExplore }: HeroProps) {
         <picture>
           <source
             media="(max-width: 767px)"
-            srcSet="/assets/images/ewes-hero-mobile.webp"
+            srcSet="/assets/images/ewes-photo-site-minier-mobile.jpg"
           />
           <img
-            src="/assets/images/ewes-hero-cinematic.webp"
+            src="/assets/images/ewes-photo-site-minier.jpg"
             alt={t('imageAlt')}
             fetchPriority="high"
             className="hero-cinematic-image absolute inset-0 h-full w-full object-cover"

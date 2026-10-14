@@ -3,11 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import {
-  EXPERT_PLACEHOLDER_PORTRAITS,
-  type Expert,
-  type ExpertPole,
-} from '@/data/experts';
+import type { Expert, ExpertPole } from '@/data/experts';
 
 const POLE_CLASS: Record<ExpertPole, string> = {
   env: 'pole-env',
@@ -17,13 +13,6 @@ const POLE_CLASS: Record<ExpertPole, string> = {
 
 /** Accent d'un expert sans pôle de rattachement. */
 const NO_POLE_CLASS = 'pole-neutral';
-
-/** Dimensions des visuels provisoires (recadrage sur un visage). */
-const SOURCE_SIZE: Record<string, [number, number]> = {
-  '/assets/images/ewes-apropos-equipe.webp': [1536, 1024],
-  '/assets/images/ewes-training-session.jpg': [1536, 1024],
-  '/assets/images/ewes-laboratory-cinematic.png': [1280, 720],
-};
 
 function initials(name: string) {
   return name
@@ -35,9 +24,9 @@ function initials(name: string) {
 }
 
 /**
- * Portrait d'un expert : photo fournie par l'API, sinon recadrage d'un
- * visuel provisoire centré sur le visage (le point focal est placé au
- * centre du cadre quelle que soit sa largeur), sinon monogramme.
+ * Portrait d'un expert : photo fournie par l'API, sinon monogramme. Les
+ * profils provisoires n'ont jamais de visage : les photos du site montrent
+ * de vraies personnes, qui ne doivent pas porter un nom inventé.
  */
 function Portrait({ expert, sizes }: { expert: Expert; sizes: string }) {
   if (expert.photo) {
@@ -55,26 +44,6 @@ function Portrait({ expert, sizes }: { expert: Expert; sizes: string }) {
             ? { objectPosition: `${expert.focal.x}% ${expert.focal.y}%` }
             : undefined
         }
-      />
-    );
-  }
-
-  const crop = EXPERT_PLACEHOLDER_PORTRAITS[expert.id];
-  const size = crop && SOURCE_SIZE[crop.src];
-  if (crop && size) {
-    return (
-      <Image
-        src={crop.src}
-        alt=""
-        width={size[0]}
-        height={size[1]}
-        sizes="(min-width: 1024px) 60vw, 150vw"
-        className="absolute left-1/2 top-[40%] max-w-none"
-        style={{
-          height: `${crop.zoom * 100}%`,
-          width: 'auto',
-          transform: `translate(-${crop.x}%, -${crop.y}%)`,
-        }}
       />
     );
   }

@@ -36,9 +36,9 @@ export const POLE_ACCENT_NAMES: Record<PoleKey, string> = {
 
 /** Visuel d'origine de chaque pôle, tant qu'aucune image n'est choisie dans le portail. */
 export const POLE_DEFAULT_IMAGES: Record<PoleKey, string> = {
-  env: '/assets/images/ewes-environment-field.png',
-  eau: '/assets/images/ewes-water-standpipe.jpg',
-  ing: '/assets/images/ewes-laboratory-cinematic.png',
+  env: '/assets/images/ewes-photo-prelevement-roche.jpg',
+  eau: '/assets/images/ewes-photo-eau-jaugeage.jpg',
+  ing: '/assets/images/ewes-photo-station-traitement.jpg',
 };
 
 /** Pôle du site correspondant à un slug de service, ou `null` s'il n'a pas de chapitre. */

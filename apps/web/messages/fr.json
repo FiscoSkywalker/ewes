@@ -55,7 +55,7 @@
     "shieldLabel": "Experts congolais & étrangers",
     "locationLabel": "Lubumbashi · RD Congo",
     "scrollLabel": "Faire défiler",
-    "imageAlt": "Infrastructure hydraulique intégrée dans un paysage fluvial",
+    "imageAlt": "Expert EWES en suivi environnemental sur un site minier",
     "ctaContact": "Discuter d’un projet"
   },
   "World": {
@@ -192,14 +192,15 @@
         "desc": "Gestion de l’eau dans les procédés industriels."
       }
     ],
-    "imageAlt": "Borne-fontaine publique distribuant de l’eau potable"
+    "imageAlt": "Expert EWES mesurant le débit d’un cours d’eau"
   },
   "Environment": {
     "eyebrow": "ENV · Environnement",
     "title": "Mesurer, évaluer, protéger.",
     "description": "Études, audits, surveillance et analyses : EWES accompagne les opérateurs industriels et les institutions dans la maîtrise de leur impact environnemental.",
     "imageCaption": "Mesurer · Comprendre · Agir",
-    "imageAlt": "Analyse de la qualité de l’eau sur le terrain",
+    "imageAlt": "Expert EWES examinant un affleurement minéralisé sur un site minier",
+    "sectionImageAlt": "Deux experts EWES en observation sur un site minier",
     "services": [
       {
         "title": "Étude d’impact environnemental",
@@ -258,7 +259,7 @@
         "text": "Des travaux d’ingénierie dans le domaine de l’électricité."
       }
     ],
-    "imageAlt": "Laboratoire d’analyse équipé d’appareils de mesure"
+    "imageAlt": "Techniciens EWES sur une station de traitement"
   },
   "Training": {
     "eyebrow": "Formation",
@@ -1116,7 +1117,7 @@
         "context": "Haut-Katanga & Lualaba",
         "title": "Baromètre national de la RSE des entreprises minières",
         "excerpt": "EWES a mené l’enquête du baromètre national de la responsabilité sociétale des entreprises minières dans les régions du Haut-Katanga et du Lualaba.",
-        "imageAlt": "Enquêteurs EWES échangeant avec des habitants d’une zone minière"
+        "imageAlt": "Enquêteur EWES en réunion d’échange avec des habitants d’une zone minière"
       },
       {
         "id": "metalkol-carbone-2024",
@@ -1126,7 +1127,7 @@
         "context": "Metalkol",
         "title": "Évaluation du carbone dans le domaine minier : mesurer, minimiser et intervenir pour le climat",
         "excerpt": "Une formation consacrée à l’évaluation du carbone dans les opérations minières, dispensée au sein de Metalkol.",
-        "imageAlt": "Laboratoire d’analyse environnementale"
+        "imageAlt": "Intervenant lors d’une conférence sur l’environnement minier"
       },
       {
         "id": "inspecteurs-2023",
@@ -1136,7 +1137,7 @@
         "context": "DPEM, ACE, FNPSS",
         "title": "Renforcement des capacités des inspecteurs en inspections environnementales et sociales",
         "excerpt": "Une session consacrée à la réalisation des inspections environnementales et sociales dans le secteur minier.",
-        "imageAlt": "Analyse de la qualité de l’eau sur le terrain"
+        "imageAlt": "Participants à une campagne de vulgarisation du code minier"
       }
     ],
     "indexLabel": "Dernières actualités",

@@ -55,7 +55,7 @@
     "shieldLabel": "Congolese & international experts",
     "locationLabel": "Lubumbashi · DR Congo",
     "scrollLabel": "Scroll down",
-    "imageAlt": "Water infrastructure set in a river landscape",
+    "imageAlt": "EWES expert carrying out environmental monitoring at a mining site",
     "ctaContact": "Discuss a project"
   },
   "World": {
@@ -192,14 +192,15 @@
         "desc": "Water management within industrial processes."
       }
     ],
-    "imageAlt": "Public standpipe supplying drinking water"
+    "imageAlt": "EWES expert measuring the flow of a river"
   },
   "Environment": {
     "eyebrow": "ENV · Environment",
     "title": "Measure, assess, protect.",
     "description": "Studies, audits, monitoring and analyses: EWES supports industrial operators and institutions in controlling their environmental impact.",
     "imageCaption": "Measure · Understand · Act",
-    "imageAlt": "Field water quality analysis",
+    "imageAlt": "EWES expert examining a mineralised outcrop at a mining site",
+    "sectionImageAlt": "Two EWES experts surveying a mining site",
     "services": [
       {
         "title": "Environmental impact study",
@@ -258,7 +259,7 @@
         "text": "Engineering works in the field of electricity."
       }
     ],
-    "imageAlt": "Analysis laboratory equipped with measuring instruments"
+    "imageAlt": "EWES technicians at a treatment plant"
   },
   "Training": {
     "eyebrow": "Training",
@@ -1103,7 +1104,7 @@
         "context": "Haut-Katanga & Lualaba",
         "title": "National CSR barometer of mining companies",
         "excerpt": "EWES carried out the survey for the national barometer of mining companies’ corporate social responsibility in the Haut-Katanga and Lualaba regions.",
-        "imageAlt": "EWES surveyors talking with residents of a mining area"
+        "imageAlt": "EWES surveyor holding a discussion with residents of a mining area"
       },
       {
         "id": "metalkol-carbone-2024",
@@ -1113,7 +1114,7 @@
         "context": "Metalkol",
         "title": "Carbon assessment in mining: measure, minimise and act for the climate",
         "excerpt": "A training course on carbon assessment in mining operations, delivered at Metalkol.",
-        "imageAlt": "Environmental analysis laboratory"
+        "imageAlt": "Speaker at a conference on the mining environment"
       },
       {
         "id": "inspecteurs-2023",
@@ -1123,7 +1124,7 @@
         "context": "DPEM, ACE, FNPSS",
         "title": "Building inspectors’ capacity for environmental and social inspections",
         "excerpt": "A session on carrying out environmental and social inspections in the mining sector.",
-        "imageAlt": "Water quality analysis in the field"
+        "imageAlt": "Participants in an awareness campaign on the mining code"
       }
     ],
     "indexLabel": "Latest news",

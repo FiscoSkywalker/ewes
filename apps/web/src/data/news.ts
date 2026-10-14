@@ -36,13 +36,12 @@ export interface NewsItem {
 
 /** Visuel de chaque actualité (placeholders générés, voir ATTRIBUTIONS.md). */
 export const NEWS_IMAGES: Record<string, string> = {
-  'barometre-rse-2025': '/assets/images/ewes-news-rse-survey.jpg',
-  'metalkol-carbone-2024': '/assets/images/ewes-laboratory-cinematic.png',
-  'inspecteurs-2023': '/assets/images/ewes-environment-field.png',
+  'barometre-rse-2025': '/assets/images/ewes-photo-enquete-communautaire.jpg',
+  'metalkol-carbone-2024': '/assets/images/ewes-photo-conference.jpg',
+  'inspecteurs-2023': '/assets/images/ewes-photo-vulgarisation-code-minier.jpg',
 };
 
-export const NEWS_FALLBACK_IMAGE =
-  '/assets/images/ewes-environment-fallback.png';
+export const NEWS_FALLBACK_IMAGE = '/assets/images/ewes-photo-carriere.jpg';
 
 /** Date lisible selon sa précision (« 2025 », « mars 2025 », « 12 mars 2025 »). */
 export function formatNewsDate(date: string, locale: string) {

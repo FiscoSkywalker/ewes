@@ -68,7 +68,7 @@ export function TrainingSection({ projects }: { projects: Project[] }) {
             data-image-reveal
           >
             <Image
-              src="/assets/images/ewes-training-session.jpg"
+              src="/assets/images/ewes-photo-formation.jpg"
               alt={t('imageAlt')}
               fill
               sizes="(min-width: 1024px) 45vw, 100vw"

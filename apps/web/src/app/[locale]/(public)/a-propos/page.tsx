@@ -102,7 +102,7 @@ export default async function AboutPage({
           <figure className="relative" data-reveal>
             <div className="relative aspect-[4/3] overflow-hidden rounded-sheet">
               <Image
-                src="/assets/images/ewes-apropos-equipe.webp"
+                src="/assets/images/ewes-photo-equipe-terrain.jpg"
                 alt={t('imageAlt')}
                 fill
                 priority

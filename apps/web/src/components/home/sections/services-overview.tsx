@@ -22,6 +22,7 @@ import {
   type ServicePole,
 } from '@/components/public/service-chapter';
 import { Link } from '@/i18n/navigation';
+import { POLE_DEFAULT_IMAGES } from '@/lib/poles';
 import { scrollToElement } from '@/lib/smooth-scroll';
 import { TextLink } from '@/components/public/ui';
 
@@ -116,7 +117,7 @@ function PolePlate({
         </span>
       </div>
 
-      {/* Illustration, déposée comme une strate */}
+      {/* Photo du pôle, déposée comme une strate */}
       <figure
         className="relative mt-6 aspect-[4/5] overflow-hidden rounded-sheet border border-border-subtle bg-background"
         style={{
@@ -124,7 +125,7 @@ function PolePlate({
         }}
       >
         <Image
-          src={`/assets/images/ewes-pole-${pole}.webp`}
+          src={POLE_DEFAULT_IMAGES[pole]}
           alt=""
           fill
           sizes="(min-width: 1024px) 30vw, (min-width: 640px) 44vw, 78vw"

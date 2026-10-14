@@ -4,6 +4,7 @@ import { useState, type ComponentType } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { POLE_DEFAULT_IMAGES } from '@/lib/poles';
 import { PoleImage } from './pole-image';
 import { EngineeringItemsList } from './engineering-items-list';
 import { EnvironmentServicesList } from './environment-services-list';
@@ -24,21 +25,21 @@ const STRATA: Stratum[] = [
     pole: 'env',
     code: 'ENV',
     namespace: 'Environment',
-    image: '/assets/images/ewes-environment-field.png',
+    image: POLE_DEFAULT_IMAGES.env,
     List: EnvironmentServicesList,
   },
   {
     pole: 'eau',
     code: 'H₂O',
     namespace: 'Water',
-    image: '/assets/images/ewes-water-standpipe.jpg',
+    image: POLE_DEFAULT_IMAGES.eau,
     List: WaterServicesList,
   },
   {
     pole: 'ing',
     code: 'ING',
     namespace: 'Engineering',
-    image: '/assets/images/ewes-laboratory-cinematic.png',
+    image: POLE_DEFAULT_IMAGES.ing,
     List: EngineeringItemsList,
   },
 ];
