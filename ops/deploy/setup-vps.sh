@@ -34,8 +34,9 @@ echo "==> Dossiers"
 install -d -m 750 -o deploy -g deploy /opt/ewes
 # Documents : uid 1000 = utilisateur `node` des conteneurs api/web. Sauvegardés par ops/backup.
 install -d -m 750 -o 1000 -g 1000 /srv/ewes/storage/private /srv/ewes/storage/public
-# Certificats, et copies de la base avant migration
-install -d -m 755 /srv/ewes/certbot/conf /srv/ewes/certbot/www
+# Certificats (init-tls.sh, lancé en `deploy`, y crée le certificat provisoire), et copies
+# de la base avant migration
+install -d -m 755 -o deploy -g deploy /srv/ewes/certbot /srv/ewes/certbot/conf /srv/ewes/certbot/www
 install -d -m 700 -o deploy -g deploy /srv/ewes/pre-deploy
 
 echo "==> Pare-feu (ufw)"
