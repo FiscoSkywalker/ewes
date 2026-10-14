@@ -197,7 +197,7 @@ interface ProjectMessage {
 }
 
 /**
- * Importe les 34 références du profil EWES (`Projects.items`), publiées.
+ * Importe les 30 références du profil EWES depuis 2013 (`Projects.items`), publiées.
  * Idempotent par slug. Les clients sont cités publiquement dans le profil :
  * `isClientPublic` est donc vrai. Pas de localisation ni d'image source.
  */

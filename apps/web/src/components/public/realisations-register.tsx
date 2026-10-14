@@ -30,7 +30,7 @@ interface RealisationsRegisterProps {
  * histogramme des missions par année (cliquable), filtres par type avec
  * compteurs et tableau Année / Client / Mission / Type. Partagé entre
  * l'Accueil (aperçu repliable) et /realisations (registre complet). Données :
- * les 34 références du profil EWES, en attendant le module NestJS
+ * les 30 références du profil EWES (2013 et après), en attendant le module NestJS
  * `realisations`.
  */
 export function RealisationsRegister({

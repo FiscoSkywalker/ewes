@@ -152,7 +152,7 @@ function FigureForm({
               <Input
                 inputMode="numeric"
                 maxLength={4}
-                placeholder="2008"
+                placeholder="2013"
                 className="w-40"
                 {...register('sinceYear')}
               />

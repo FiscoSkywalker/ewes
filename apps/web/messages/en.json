@@ -285,7 +285,7 @@
   "Projects": {
     "eyebrow": "03 · Our projects",
     "title": "The register of our assignments.",
-    "description": "From the first impact assessment in 2008 to the 2025 CSR barometer. Filter by type of assignment or click a year.",
+    "description": "From the founding of EWES in 2013 to the 2025 CSR barometer. Filter by type of assignment or click a year.",
     "histogramLabel": "Number of assignments per year",
     "yearBar": "{year}: {count, plural, =0 {no assignments} =1 {# assignment} other {# assignments}}",
     "filtersLabel": "Filter by type of assignment",
@@ -573,43 +573,11 @@
         "yearEnd": 2014,
         "client": "UNILU–Society Interface",
         "mission": "Training seminar in mining environment"
-      },
-      {
-        "id": "ruashi-audit-2012",
-        "category": "AUDIT",
-        "year": 2012,
-        "yearEnd": null,
-        "client": "Ruashi Mining",
-        "mission": "Environmental and social audit; annual environmental report"
-      },
-      {
-        "id": "stl-eies-2011",
-        "category": "EIES",
-        "year": 2011,
-        "yearEnd": null,
-        "client": "STL",
-        "mission": "ESIA and environmental management plan (EIES-PGEP)"
-      },
-      {
-        "id": "somika-audit-2010",
-        "category": "AUDIT",
-        "year": 2010,
-        "yearEnd": null,
-        "client": "SOMIKA",
-        "mission": "Environmental and social audit; annual environmental report"
-      },
-      {
-        "id": "kisenge-eies-2008",
-        "category": "EIES",
-        "year": 2008,
-        "yearEnd": null,
-        "client": "Kisenge Manganèse",
-        "mission": "ESIA and environmental management plan (EIES-PGEP)"
       }
     ],
     "river": {
       "title": "The thread of our assignments.",
-      "description": "From the first impact assessment in 2008 to the 2025 CSR Barometer: follow the course of the assignments carried out by EWES. Each dot is an assignment; each card opens its sheet.",
+      "description": "From the founding of EWES in 2013 to the 2025 CSR Barometer: follow the course of the assignments carried out by EWES. Each dot is an assignment; each card opens its sheet.",
       "counter": "assignments since {from}",
       "openLabel": "{client}, {year}: view the assignment sheet",
       "endTitle": "{count} assignments, from {from} to {to}.",
@@ -645,10 +613,11 @@
         "subtext": "Collaboration with Belgian, French and Canadian partners"
       },
       {
-        "value": 17,
+        "value": 13,
+        "sinceYear": 2013,
         "suffix": " years",
-        "label": "Of documented references",
-        "subtext": "From the first referenced ESIA-PGEP (2008) to the 2025 CSR survey"
+        "label": "Of field experience",
+        "subtext": "Since EWES was founded in 2013, up to the 2025 CSR survey"
       }
     ]
   },
@@ -1052,12 +1021,12 @@
     "timelineTitle": "Milestones",
     "timeline": [
       {
-        "year": "2008",
-        "text": "First referenced impact assessment (EIES-PGEP), for Kisenge Manganèse."
+        "year": "2013",
+        "text": "EWES S.A.R.L. is founded and holds its first training seminar on the mining environment, with the UNILU–Society Interface."
       },
       {
-        "year": "2013",
-        "text": "First training seminar on the mining environment, with the UNILU–Society Interface."
+        "year": "2014",
+        "text": "First environmental and social impact assessment, for the Société de Surveillance Minière."
       },
       {
         "year": "2021",
@@ -1070,7 +1039,7 @@
     ],
     "objectivesTitle": "Our research objectives",
     "stats": {
-      "firstStudy": "First referenced impact assessment",
+      "founded": "EWES founded",
       "missions": "Referenced assignments",
       "operators": "Mining operators supported",
       "poles": "Areas of expertise"

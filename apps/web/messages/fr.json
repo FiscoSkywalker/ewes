@@ -285,7 +285,7 @@
   "Projects": {
     "eyebrow": "03 · Nos réalisations",
     "title": "Le registre de nos missions.",
-    "description": "De la première étude d’impact en 2008 au Baromètre RSE de 2025. Filtrez par type de mission ou cliquez sur une année.",
+    "description": "De la création d’EWES en 2013 au Baromètre RSE de 2025. Filtrez par type de mission ou cliquez sur une année.",
     "histogramLabel": "Nombre de missions par année",
     "yearBar": "{year} : {count, plural, =0 {aucune mission} =1 {# mission} other {# missions}}",
     "filtersLabel": "Filtrer par type de mission",
@@ -573,43 +573,11 @@
         "yearEnd": 2014,
         "client": "Interface UNILU–Société",
         "mission": "Séminaire de formation en environnement minier"
-      },
-      {
-        "id": "ruashi-audit-2012",
-        "category": "AUDIT",
-        "year": 2012,
-        "yearEnd": null,
-        "client": "Ruashi Mining",
-        "mission": "Audit environnemental et social ; rapport annuel environnemental"
-      },
-      {
-        "id": "stl-eies-2011",
-        "category": "EIES",
-        "year": 2011,
-        "yearEnd": null,
-        "client": "STL",
-        "mission": "EIES-PGEP"
-      },
-      {
-        "id": "somika-audit-2010",
-        "category": "AUDIT",
-        "year": 2010,
-        "yearEnd": null,
-        "client": "SOMIKA",
-        "mission": "Audit environnemental et social ; rapport annuel environnemental"
-      },
-      {
-        "id": "kisenge-eies-2008",
-        "category": "EIES",
-        "year": 2008,
-        "yearEnd": null,
-        "client": "Kisenge Manganèse",
-        "mission": "EIES-PGEP"
       }
     ],
     "river": {
       "title": "Le fil de nos missions.",
-      "description": "De la première étude d’impact en 2008 au Baromètre RSE de 2025 : remontez le cours des missions menées par EWES. Chaque point est une mission ; chaque carte ouvre sa fiche.",
+      "description": "De la création d’EWES en 2013 au Baromètre RSE de 2025 : remontez le cours des missions menées par EWES. Chaque point est une mission ; chaque carte ouvre sa fiche.",
       "counter": "missions depuis {from}",
       "openLabel": "{client}, {year} : voir la fiche de la mission",
       "endTitle": "{count} missions, de {from} à {to}.",
@@ -645,10 +613,11 @@
         "subtext": "Collaboration avec des partenaires belges, français et canadiens"
       },
       {
-        "value": 17,
+        "value": 13,
+        "sinceYear": 2013,
         "suffix": " ans",
-        "label": "De références documentées",
-        "subtext": "De la première EIES-PGEP référencée (2008) à l’enquête RSE de 2025"
+        "label": "D’expérience sur le terrain",
+        "subtext": "Depuis la création d’EWES en 2013, jusqu’à l’enquête RSE de 2025"
       }
     ]
   },
@@ -1065,12 +1034,12 @@
     "timelineTitle": "Repères",
     "timeline": [
       {
-        "year": "2008",
-        "text": "Première étude d’impact référencée (EIES-PGEP), pour Kisenge Manganèse."
+        "year": "2013",
+        "text": "Création d’EWES S.A.R.L. et premier séminaire de formation en environnement minier, avec l’Interface UNILU–Société."
       },
       {
-        "year": "2013",
-        "text": "Premier séminaire de formation en environnement minier, avec l’Interface UNILU–Société."
+        "year": "2014",
+        "text": "Première étude d’impact environnemental et social, pour la Société de Surveillance Minière."
       },
       {
         "year": "2021",
@@ -1083,7 +1052,7 @@
     ],
     "objectivesTitle": "Nos objectifs de recherche",
     "stats": {
-      "firstStudy": "Première étude d’impact référencée",
+      "founded": "Création d’EWES",
       "missions": "Missions référencées",
       "operators": "Opérateurs miniers accompagnés",
       "poles": "Pôles d’expertise"
