@@ -1,6 +1,6 @@
 # Nginx — reverse proxy EWES (blueprint/18_Deployment.md §2 et note du 2026-10-08).
-# Modèle traité par l'image nginx (envsubst) : seule ${DOMAIN} est substituée, les
-# variables Nginx ($host, $scheme…) restent intactes.
+# Modèle traité par l'image nginx (envsubst) : seules ${DOMAIN} et ${NOINDEX} sont
+# substituées, les variables Nginx ($host, $scheme…) restent intactes.
 #
 # Règles de ce fichier :
 #  - HTTP redirige vers HTTPS (sauf le défi Let's Encrypt) ;
@@ -9,7 +9,15 @@
 #    près : POST /api/v1/contact (le formulaire public l'appelle depuis le navigateur) ;
 #  - /api/revalidate (invalidation du cache, déjà protégée par secret) n'est jamais publique ;
 #  - X-Forwarded-For est complété avec $proxy_add_x_forwarded_for : l'API (TRUST_PROXY_HOPS=1)
-#    et le BFF Next en retiennent la DERNIÈRE adresse, celle que Nginx vient d'ajouter.
+#    et le BFF Next en retiennent la DERNIÈRE adresse, celle que Nginx vient d'ajouter ;
+#  - NOINDEX=1 (.env, recette sur un sous-domaine) ajoute « X-Robots-Tag: noindex » à toutes
+#    les réponses : les moteurs ne référencent pas la copie de recette. Sans NOINDEX, aucun
+#    en-tête n'est ajouté (add_header ignore une valeur vide).
+
+map "${NOINDEX}" $ewes_x_robots_tag {
+    "1"     "noindex, nofollow";
+    default "";
+}
 
 server {
     listen 80;
@@ -56,6 +64,8 @@ server {
     ssl_session_cache   shared:SSL:10m;
     ssl_session_timeout 1d;
     ssl_session_tickets off;
+
+    add_header X-Robots-Tag $ewes_x_robots_tag always;
 
     # Le plus gros fichier accepté par l'API est un document privé de 25 Mo.
     client_max_body_size 30m;

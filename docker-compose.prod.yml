@@ -106,6 +106,8 @@ services:
       - "443:443"
     environment:
       DOMAIN: ${DOMAIN}
+      # 1 = recette sur un sous-domaine : en-tête « X-Robots-Tag: noindex » (ewes.conf.template).
+      NOINDEX: ${NOINDEX:-0}
     volumes:
       - ./ops/deploy/nginx/ewes.conf.template:/etc/nginx/templates/ewes.conf.template:ro
       - ./ops/deploy/nginx/proxy.conf:/etc/nginx/snippets/proxy.conf:ro

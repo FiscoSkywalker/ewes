@@ -44,6 +44,19 @@ nslookup www.votre-domaine
 
 Let's Encrypt (étape 7) échoue tant que ce n'est pas le cas.
 
+### Variante : recette sur un sous-domaine (ex. `new.ewes.cd`)
+
+Le temps de la recette, le site peut tourner sur un sous-domaine sans toucher au site ni à la messagerie actuels du domaine nu (`blueprint/18` §1 le prévoit). Une seule différence par étape :
+
+| Étape | Recette sur `new.ewes.cd` |
+|---|---|
+| 2 — DNS | Un seul enregistrement **A** `new` → `31.220.51.106` (pas de `www`, ne toucher ni au A du domaine nu, ni au MX, ni aux autres enregistrements). Vérifier : `nslookup new.ewes.cd` |
+| 6 — `.env` | `DOMAIN=new.ewes.cd` et `NOINDEX=1` (les moteurs de recherche ne référencent pas la copie de recette : en-tête `X-Robots-Tag: noindex`) |
+| 7 — Certificat | `NO_WWW=1 ./ops/deploy/init-tls.sh vous@adresse` (certificat pour `new.ewes.cd` seul) |
+| 8 — GitHub | Variable `SITE_URL` = `https://new.ewes.cd`, secret `VPS_HOST` = `31.220.51.106` |
+
+**Bascule sur le domaine définitif après la recette** : préparer le DNS du domaine nu (encadré ci-dessus), puis sur le VPS mettre `DOMAIN=ewes.cd` et retirer `NOINDEX` dans `.env`, refaire l'étape 7 **sans** `NO_WWW` (certificat `ewes.cd` + `www.ewes.cd`), changer `SITE_URL` en `https://ewes.cd` dans GitHub et redéployer. Les données (contenus, comptes, documents) restent en place : seule l'adresse change. L'enregistrement `new` peut ensuite être supprimé, avec son certificat (sinon le renouvellement automatique échoue en boucle) : `./ops/deploy/compose.sh run --rm --no-deps --entrypoint certbot certbot delete --cert-name new.ewes.cd`.
+
 ## Étape 3 — Installer Docker sur le VPS
 
 Connexion initiale en `root` (les identifiants viennent du fournisseur du VPS), puis :
@@ -219,7 +232,7 @@ cat .deploy-history                         # historique des déploiements
 
 **Ajouter une variable** : modifier `.env` sur le VPS, puis `./ops/deploy/compose.sh up -d api web`. Si elle commence par `NEXT_PUBLIC_`, elle est figée à la construction : modifier le workflow/Dockerfile et redéployer.
 
-**Changer de domaine** : changer `DOMAIN` (`.env`) et la variable GitHub `SITE_URL`, refaire l'étape 7, puis redéployer (le site est reconstruit avec la nouvelle adresse).
+**Changer de domaine** : changer `DOMAIN` (`.env`) et la variable GitHub `SITE_URL`, refaire l'étape 7 (avec `NO_WWW=1` pour un sous-domaine), puis redéployer (le site est reconstruit avec la nouvelle adresse). Cas de la recette sur sous-domaine : voir la variante de l'étape 2.
 
 ## Pourquoi c'est organisé ainsi
 
