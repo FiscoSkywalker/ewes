@@ -155,7 +155,7 @@ export function ServiceChapter({
             <span className="font-heading text-6xl font-bold leading-none tracking-tight text-transparent [-webkit-text-stroke:1.5px_var(--pole)]">
               {String(index).padStart(2, '0')}
             </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-elevated py-1 pl-1 pr-3 font-mono text-[11px] font-bold tracking-[0.12em] text-pole">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-elevated py-1 pl-1 pr-3 font-mono text-xs font-bold tracking-[0.1em] text-pole">
               <span
                 className="pattern-swatch h-5 w-5 rounded-full border border-border-subtle"
                 aria-hidden="true"
@@ -166,7 +166,7 @@ export function ServiceChapter({
 
           <h2
             id={`${pole}-title`}
-            className="section-title mt-8 text-4xl text-sand sm:text-5xl lg:text-6xl"
+            className="section-title mt-8 text-3xl text-sand sm:text-4xl lg:text-5xl"
             data-split
           >
             {data?.name ?? t(`poles.${pole}`)}
@@ -208,7 +208,7 @@ export function ServiceChapter({
                 className="h-2.5 w-2.5 rounded-full bg-pole"
                 aria-hidden="true"
               />
-              <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-sand">
+              <span className="font-mono text-xs font-bold uppercase tracking-[0.1em] text-sand">
                 {count}
               </span>
             </figcaption>
@@ -231,14 +231,14 @@ export function ServiceChapter({
                   <span className="flex h-12 w-12 items-center justify-center rounded-control bg-[color-mix(in_srgb,var(--pole)_11%,transparent)] text-pole transition-colors duration-300 group-hover:bg-pole group-hover:text-white">
                     <Icon size={20} strokeWidth={1.75} />
                   </span>
-                  <span className="font-mono text-[11px] text-muted">
+                  <span className="font-mono text-xs text-muted">
                     {String(serviceIndex + 1).padStart(2, '0')}
                   </span>
                 </div>
                 <h3 className="mt-6 font-heading text-lg font-bold leading-snug text-sand sm:text-xl">
                   {service.title}
                 </h3>
-                <p className="mt-2 text-sm leading-6 text-sand/65">
+                <p className="mt-2 text-sm leading-6 text-sand/75">
                   {service.text ?? service.desc}
                 </p>
                 <span

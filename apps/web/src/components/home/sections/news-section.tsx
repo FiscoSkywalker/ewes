@@ -21,7 +21,7 @@ import { ButtonLink, EmptyState, TextLink } from '@/components/public/ui';
 const ROTATION_MS = 7000;
 
 /**
- * « 04 · Actualités & publications » de l'Accueil — homepage uniquement.
+ * « 06 · Actualités » de l'Accueil — homepage uniquement.
  * Carnet de bord : un panneau « À la une » et un sommaire numéroté. Survoler
  * ou atteindre au clavier une ligne du sommaire l'affiche dans le panneau
  * (balayage de l'image) ; sans interaction, les actualités défilent seules.
@@ -35,6 +35,7 @@ const ROTATION_MS = 7000;
  */
 export function NewsSection({ news }: { news: HomeNews }) {
   const t = useTranslations('News');
+  const tHome = useTranslations('HomeSections');
   const tPage = useTranslations('NewsPage');
   const locale = useLocale();
   const reducedMotion = useReducedMotion();
@@ -64,12 +65,12 @@ export function NewsSection({ news }: { news: HomeNews }) {
       ref={sectionRef}
       data-paused={!inView}
       aria-labelledby="home-news-title"
-      className="bg-paper-muted px-6 py-24 text-sand md:px-16 md:py-32"
+      className="bg-paper-muted px-6 py-14 text-sand md:px-16 md:py-24"
     >
       <div className="mx-auto w-full max-w-[1440px]">
         <div className="mb-14 flex flex-col justify-between gap-8 md:flex-row md:items-end">
           <SectionHeading
-            eyebrow={t('eyebrow')}
+            eyebrow={tHome('newsEyebrow')}
             title={<span id="home-news-title">{t('title')}</span>}
           />
           <div className="flex flex-col gap-5 md:items-end">
@@ -83,10 +84,10 @@ export function NewsSection({ news }: { news: HomeNews }) {
                           pathname: '/actualites',
                           query: { categorie: key },
                         }}
-                        className="inline-flex items-center gap-2 rounded-full border border-sand/20 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-sand/75 transition-colors hover:border-sand hover:text-sand"
+                        className="inline-flex items-center gap-2 rounded-full border border-sand/20 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.1em] text-sand/75 transition-colors hover:border-sand hover:text-sand"
                       >
                         {tPage(`categories.${key}`)}
-                        <span className="font-mono text-[10px] font-normal opacity-70">
+                        <span className="font-mono text-xs font-normal">
                           {count}
                         </span>
                       </Link>
@@ -129,7 +130,7 @@ export function NewsSection({ news }: { news: HomeNews }) {
             data-reveal
           >
             {/* À la une : l'actualité active */}
-            <article className="tone-night group relative flex min-h-[520px] flex-col justify-end overflow-hidden rounded-sheet bg-night focus-within:ring-2 focus-within:ring-primary lg:min-h-[600px]">
+            <article className="tone-night group relative flex min-h-[360px] flex-col justify-end overflow-hidden rounded-sheet bg-night focus-within:ring-2 focus-within:ring-primary lg:min-h-[560px]">
               {items.map((item, index) => {
                 const state =
                   index === active
@@ -158,7 +159,7 @@ export function NewsSection({ news }: { news: HomeNews }) {
                 aria-hidden="true"
               />
 
-              <span className="absolute left-5 top-5 z-40 inline-flex items-center gap-2 rounded-full bg-night/65 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-on-night backdrop-blur-md">
+              <span className="absolute left-5 top-5 z-40 inline-flex items-center gap-2 rounded-full bg-night/65 px-3 py-1.5 font-mono text-xs uppercase tracking-[0.1em] text-on-night backdrop-blur-md">
                 <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-malachite-bright" />
                 {tPage('featured')}
               </span>
@@ -177,7 +178,7 @@ export function NewsSection({ news }: { news: HomeNews }) {
                 <Link
                   href={`/actualites/${current.id}`}
                   aria-label={t('readLabel', { title: current.title })}
-                  className="mt-8 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.12em] text-on-night outline-none after:absolute after:inset-0 after:content-['']"
+                  className="mt-8 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.1em] text-on-night outline-none after:absolute after:inset-0 after:content-['']"
                 >
                   {tPage('readMore')}
                   <span className="flex h-10 w-10 items-center justify-center rounded-full border border-on-night/25 transition-colors group-hover:border-malachite-bright group-hover:bg-malachite-bright group-hover:text-night">
@@ -190,7 +191,7 @@ export function NewsSection({ news }: { news: HomeNews }) {
             {/* Sommaire */}
             <div className="flex flex-col">
               <div className="flex items-center justify-between border-b border-sand pb-3">
-                <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+                <h3 className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
                   {t('indexLabel')}
                 </h3>
                 {items.length > 1 && !reducedMotion && (
@@ -223,16 +224,14 @@ export function NewsSection({ news }: { news: HomeNews }) {
                       >
                         <span
                           className={`font-heading text-2xl font-bold leading-none tabular-nums transition-colors ${
-                            isActive
-                              ? 'text-malachite'
-                              : 'text-transparent [-webkit-text-stroke:1px_var(--color-sand)] opacity-40'
+                            isActive ? 'text-malachite' : 'text-muted'
                           }`}
                           aria-hidden="true"
                         >
                           {String(index + 1).padStart(2, '0')}
                         </span>
                         <span>
-                          <span className="flex flex-wrap items-center gap-x-3 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+                          <span className="flex flex-wrap items-center gap-x-3 font-mono text-xs uppercase tracking-[0.1em] text-muted">
                             <span className="text-malachite">
                               {tPage(`categories.${item.category}`)}
                             </span>
@@ -242,7 +241,7 @@ export function NewsSection({ news }: { news: HomeNews }) {
                           </span>
                           <span
                             className={`mt-2 block font-heading text-lg font-semibold leading-snug transition-colors ${
-                              isActive ? 'text-sand' : 'text-sand/60'
+                              isActive ? 'text-sand' : 'text-sand/85'
                             } group-hover/row:text-sand`}
                           >
                             {item.title}

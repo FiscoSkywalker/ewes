@@ -84,7 +84,7 @@ export function MissionsTimeline({
           <span className="block font-heading text-5xl font-bold leading-none tracking-tight text-on-night">
             {headline.value}
           </span>
-          <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.14em]">
+          <span className="mt-2 block font-mono text-xs uppercase tracking-[0.1em]">
             {headline.label}
           </span>
         </p>
@@ -156,13 +156,13 @@ export function MissionsTimeline({
                         role="tooltip"
                         className={`pointer-events-none absolute bottom-[calc(100%+10px)] z-10 w-56 rounded-control bg-on-night px-3.5 py-3 text-left opacity-0 shadow-xl transition-opacity group-hover/dot:opacity-100 group-focus-within/dot:opacity-100 ${tipAlign}`}
                       >
-                        <span className="block font-mono text-[9px] uppercase tracking-[0.14em] text-malachite">
+                        <span className="block font-mono text-xs uppercase tracking-[0.1em] text-malachite">
                           {option?.tag} · {y}
                         </span>
                         <span className="mt-1 block text-xs font-semibold leading-snug text-night">
                           {project.client}
                         </span>
-                        <span className="mt-1 line-clamp-2 block text-[11px] leading-snug text-night/70">
+                        <span className="mt-1 line-clamp-2 block text-xs leading-snug text-night/70">
                           {project.mission}
                         </span>
                       </span>
@@ -172,7 +172,7 @@ export function MissionsTimeline({
               </ul>
 
               <span
-                className={`pointer-events-none absolute bottom-1.5 font-mono text-[9px] leading-none sm:text-[10px] ${
+                className={`pointer-events-none absolute bottom-1.5 font-mono text-xs leading-none sm:text-xs ${
                   active
                     ? 'font-bold text-on-night'
                     : list.length
@@ -192,7 +192,7 @@ export function MissionsTimeline({
         className="pointer-events-none relative -mt-7 mb-7 h-px bg-on-night/15"
         aria-hidden="true"
       />
-      <div className="relative mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-on-night/10 pt-5 font-mono text-[10px] uppercase tracking-[0.12em]">
+      <div className="relative mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-on-night/10 pt-5 font-mono text-xs uppercase tracking-[0.1em]">
         <span className="inline-flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-malachite-bright" />
           {t('legendMatch')}

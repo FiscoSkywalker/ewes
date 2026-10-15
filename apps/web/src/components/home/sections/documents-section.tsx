@@ -1,5 +1,3 @@
-'use client';
-
 import { useTranslations } from 'next-intl';
 import {
   DocumentsShowcase,
@@ -8,7 +6,7 @@ import {
 import { SectionHeading } from '@/components/public/section-heading';
 
 /**
- * « 05 · Documents » de l'Accueil — homepage uniquement. Les documents sont
+ * « 07 · Documents » de l'Accueil — homepage uniquement. Les documents sont
  * lus côté serveur (API `documents-publics`) et transmis en props.
  */
 export function DocumentsSection({
@@ -17,12 +15,13 @@ export function DocumentsSection({
   documents: ShowcaseDocument[];
 }) {
   const t = useTranslations('HomeDocuments');
+  const tHome = useTranslations('HomeSections');
 
   return (
-    <section className="bg-white px-6 py-24 text-sand md:px-16 md:py-32">
+    <section className="bg-white px-6 py-14 text-sand md:px-16 md:py-24">
       <div className="mx-auto w-full max-w-[1440px]">
         <SectionHeading
-          eyebrow={t('eyebrow')}
+          eyebrow={tHome('documentsEyebrow')}
           title={t('title')}
           description={t('lead')}
           className="mb-12 max-w-4xl"

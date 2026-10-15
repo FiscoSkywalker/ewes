@@ -1,14 +1,8 @@
 'use client';
 
 import { useEffect, type ReactNode } from 'react';
-import Lenis from 'lenis';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { registerLenis } from '@/lib/smooth-scroll';
-
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
+import { loadMotion, whenIdle } from '@/lib/motion';
 
 interface ExperienceControllerProps {
   children: ReactNode;
@@ -26,29 +20,41 @@ interface ExperienceControllerProps {
  */
 export function ExperienceController({ children }: ExperienceControllerProps) {
   useEffect(() => {
-    const lenis = new Lenis({
-      lerp: 0.13,
-      smoothWheel: true,
-      wheelMultiplier: 1,
+    // Lenis et GSAP sont chargés après le premier affichage (voir lib/motion) :
+    // d'ici là, le défilement natif du navigateur s'applique.
+    let disposed = false;
+    let dispose = () => {};
+    const cancelIdle = whenIdle(async () => {
+      const { gsap, ScrollTrigger, Lenis } = await loadMotion();
+      if (disposed) return;
+
+      const lenis = new Lenis({
+        lerp: 0.13,
+        smoothWheel: true,
+        wheelMultiplier: 1,
+      });
+      registerLenis(lenis);
+
+      lenis.on('scroll', ScrollTrigger.update);
+
+      const updateTicker = (time: number) => {
+        lenis.raf(time * 1000);
+      };
+
+      gsap.ticker.add(updateTicker);
+      gsap.ticker.lagSmoothing(500, 33);
+
+      dispose = () => {
+        gsap.ticker.remove(updateTicker);
+        registerLenis(null);
+        lenis.destroy();
+      };
     });
-    registerLenis(lenis);
-
-    lenis.on('scroll', ScrollTrigger.update);
-
-    const updateTicker = (time: number) => {
-      lenis.raf(time * 1000);
-    };
-
-    gsap.ticker.add(updateTicker);
-    // Sans lissage de retard, GSAP rattrape les frames perdues d'un coup
-    // (sauts visibles après un pic de charge) ; 500 ms/33 ms = comportement
-    // par défaut de GSAP, qui absorbe ces pics proprement.
-    gsap.ticker.lagSmoothing(500, 33);
 
     return () => {
-      gsap.ticker.remove(updateTicker);
-      registerLenis(null);
-      lenis.destroy();
+      disposed = true;
+      cancelIdle();
+      dispose();
     };
   }, []);
 

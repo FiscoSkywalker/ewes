@@ -34,7 +34,7 @@ export function DocumentsOverview({
   return (
     <div className="grid gap-14 lg:grid-cols-2 lg:gap-24">
       <div>
-        <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+        <h3 className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
           {t('publicTitle')}
         </h3>
         <EmptyState
@@ -53,7 +53,7 @@ export function DocumentsOverview({
       </div>
 
       <div className="tone-night self-start bg-night shadow-[12px_12px_0_var(--color-malachite)]">
-        <div className="flex items-center gap-3 border-b border-on-night/12 px-4 py-3 font-mono text-[11px]">
+        <div className="flex items-center gap-3 border-b border-on-night/12 px-4 py-3 font-mono text-xs">
           <span className="flex gap-1.5" aria-hidden="true">
             <i className="h-2 w-2 rounded-full bg-on-night/20" />
             <i className="h-2 w-2 rounded-full bg-on-night/20" />
@@ -68,7 +68,7 @@ export function DocumentsOverview({
 
         <div className="p-6 sm:p-8">
           <div aria-hidden="true">
-            <div className="flex items-center gap-2.5 border border-on-night/15 px-3.5 py-3 font-mono text-[11px]">
+            <div className="flex items-center gap-2.5 border border-on-night/15 px-3.5 py-3 font-mono text-xs">
               <Search size={14} className="flex-none" />
               {t('vault.search')}
             </div>
@@ -81,7 +81,7 @@ export function DocumentsOverview({
                   <span className="relative h-3 w-4 flex-none rounded-[1px] border-[1.5px] border-malachite-bright" />
                   {folder.name}
                   <em
-                    className={`ml-auto border border-current px-1.5 py-0.5 font-mono text-[10px] not-italic uppercase tracking-[0.08em] ${ROLE_TONE[folder.role]}`}
+                    className={`ml-auto border border-current px-1.5 py-0.5 font-mono text-xs not-italic uppercase tracking-[0.08em] ${ROLE_TONE[folder.role]}`}
                   >
                     {t(`vault.roles.${folder.role}`)}
                   </em>
@@ -89,7 +89,7 @@ export function DocumentsOverview({
               ))}
             </ul>
           </div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-on-night-muted/70">
+          <p className="font-mono text-xs uppercase tracking-[0.1em] text-on-night-muted/70">
             {t('vault.illustration')}
           </p>
           <p className="mb-6 mt-3 text-sm leading-6">{t('vault.note')}</p>

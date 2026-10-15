@@ -1,3 +1,8 @@
+'use client';
+
+// Composant client : les contours sont recalculés dans le navigateur à partir
+// de l'identifiant, ce qui évite d'envoyer deux fois leurs tracés (HTML + flux
+// RSC) quand une page serveur affiche plusieurs couvertures.
 import Image from 'next/image';
 import type { Project, ProjectCategory } from '@/data/projects';
 
@@ -107,7 +112,7 @@ export function ProjectCover({
           aria-hidden="true"
         />
         {tag && (
-          <span className="absolute left-4 top-4 rounded-full bg-night/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-on-night backdrop-blur-sm">
+          <span className="absolute left-4 top-4 rounded-full bg-night/60 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.1em] text-on-night backdrop-blur-sm">
             {tag}
           </span>
         )}
@@ -153,7 +158,7 @@ export function ProjectCover({
       <div className="absolute inset-0 bg-linear-to-t from-night via-night/20 to-transparent" />
       {tag && (
         <span
-          className="absolute left-4 top-4 font-mono text-[10px] uppercase tracking-[0.18em]"
+          className="absolute left-4 top-4 font-mono text-xs uppercase tracking-[0.1em]"
           style={{ color: tone.accent }}
         >
           {tag}

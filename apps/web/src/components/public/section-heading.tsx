@@ -15,6 +15,13 @@ interface SectionHeadingProps {
   className?: string;
 }
 
+/** Hiérarchie des titres (Archivo) : h1 de page > h2 de section > h3. */
+const HEADING_SIZE = {
+  h1: 'text-4xl sm:text-5xl lg:text-6xl',
+  h2: 'text-3xl sm:text-4xl lg:text-5xl',
+  h3: 'text-2xl sm:text-3xl',
+} as const;
+
 /**
  * En-tête de section réutilisé sur toutes les pages publiques
  * (blueprint/05_UI_UX_System.md §4). Le titre est révélé ligne par ligne au
@@ -43,7 +50,7 @@ export function SectionHeading({
         {eyebrow}
       </div>
       <Heading
-        className={`section-title text-4xl sm:text-5xl lg:text-7xl ${night ? 'text-on-night' : 'text-sand'}`}
+        className={`section-title ${HEADING_SIZE[Heading]} ${night ? 'text-on-night' : 'text-sand'}`}
         data-split
       >
         {title}

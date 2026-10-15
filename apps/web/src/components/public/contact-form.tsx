@@ -141,7 +141,7 @@ export function ContactForm({ onSectorChange }: ContactFormProps) {
         : 'border-on-night/20 focus:border-malachite-bright'
     }`;
   const labelClass =
-    'font-mono text-[10px] uppercase tracking-[0.12em] text-on-night-muted';
+    'font-mono text-xs uppercase tracking-[0.1em] text-on-night-muted';
 
   /** Attributs d'accessibilité + message d'erreur d'un champ. */
   const fieldA11y = (field: ContactField) => ({
@@ -324,7 +324,7 @@ export function ContactForm({ onSectorChange }: ContactFormProps) {
         <Button type="submit" tone="night" pending={sending} icon={Send}>
           {sending ? t('submit.sending') : t('submitLabel')}
         </Button>
-        <p className="max-w-sm text-[11px] leading-5 text-on-night-muted/80">
+        <p className="max-w-sm text-xs leading-5 text-on-night-muted/80">
           {t('requiredNote')}{' '}
           {t.rich('privacyNote', {
             link: (chunks) => (

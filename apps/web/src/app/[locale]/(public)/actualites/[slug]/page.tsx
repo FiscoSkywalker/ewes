@@ -97,7 +97,7 @@ export default async function NewsArticlePage({
       <article className="mx-auto w-full max-w-[1200px]">
         {/* Fil d'Ariane */}
         <nav aria-label={tNav('breadcrumb')} className="mb-10">
-          <ol className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <ol className="flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-muted">
             <li>
               <Link href="/" className="hover:text-sand">
                 {tNav('home')}
@@ -166,7 +166,7 @@ export default async function NewsArticlePage({
             <dl className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-sand pt-6 lg:grid-cols-1">
               {facts.map(([label, value]) => (
                 <div key={label}>
-                  <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+                  <dt className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
                     {label}
                   </dt>
                   <dd className="mt-1 text-sm font-semibold leading-6">
@@ -207,7 +207,7 @@ export default async function NewsArticlePage({
                   href={`/actualites/${other.id}`}
                   className={`group flex flex-col gap-2 p-7 transition-colors hover:bg-white sm:p-8 ${end ? 'sm:items-end sm:border-l sm:border-border-subtle sm:text-right' : 'border-b border-border-subtle sm:border-b-0'}`}
                 >
-                  <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+                  <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-muted">
                     {!end && (
                       <Icon
                         size={12}

@@ -33,7 +33,7 @@ export function ProjectCard({
         sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw"
         className="aspect-[16/10] rounded-card"
       />
-      <span className="mt-5 flex items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.12em]">
+      <span className="mt-5 flex items-center justify-between gap-3 font-mono text-xs uppercase tracking-[0.1em]">
         <span className={PROJECT_CATEGORY_TONE[project.category]}>
           {category?.tag ?? project.category}
         </span>
@@ -48,7 +48,7 @@ export function ProjectCard({
         </span>
       )}
       {project.slug && (
-        <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-sand/70 transition-colors group-hover:text-sand">
+        <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.1em] text-sand/70 transition-colors group-hover:text-sand">
           {t('openSheet')}
           <ArrowUpRight
             size={13}

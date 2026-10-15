@@ -84,13 +84,13 @@ export function DocumentCover({ doc }: { doc: ShowcaseDocument }) {
       <div className="absolute inset-0 translate-x-2.5 translate-y-1.5 rotate-[2.5deg] rounded-card bg-on-night/16 transition-transform duration-500 group-hover:translate-x-3.5 group-hover:rotate-[4deg]" />
       <div className="relative flex h-full flex-col rounded-card bg-paper p-5 text-sand shadow-[0_24px_48px_-16px_rgba(0,0,0,0.55)] transition-transform duration-500 group-hover:-translate-y-1.5 group-hover:-rotate-1">
         <div className="pattern-swatch h-14 rounded-control border border-border-subtle" />
-        <span className="mt-5 font-mono text-[9px] uppercase tracking-[0.16em] text-pole">
+        <span className="mt-5 font-mono text-xs uppercase tracking-[0.1em] text-pole">
           {t(`categories.${doc.category}`)}
         </span>
         <p className="mt-2 line-clamp-5 font-heading text-[15px] font-bold leading-snug">
           {doc.title}
         </p>
-        <div className="mt-auto flex items-end justify-between border-t border-border pt-3 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
+        <div className="mt-auto flex items-end justify-between border-t border-border pt-3 font-mono text-xs uppercase tracking-[0.1em] text-muted">
           <span>EWES · {doc.year}</span>
           <span className="rounded-[3px] bg-pole px-1.5 py-0.5 text-white">
             {doc.format}
@@ -105,7 +105,7 @@ export function DocumentCover({ doc }: { doc: ShowcaseDocument }) {
 export function FileBadge({ doc }: { doc: ShowcaseDocument }) {
   return (
     <span
-      className={`${poleClass(doc.pole)} relative flex h-14 w-11 flex-none flex-col justify-end overflow-hidden rounded-md border border-border bg-surface-elevated pb-1.5 text-center font-mono text-[9px] font-bold tracking-[0.08em] text-pole transition-colors group-hover:border-pole`}
+      className={`${poleClass(doc.pole)} relative flex h-14 w-11 flex-none flex-col justify-end overflow-hidden rounded-md border border-border bg-surface-elevated pb-1.5 text-center font-mono text-xs font-bold tracking-[0.08em] text-pole transition-colors group-hover:border-pole`}
       aria-hidden="true"
     >
       <span className="pattern-swatch absolute inset-x-0 top-0 h-5 border-b border-border-subtle" />
@@ -193,10 +193,13 @@ export function DocumentsShowcase({
             aria-hidden="true"
           />
 
-          <DocumentCover doc={featured} />
+          {/* Illustration décorative : masquée sur mobile pour raccourcir la page. */}
+          <div className="hidden sm:block">
+            <DocumentCover doc={featured} />
+          </div>
 
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-on-night/15 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-malachite-bright">
+            <span className="inline-flex items-center gap-2 rounded-full border border-on-night/15 px-3 py-1 font-mono text-xs uppercase tracking-[0.1em] text-malachite-bright">
               <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-malachite-bright" />
               {t('featured')}
             </span>
@@ -204,7 +207,7 @@ export function DocumentsShowcase({
               {featured.title}
             </h3>
             <p className="mt-4 text-sm leading-7">{featured.excerpt}</p>
-            <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-on-night-muted/80">
+            <p className="mt-5 font-mono text-xs uppercase tracking-[0.1em] text-on-night-muted/80">
               {t(`categories.${featured.category}`)} · {meta(featured)}
             </p>
             <DocumentLink
@@ -214,9 +217,7 @@ export function DocumentsShowcase({
             >
               <ArrowDownToLine size={15} />
               {t('download')}
-              <span className="font-mono text-[10px] opacity-60">
-                {featured.format}
-              </span>
+              <span className="font-mono text-xs">{featured.format}</span>
             </DocumentLink>
           </div>
         </article>
@@ -233,14 +234,14 @@ export function DocumentsShowcase({
                 <FileBadge doc={doc} />
                 <span className="min-w-0 flex-1">
                   <span
-                    className={`${poleClass(doc.pole)} font-mono text-[10px] uppercase tracking-[0.14em] text-pole`}
+                    className={`${poleClass(doc.pole)} font-mono text-xs uppercase tracking-[0.1em] text-pole`}
                   >
                     {t(`categories.${doc.category}`)}
                   </span>
                   <span className="mt-1 block text-[15px] font-semibold leading-snug text-sand">
                     {doc.title}
                   </span>
-                  <span className="mt-1.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+                  <span className="mt-1.5 block font-mono text-xs uppercase tracking-[0.1em] text-muted">
                     {meta(doc)}
                   </span>
                 </span>
@@ -254,7 +255,7 @@ export function DocumentsShowcase({
           <li className="mt-auto pt-3">
             <Link
               href="/documents"
-              className="group flex items-center justify-between rounded-card border border-dashed border-sand/25 px-5 py-4 text-xs font-bold uppercase tracking-[0.12em] text-sand transition-colors hover:border-sand hover:bg-paper"
+              className="group flex items-center justify-between rounded-card border border-dashed border-sand/25 px-5 py-4 text-xs font-bold uppercase tracking-[0.1em] text-sand transition-colors hover:border-sand hover:bg-paper"
             >
               {t('viewAll')}
               <ArrowRight

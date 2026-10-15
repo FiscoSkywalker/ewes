@@ -106,7 +106,7 @@ export default async function NewsPage({
                     className="absolute inset-0 bg-linear-to-t from-night/50 to-transparent lg:bg-linear-to-r lg:from-transparent lg:via-transparent lg:to-night/60"
                     aria-hidden="true"
                   />
-                  <span className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-night/65 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-on-night backdrop-blur-md">
+                  <span className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-night/65 px-3 py-1.5 font-mono text-xs uppercase tracking-[0.1em] text-on-night backdrop-blur-md">
                     <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-malachite-bright" />
                     {t('featured')}
                   </span>
@@ -124,7 +124,7 @@ export default async function NewsPage({
                   <p className="mt-5 text-sm leading-7 sm:text-base">
                     {featured.excerpt}
                   </p>
-                  <span className="mt-8 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.12em] text-on-night">
+                  <span className="mt-8 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.1em] text-on-night">
                     {t('readMore')}
                     <span className="flex h-10 w-10 items-center justify-center rounded-full border border-on-night/25 transition-colors group-hover:border-malachite-bright group-hover:bg-malachite-bright group-hover:text-night">
                       <ArrowRight size={16} />

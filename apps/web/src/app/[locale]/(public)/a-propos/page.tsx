@@ -111,14 +111,14 @@ export default async function AboutPage({
               />
             </div>
             <figcaption className="absolute -bottom-8 left-6 right-6 flex flex-col gap-4 rounded-card bg-surface-elevated p-5 shadow-[0_24px_48px_-24px_rgba(21,52,66,0.45)] sm:left-auto sm:right-8 sm:w-80">
-              <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-primary">
+              <span className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-primary">
                 <Building2 size={13} /> {t('hqLabel')}
               </span>
               <span>
                 <span className="block font-heading text-3xl font-bold leading-none">
                   {t('hqCity')}
                 </span>
-                <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                <span className="mt-1 block font-mono text-xs uppercase tracking-[0.1em] text-muted">
                   {t('hqRegion')}
                 </span>
               </span>
@@ -151,7 +151,7 @@ export default async function AboutPage({
                 <Phone size={15} className="flex-none text-primary" />
                 {settings.phone}
               </a>
-              <p className="border-t border-border pt-4 text-xs leading-5 text-sand/60">
+              <p className="border-t border-border pt-4 text-xs leading-5 text-sand/75">
                 {t('networkLine')}
               </p>
             </div>
@@ -213,7 +213,7 @@ export default async function AboutPage({
               </p>
             </div>
             <ExpertsGallery experts={experts} poleNames={poleNames} />
-            <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+            <p className="mt-6 font-mono text-xs uppercase tracking-[0.1em] text-muted">
               {tPage('team.hint')}
             </p>
           </div>
@@ -237,7 +237,7 @@ export default async function AboutPage({
                   <h3 className="font-heading text-lg font-bold leading-snug">
                     {item.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-sand/65">
+                  <p className="mt-2 text-sm leading-6 text-sand/75">
                     {item.text}
                   </p>
                 </li>
@@ -256,14 +256,14 @@ export default async function AboutPage({
                   key={item.title}
                   className="grid grid-cols-[56px_1fr] gap-4 border-b border-sand/20 py-6"
                 >
-                  <span className="font-heading text-3xl font-bold text-water">
+                  <span className="font-heading text-3xl font-bold text-primary">
                     {String(index + 1).padStart(2, '0')}
                   </span>
                   <div>
                     <h3 className="font-heading text-lg font-bold leading-snug">
                       {item.title}
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-sand/65">
+                    <p className="mt-2 text-sm leading-6 text-sand/75">
                       {item.text}
                     </p>
                   </div>

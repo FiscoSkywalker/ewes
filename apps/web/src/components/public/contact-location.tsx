@@ -31,12 +31,12 @@ export function ContactLocation({
 
           <div className="mt-10 grid gap-6" data-reveal>
             <div>
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-primary">
+              <p className="mb-2 font-mono text-xs uppercase tracking-[0.1em] text-primary">
                 {t('addressLabel')}
               </p>
               <p className="max-w-md text-lg leading-snug">{address}</p>
             </div>
-            <p className="max-w-md border-t border-border pt-5 text-sm leading-6 text-sand/65">
+            <p className="max-w-md border-t border-border pt-5 text-sm leading-6 text-sand/75">
               {tWorld('networkLine')}
             </p>
             <ButtonAnchor
@@ -120,16 +120,16 @@ export function ContactLocation({
               <span className="block font-heading text-2xl font-bold leading-none">
                 {tWorld('hqCity')}
               </span>
-              <span className="mt-1.5 block font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+              <span className="mt-1.5 block font-mono text-xs uppercase tracking-[0.1em] text-muted">
                 {tWorld('hqRegion')}
               </span>
             </span>
-            <span className="font-mono text-[10px] tracking-[0.08em] text-primary">
+            <span className="font-mono text-xs tracking-[0.08em] text-primary">
               {t('coordinates')}
             </span>
           </figcaption>
 
-          <span className="absolute right-5 top-5 font-mono text-[10px] tracking-[0.2em] text-muted">
+          <span className="absolute right-5 top-5 font-mono text-xs tracking-[0.1em] text-muted">
             N ↑
           </span>
         </figure>

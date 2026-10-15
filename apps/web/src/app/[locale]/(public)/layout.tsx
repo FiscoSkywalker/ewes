@@ -28,7 +28,9 @@ export default async function PublicLayout({
         <div className="flex min-h-full flex-col bg-background text-sand selection:bg-primary selection:text-white">
           <ScrollAnimations />
           <Header />
-          <main className="flex-1">{children}</main>
+          <main id="contenu" tabIndex={-1} className="flex-1 outline-none">
+            {children}
+          </main>
           <Footer />
         </div>
       </ExperienceController>

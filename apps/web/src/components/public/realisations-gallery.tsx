@@ -156,7 +156,7 @@ export function RealisationsGallery({
             key={stat.label}
             className={`flex flex-col gap-2 p-7 sm:p-8 ${index > 0 ? 'border-t border-border sm:border-l sm:border-t-0' : ''}`}
           >
-            <dt className="order-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+            <dt className="order-2 font-mono text-xs uppercase tracking-[0.1em] text-muted">
               {stat.label}
             </dt>
             <dd className="order-1 font-heading text-4xl font-bold tracking-tight text-sand sm:text-5xl">
@@ -249,7 +249,7 @@ export function RealisationsGallery({
         </div>
 
         <p
-          className="flex flex-wrap items-center gap-4 font-mono text-[11px] uppercase tracking-[0.12em] text-muted"
+          className="flex flex-wrap items-center gap-4 font-mono text-xs uppercase tracking-[0.1em] text-muted"
           aria-live="polite"
         >
           {t('results', { count: filtered.length })}
@@ -294,7 +294,7 @@ export function RealisationsGallery({
                     className="aspect-[16/10] w-full"
                   />
                   <span className="flex flex-1 flex-col p-6 sm:p-7">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-malachite">
+                    <span className="font-mono text-xs uppercase tracking-[0.1em] text-malachite">
                       {project.yearEnd
                         ? `${project.year}–${project.yearEnd}`
                         : project.year}
@@ -306,7 +306,7 @@ export function RealisationsGallery({
                     <span className="mb-6 mt-3 line-clamp-3 text-sm leading-6 text-sand/70">
                       {project.mission}
                     </span>
-                    <span className="mt-auto flex items-center justify-between border-t border-border-subtle pt-5 text-[11px] font-bold uppercase tracking-[0.12em] text-sand">
+                    <span className="mt-auto flex items-center justify-between border-t border-border-subtle pt-5 text-xs font-bold uppercase tracking-[0.1em] text-sand">
                       {t('openSheet')}
                       <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border transition-colors group-hover:border-sand group-hover:bg-sand group-hover:text-paper">
                         <ArrowUpRight

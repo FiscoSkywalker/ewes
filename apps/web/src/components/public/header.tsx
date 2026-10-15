@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import NextLink from 'next/link';
-import { LogIn, Menu, X } from 'lucide-react';
+import { ArrowUpRight, LogIn, Menu, X } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { BrandLogo } from './brand-logo';
 import { LanguageSelector } from './language-selector';
@@ -55,6 +55,12 @@ export function Header() {
 
   return (
     <>
+      <a
+        href="#contenu"
+        className="sr-only z-[60] rounded-full bg-sand px-5 py-3 text-sm font-semibold text-paper focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+      >
+        {t('skipToContent')}
+      </a>
       <header
         className={`pointer-events-auto fixed inset-x-0 top-0 z-40 px-4 transition-transform duration-500 md:px-8 ${
           headerHidden ? '-translate-y-[120%]' : 'translate-y-0'
@@ -76,7 +82,7 @@ export function Header() {
               priority
               className={`transition-[height] duration-500 ${isScrolled ? 'h-10' : 'h-14'}`}
             />
-            <span className="hidden border-l border-sand/15 pl-3 text-[9px] font-bold uppercase leading-4 tracking-[0.18em] text-muted 2xl:block">
+            <span className="hidden border-l border-sand/15 pl-3 text-xs font-bold uppercase leading-4 tracking-[0.1em] text-muted 2xl:block">
               {t('tagline')}
             </span>
           </Link>
@@ -91,8 +97,10 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative whitespace-nowrap py-2 text-[10px] font-bold uppercase tracking-[0.1em] transition-colors 2xl:text-[11px] ${
-                    isActive ? 'text-primary' : 'text-sand/65 hover:text-sand'
+                  className={`relative whitespace-nowrap py-2 text-[13px] font-semibold transition-colors 2xl:text-sm ${
+                    isActive
+                      ? 'text-primary-deep'
+                      : 'text-sand/85 hover:text-sand'
                   }`}
                 >
                   {item.label}
@@ -110,7 +118,7 @@ export function Header() {
             </div>
             <NextLink
               href="/admin/login"
-              className={`hidden h-10 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-[10px] font-bold uppercase tracking-[0.12em] transition-all md:inline-flex ${
+              className={`hidden h-10 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-xs font-bold uppercase tracking-[0.1em] transition-all md:inline-flex ${
                 isScrolled
                   ? 'border-primary bg-primary text-white hover:bg-primary-hover'
                   : 'border-sand/22 bg-white/18 text-sand backdrop-blur-sm hover:bg-white/38'
@@ -175,14 +183,24 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <NextLink
-          href="/admin/login"
-          onClick={() => setMobileOpen(false)}
-          className={buttonClass('paper', 'mt-auto w-full shrink-0')}
-        >
-          <LogIn size={14} />
-          {t('login')}
-        </NextLink>
+        <div className="mt-auto flex shrink-0 flex-col items-center gap-4">
+          <Link
+            href="/contact"
+            onClick={() => setMobileOpen(false)}
+            className={buttonClass('paper', 'w-full')}
+          >
+            {t('contactCta')}
+            <ArrowUpRight size={14} aria-hidden="true" />
+          </Link>
+          <NextLink
+            href="/admin/login"
+            onClick={() => setMobileOpen(false)}
+            className="inline-flex items-center gap-2 py-1 text-sm text-sand/80 underline-offset-4 hover:text-sand hover:underline"
+          >
+            <LogIn size={14} aria-hidden="true" />
+            {t('login')}
+          </NextLink>
+        </div>
       </div>
     </>
   );

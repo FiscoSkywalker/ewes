@@ -159,7 +159,7 @@ export function ExpertsGallery({
                 {expert.name}
               </span>
               {expert.pole && (
-                <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-on-night-muted lg:hidden">
+                <span className="ml-auto font-mono text-xs uppercase tracking-[0.1em] text-on-night-muted lg:hidden">
                   {tPoles(expert.pole)}
                 </span>
               )}
@@ -176,7 +176,7 @@ export function ExpertsGallery({
               <div className="expert-panel-in flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-lg">
                   {expert.pole && (
-                    <span className="inline-flex items-center gap-2 rounded-full bg-night/60 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-on-night backdrop-blur-md">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-night/60 px-3 py-1 font-mono text-xs uppercase tracking-[0.1em] text-on-night backdrop-blur-md">
                       <span className="h-1.5 w-1.5 rounded-full bg-pole" />
                       {t('pole', { pole: tPoles(expert.pole) })}
                     </span>
@@ -200,7 +200,7 @@ export function ExpertsGallery({
                     {expert.specialties.map((specialty) => (
                       <li
                         key={specialty}
-                        className="rounded-full border border-on-night/25 bg-night/40 px-3 py-1 text-[11px] font-semibold text-on-night backdrop-blur-sm"
+                        className="rounded-full border border-on-night/25 bg-night/40 px-3 py-1 text-xs font-semibold text-on-night backdrop-blur-sm"
                       >
                         {specialty}
                       </li>
@@ -212,7 +212,7 @@ export function ExpertsGallery({
                     <span className="font-heading text-6xl font-bold leading-none text-transparent [-webkit-text-stroke:1.5px_var(--color-on-night)]">
                       {expert.years}
                     </span>
-                    <span className="pb-1 font-mono text-[10px] uppercase tracking-[0.14em] lg:pb-0">
+                    <span className="pb-1 font-mono text-xs uppercase tracking-[0.1em] lg:pb-0">
                       {t('years')}
                     </span>
                   </p>

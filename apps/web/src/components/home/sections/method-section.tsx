@@ -1,14 +1,5 @@
-'use client';
-
-import { useLayoutEffect, useRef, type CSSProperties } from 'react';
 import { useTranslations } from 'next-intl';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SectionHeading } from '@/components/public/section-heading';
-
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
 
 interface Step {
   title: string;
@@ -16,80 +7,49 @@ interface Step {
 }
 
 /**
- * « Méthode » de l'Accueil — homepage uniquement. Quatre étapes reliées par
- * une canalisation qui se remplit au fil du défilement (bleu → malachite →
- * cuivre, les trois pôles) ; chaque étape s'allume quand l'eau l'atteint.
- * La progression est écrite directement dans le DOM (variable CSS + attribut
- * `data-reached`) : pas de re-rendu React à chaque image. Rendu serveur et
- * préférence « animations réduites » : tout est affiché rempli.
+ * « 03 · Méthode » de l'Accueil — homepage uniquement. Quatre étapes en
+ * format compact : en ligne sur grand écran, reliées par un filet aux
+ * couleurs des trois pôles ; empilées sur mobile.
  */
 export function MethodSection() {
   const t = useTranslations('Method');
+  const tHome = useTranslations('HomeSections');
   const steps = t.raw('steps') as Step[];
-  const listRef = useRef<HTMLOListElement>(null);
-
-  useLayoutEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      list.style.setProperty('--progress', '1');
-      return;
-    }
-
-    const items = Array.from(list.children) as HTMLElement[];
-    const update = (progress: number) => {
-      list.style.setProperty('--progress', progress.toFixed(3));
-      items.forEach((item, index) => {
-        item.dataset.reached = String(progress >= index / items.length - 0.02);
-      });
-    };
-    const trigger = ScrollTrigger.create({
-      trigger: list,
-      start: 'top 70%',
-      end: 'bottom 60%',
-      scrub: true,
-      onUpdate: (self) => update(self.progress),
-    });
-    update(trigger.progress);
-    return () => {
-      trigger.kill();
-      list.style.setProperty('--progress', '1');
-      items.forEach((item) => {
-        item.dataset.reached = 'true';
-      });
-    };
-  }, []);
 
   return (
-    <section className="bg-white px-6 py-24 text-sand md:px-16 md:py-32">
-      <div className="mx-auto grid w-full max-w-[1440px] gap-12 lg:grid-cols-[5fr_6fr] lg:items-start lg:gap-32">
-        <div className="lg:sticky lg:top-32">
-          <SectionHeading
-            eyebrow={t('eyebrow')}
-            title={t('title')}
-            description={t('text')}
-          />
+    <section className="bg-white px-6 py-14 text-sand md:px-16 md:py-24">
+      <div className="mx-auto w-full max-w-[1440px]">
+        <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-end">
+          <SectionHeading eyebrow={tHome('methodEyebrow')} title={t('title')} />
+          <p
+            className="max-w-md text-base leading-7 text-sand/85 lg:justify-self-end"
+            data-reveal
+          >
+            {t('text')}
+          </p>
         </div>
 
         <ol
-          ref={listRef}
-          className="method-pipe relative grid"
-          style={{ '--progress': 1 } as CSSProperties}
+          className="relative mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8"
+          data-stagger
         >
+          <span
+            className="absolute left-6 right-6 top-6 hidden h-px bg-linear-to-r from-primary via-malachite to-copper opacity-60 lg:block"
+            aria-hidden="true"
+          />
           {steps.map((step, index) => (
             <li
               key={step.title}
-              data-reached="true"
-              className="group relative grid grid-cols-[48px_1fr] gap-6 pb-12 last:pb-0 lg:pb-24"
+              className="relative grid grid-cols-[48px_1fr] gap-4 lg:block"
             >
-              <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-sand bg-sand font-mono text-xs text-paper transition-colors duration-500 group-data-[reached=false]:border-sand/25 group-data-[reached=false]:bg-white group-data-[reached=false]:text-muted">
+              <span className="relative flex h-12 w-12 items-center justify-center rounded-full bg-sand font-mono text-sm font-bold text-paper">
                 {String(index + 1).padStart(2, '0')}
               </span>
               <div>
-                <h3 className="pt-2.5 font-heading text-2xl font-semibold leading-tight text-sand transition-colors duration-500 group-data-[reached=false]:text-muted">
+                <h3 className="pt-2.5 font-heading text-xl font-bold leading-snug text-sand lg:mt-5 lg:pt-0">
                   {step.title}
                 </h3>
-                <p className="mt-2 max-w-xl text-sm leading-7 text-sand/72">
+                <p className="mt-2 text-[15px] leading-6 text-sand/80">
                   {step.text}
                 </p>
               </div>

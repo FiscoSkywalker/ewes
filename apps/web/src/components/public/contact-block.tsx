@@ -95,7 +95,7 @@ export function ContactBlock() {
       ref={sectionRef}
       data-paused={!inView}
       aria-labelledby="home-contact-title"
-      className="tone-night relative overflow-hidden bg-night-deep px-6 py-24 md:px-16 md:py-32"
+      className="tone-night relative overflow-hidden bg-night-deep px-6 py-14 md:px-16 md:py-28"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(45%_55%_at_0%_100%,rgba(140,195,214,.14),transparent_70%),radial-gradient(40%_50%_at_100%_0%,rgba(90,209,161,.10),transparent_70%)]" />
       <TopoContours interactive />
@@ -107,7 +107,7 @@ export function ContactBlock() {
           </p>
           <h2
             id="home-contact-title"
-            className="section-title text-4xl text-on-night sm:text-5xl lg:text-7xl"
+            className="section-title text-3xl text-on-night sm:text-4xl lg:text-5xl"
           >
             <span className="sr-only">
               {t('titleStart')} {t('words.AUTRE')}
@@ -145,7 +145,7 @@ export function ContactBlock() {
                     {item.icon}
                   </span>
                   <span className="min-w-0">
-                    <span className="block font-mono text-[10px] uppercase tracking-[0.12em] text-on-night-muted">
+                    <span className="block font-mono text-xs uppercase tracking-[0.1em] text-on-night-muted">
                       {item.label}
                     </span>
                     <span className="mt-0.5 block break-words text-base leading-snug text-on-night">

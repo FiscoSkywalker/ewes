@@ -54,7 +54,7 @@ export function LanguageSelector({ compact = false }: LanguageSelectorProps) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full border border-sand/14 px-3 text-[10px] font-bold tracking-[0.12em] text-sand/75 transition-colors hover:border-primary/45 hover:text-primary"
+        className="flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full border border-sand/14 px-3 text-xs font-bold tracking-[0.1em] text-sand/75 transition-colors hover:border-primary/45 hover:text-primary"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`Langue préférée : ${LANGUAGE_LABELS[locale]}`}
@@ -91,7 +91,7 @@ export function LanguageSelector({ compact = false }: LanguageSelectorProps) {
               className="flex w-full items-center justify-between gap-5 px-4 py-3 text-left transition-colors hover:bg-background/70"
             >
               <span>
-                <span className="block text-[10px] font-bold tracking-[0.15em] text-primary">
+                <span className="block text-xs font-bold tracking-[0.1em] text-primary">
                   {code.toUpperCase()}
                 </span>
                 <span className="mt-0.5 block text-xs font-medium text-sand">

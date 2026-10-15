@@ -64,7 +64,7 @@ export function OfficeStatusInline() {
       <span className="font-semibold">
         {time?.open ? t('open') : t('closed')}
       </span>
-      <span className="font-mono text-[11px] tabular-nums text-on-night-muted">
+      <span className="font-mono text-xs tabular-nums text-on-night-muted">
         {time?.label ?? '--:--'} · {t('label')}
       </span>
     </p>
@@ -90,7 +90,7 @@ export function OfficeStatus() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_100%_0%,rgba(90,209,161,.16),transparent_70%),radial-gradient(60%_60%_at_0%_100%,rgba(140,195,214,.14),transparent_70%)]" />
 
       <div className="relative">
-        <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-on-night-muted">
+        <p className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-on-night-muted">
           <Clock size={13} className="text-malachite-bright" />
           {t('label')}
         </p>
@@ -118,7 +118,7 @@ export function OfficeStatus() {
         </p>
 
         <dl className="mt-8 grid gap-3 border-t border-on-night/12 pt-6 text-sm">
-          <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-on-night-muted">
+          <dt className="font-mono text-xs uppercase tracking-[0.1em] text-on-night-muted">
             {t('hoursTitle')}
           </dt>
           {rows.map((row) => (

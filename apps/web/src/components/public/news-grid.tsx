@@ -50,7 +50,7 @@ export function NewsGrid() {
               />
             </figure>
             <div>
-              <p className="flex flex-wrap items-center gap-3 font-mono text-[11px] text-muted">
+              <p className="flex flex-wrap items-center gap-3 font-mono text-xs text-muted">
                 <span className="border border-current px-2 py-0.5 uppercase tracking-[0.06em] text-malachite">
                   {item.type}
                 </span>

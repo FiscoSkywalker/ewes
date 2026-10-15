@@ -41,7 +41,7 @@ export function FilterChip({
   onClick,
 }: FilterChipProps) {
   const classes = [
-    'inline-flex flex-none items-center gap-2 border px-4 py-2 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors outline-offset-2 focus-visible:outline-2 focus-visible:outline-primary',
+    'inline-flex flex-none items-center gap-2 border px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] transition-colors outline-offset-2 focus-visible:outline-2 focus-visible:outline-primary',
     shape === 'pill' ? 'rounded-full' : 'px-3.5',
     active
       ? 'border-sand bg-sand text-paper'
@@ -55,9 +55,7 @@ export function FilterChip({
     <>
       {children}
       {count !== undefined && (
-        <span className="font-mono text-[10px] font-normal opacity-70">
-          {count}
-        </span>
+        <span className="font-mono text-xs font-normal">{count}</span>
       )}
     </>
   );

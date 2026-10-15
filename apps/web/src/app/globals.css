@@ -22,7 +22,7 @@
   --color-surface-muted: #eef4f6;
 
   --color-sand: #153442;
-  --color-muted: #607986;
+  --color-muted: #4a6270;
   --color-water: #79adc1;
 
   --color-success: #1e7a3d;
@@ -160,8 +160,8 @@ body {
 .section-title {
   font-family: var(--font-heading), sans-serif;
   font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 0.95;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
 }
 
 .eyebrow {
@@ -169,9 +169,9 @@ body {
   align-items: center;
   gap: 0.6rem;
   color: var(--pole, var(--color-primary));
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -369,13 +369,15 @@ body {
   transform: translateX(130%) skewX(-16deg);
 }
 
+/*
+ * Glissement seul, sans fondu : le texte du hero est l'élément LCP et doit
+ * être peint dès le premier affichage (une opacité nulle retardait le LCP).
+ */
 @keyframes heroEnter {
   from {
-    opacity: 0;
-    transform: translate3d(0, 36px, 0);
+    transform: translate3d(0, 24px, 0);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
@@ -447,7 +449,7 @@ body {
  */
 .hero-title {
   max-width: 16ch;
-  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-family: var(--font-heading), system-ui, sans-serif;
   font-weight: 720;
   font-variation-settings: 'wdth' 116;
   letter-spacing: -0.025em;
@@ -457,9 +459,10 @@ body {
 
 @media (min-width: 900px) {
   .hero-title {
-    max-width: 18ch;
+    max-width: none;
     white-space: pre-line;
-    font-size: clamp(3.2rem, 5.3vw, 5.4rem);
+    /* Le texte doit tenir dans la partie voilée (~55 % de la largeur). */
+    font-size: clamp(3rem, 4.5vw, 4.6rem);
   }
 }
 
@@ -474,7 +477,7 @@ body {
 
 .hero-lead {
   max-width: 46ch;
-  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
   font-size: clamp(1.05rem, 1.35vw, 1.2rem);
   line-height: 1.6;
 }
@@ -510,12 +513,6 @@ body {
   background-color: var(--color-paper);
   background-image: var(--pole-pattern);
   background-size: auto 8px;
-}
-
-/* Masques de lignes SplitText : marge pour les accents des capitales. */
-.split-line-mask {
-  padding-block: 0.12em;
-  margin-block: -0.12em;
 }
 
 .marquee-track {
