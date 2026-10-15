@@ -30,7 +30,9 @@ interface Row {
   record: AdminPage | undefined;
 }
 
-const TITLE_CLASS = 'block truncate font-medium text-ink';
+// Pas de `truncate` dans un tableau en largeur automatique : la cellule
+// s'élargirait au texte entier et ferait déborder le tableau sur mobile.
+const TITLE_CLASS = 'block font-medium text-ink';
 
 export default function PagesPage() {
   const pages = useQuery({
@@ -63,7 +65,6 @@ export default function PagesPage() {
     {
       id: 'page',
       header: 'Page',
-      className: 'min-w-56',
       cell: ({ sitePage }) => (
         <span className="flex items-center gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
@@ -71,7 +72,7 @@ export default function PagesPage() {
           </span>
           <span className="min-w-0">
             <span className={TITLE_CLASS}>{sitePage.label}</span>
-            <span className="block truncate font-mono text-xs text-ink-subtle">
+            <span className="block break-all font-mono text-xs text-ink-subtle">
               {sitePage.href}
             </span>
           </span>
@@ -82,7 +83,6 @@ export default function PagesPage() {
       id: 'title',
       header: 'Titre affiché sur le site',
       hideBelow: 'md',
-      className: 'max-w-md',
       cell: ({ sitePage, record }) => {
         const live = pageState(record) === 'live';
         const title = live
@@ -91,11 +91,11 @@ export default function PagesPage() {
         return (
           <span className="block min-w-0">
             <span
-              className={`block truncate ${live ? 'text-ink' : 'text-ink-muted'}`}
+              className={`line-clamp-2 ${live ? 'text-ink' : 'text-ink-muted'}`}
             >
               {title ?? '…'}
             </span>
-            <span className="block truncate text-xs text-ink-subtle">
+            <span className="block text-xs text-ink-subtle">
               {live ? 'Modifié depuis le portail' : 'Texte d’origine du site'}
             </span>
           </span>
@@ -105,7 +105,7 @@ export default function PagesPage() {
     {
       id: 'english',
       header: 'Anglais',
-      hideBelow: 'lg',
+      hideBelow: 'xl',
       cell: ({ record }) => {
         if (pageState(record) !== 'live') {
           return <span className="text-xs text-ink-subtle">—</span>;
@@ -124,7 +124,7 @@ export default function PagesPage() {
     {
       id: 'updated',
       header: 'Modifiée',
-      hideBelow: 'lg',
+      hideBelow: 'xl',
       className: 'whitespace-nowrap text-ink-muted',
       cell: ({ record }) =>
         record ? (

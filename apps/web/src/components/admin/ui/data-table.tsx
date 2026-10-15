@@ -22,7 +22,7 @@ export interface Column<T> {
   firstDirection?: SortDirection;
   align?: 'start' | 'end';
   /** Colonne secondaire masquée sur petit écran. */
-  hideBelow?: 'sm' | 'md' | 'lg';
+  hideBelow?: 'sm' | 'md' | 'lg' | 'xl';
   /** Largeur, alignement… de la colonne (`w-40`, `whitespace-nowrap`). */
   className?: string;
 }
@@ -31,6 +31,7 @@ const HIDE_BELOW = {
   sm: 'hidden sm:table-cell',
   md: 'hidden md:table-cell',
   lg: 'hidden lg:table-cell',
+  xl: 'hidden xl:table-cell',
 } as const;
 
 export interface DataTableProps<T> {

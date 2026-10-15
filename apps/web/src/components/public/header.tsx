@@ -133,26 +133,32 @@ export function Header() {
         </div>
       </header>
 
+      {/* Menu plein écran : défile s'il dépasse la hauteur visible (petits
+          téléphones, barre d'adresse Safari affichée), tailles indexées sur
+          `dvh` pour tenir d'un bloc sur un écran courant. */}
       <div
-        className={`pointer-events-auto fixed inset-0 z-50 bg-background/96 px-6 py-5 backdrop-blur-2xl transition-all duration-300 xl:hidden ${
+        className={`pointer-events-auto fixed inset-0 z-50 flex flex-col overflow-y-auto overscroll-contain bg-background/96 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-2xl transition-all duration-300 xl:hidden ${
           mobileOpen ? 'visible opacity-100' : 'invisible opacity-0'
         }`}
         aria-hidden={!mobileOpen}
         data-lenis-prevent
       >
-        <div className="flex items-center justify-between">
-          <BrandLogo className="h-12" />
-          <button
-            type="button"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-sand/15 text-sand"
-            onClick={() => setMobileOpen(false)}
-            aria-label={t('closeMenu')}
-          >
-            <X size={20} />
-          </button>
+        <div className="flex shrink-0 items-center justify-between gap-3">
+          <BrandLogo className="h-11" />
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
+            <button
+              type="button"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-sand/15 text-sand"
+              onClick={() => setMobileOpen(false)}
+              aria-label={t('closeMenu')}
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
         <nav
-          className="mt-14 flex flex-col"
+          className="mb-6 mt-[clamp(1rem,4dvh,3.5rem)] flex flex-col"
           aria-label={t('mobileNavAriaLabel')}
         >
           {navItems.map((item, index) => (
@@ -160,22 +166,19 @@ export function Header() {
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className="flex items-center justify-between border-b border-sand/10 py-4 text-left font-heading text-3xl font-semibold text-sand"
+              className="flex items-center justify-between gap-4 border-b border-sand/10 py-[clamp(.5rem,1.6dvh,1rem)] text-left font-heading text-[clamp(1.375rem,4dvh,1.875rem)] font-semibold leading-tight text-sand"
             >
-              <span className="whitespace-nowrap">{item.label}</span>
+              <span>{item.label}</span>
               <span className="text-xs font-sans text-primary">
                 0{index + 1}
               </span>
             </Link>
           ))}
         </nav>
-        <div className="mt-8">
-          <LanguageSelector />
-        </div>
         <NextLink
           href="/admin/login"
           onClick={() => setMobileOpen(false)}
-          className={buttonClass('paper', 'mt-5 w-full')}
+          className={buttonClass('paper', 'mt-auto w-full shrink-0')}
         >
           <LogIn size={14} />
           {t('login')}
