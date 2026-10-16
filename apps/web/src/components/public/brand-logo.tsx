@@ -23,7 +23,9 @@ export function BrandLogo({
       width={640}
       height={256}
       sizes="160px"
-      priority={priority}
+      // Au-dessus de la ligne de flottaison, mais sans priorité réseau haute :
+      // elle est réservée à l'élément LCP (photo ou texte du hero).
+      loading={priority ? 'eager' : undefined}
       className={`w-auto ${className}`}
     />
   );

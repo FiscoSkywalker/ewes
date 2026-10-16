@@ -139,7 +139,8 @@ export default async function NewsArticlePage({
               src={item.image}
               alt={item.imageAlt}
               fill
-              priority
+              loading="eager"
+              fetchPriority="high"
               sizes="(min-width: 1200px) 1200px, 100vw"
               className="object-cover"
             />

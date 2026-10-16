@@ -98,7 +98,8 @@ export default async function NewsPage({
                     src={featured.image!}
                     alt={featured.imageAlt}
                     fill
-                    priority
+                    loading="eager"
+                    fetchPriority="high"
                     sizes="(min-width: 1024px) 58vw, 100vw"
                     className="object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-105"
                   />

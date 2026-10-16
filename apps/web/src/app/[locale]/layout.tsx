@@ -25,6 +25,7 @@ const headingFont = Archivo({
   variable: '--font-heading',
   subsets: ['latin'],
   axes: ['wdth'],
+  preload: false,
 });
 
 /** Mot d'accent du titre de l'Accueil uniquement. */
@@ -33,6 +34,7 @@ const accentSerif = Source_Serif_4({
   subsets: ['latin'],
   style: ['italic'],
   weight: ['400'],
+  preload: false,
 });
 
 const geistMono = Geist_Mono({
