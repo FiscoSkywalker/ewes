@@ -23,9 +23,10 @@ export function ClientsMarquee() {
             src={logo}
             alt={hidden ? '' : name}
             title={name}
-            width={150}
-            height={150}
-            sizes="80px"
+            // Largeur d'affichage (80 px) : srcset 1x/2x seulement, au lieu
+            // de toutes les largeurs d'écran pour chacun des logos.
+            width={80}
+            height={80}
             className="h-16 w-16 object-contain sm:h-20 sm:w-20"
           />
         </li>
@@ -40,7 +41,7 @@ export function ClientsMarquee() {
       className="marquee border-y border-sand/10 bg-white py-8"
       aria-label={t('label')}
     >
-      <p className="mb-5 text-center font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+      <p className="mb-5 text-center font-mono text-xs uppercase tracking-[0.1em] text-muted">
         {t('label')}
       </p>
       <div className="overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">

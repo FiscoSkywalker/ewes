@@ -12,7 +12,7 @@ import {
 } from '@/data/projects';
 import { ProjectCover } from '@/components/public/project-cover';
 import { Link } from '@/i18n/navigation';
-import { ButtonLink, TextLink } from '@/components/public/ui';
+import { ButtonLink } from '@/components/public/ui';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -40,7 +40,7 @@ const riverY = (x: number) =>
   BAND / 2 + 22 * Math.sin(x / 95) + 8 * Math.sin(x / 37 + 1);
 
 /**
- * « 03 · Nos réalisations » de l'Accueil — homepage uniquement. Les missions
+ * Frise des missions de la page Réalisations (anciennement sur l'Accueil). Les missions
  * du registre (mêmes données, mêmes couvertures que /realisations), dans
  * l'ordre chronologique, posées le long d'une rivière qui se dessine au fil
  * du défilement : un point = une mission, comme la frise de la page
@@ -239,10 +239,10 @@ export function MissionsRiver({ projects }: { projects: Project[] }) {
         {/* En-tête : titre + compteur */}
         <div className="mx-auto grid w-full max-w-[1440px] gap-6 px-6 md:grid-cols-[1fr_auto] md:items-end md:px-16">
           <div>
-            <p className="eyebrow mb-4">{t('eyebrow')}</p>
+            <p className="eyebrow mb-4">{tRiver('eyebrow')}</p>
             <h2
               id="missions-river-title"
-              className="section-title text-4xl sm:text-5xl lg:text-6xl"
+              className="section-title text-3xl sm:text-4xl lg:text-5xl"
             >
               {tRiver('title')}
             </h2>
@@ -258,7 +258,7 @@ export function MissionsRiver({ projects }: { projects: Project[] }) {
             >
               {lastYear}
             </span>
-            <span className="pb-1.5 font-mono text-[10px] uppercase leading-5 tracking-[0.14em] text-muted">
+            <span className="pb-1.5 font-mono text-xs uppercase leading-5 tracking-[0.1em] text-muted">
               <span className="block font-heading text-3xl font-bold normal-case leading-none tracking-tight text-sand tabular-nums">
                 <span ref={countRef}>{missions.length}</span>
                 <span className="text-muted">/{missions.length}</span>
@@ -362,7 +362,7 @@ export function MissionsRiver({ projects }: { projects: Project[] }) {
                     />
                     {newYear && (
                       <span
-                        className="absolute -translate-x-1/2 rounded-full bg-sand px-2 py-0.5 font-mono text-[10px] font-bold text-paper transition-opacity duration-500 group-data-[reached=false]:opacity-30"
+                        className="absolute -translate-x-1/2 rounded-full bg-sand px-2 py-0.5 font-mono text-xs font-bold text-paper transition-opacity duration-500 group-data-[reached=false]:opacity-30"
                         style={{
                           left: x,
                           top: `calc(${bandTop} + ${above ? y + 12 : y - 30}px)`,
@@ -397,13 +397,13 @@ export function MissionsRiver({ projects }: { projects: Project[] }) {
                         className="min-h-12 w-full flex-1"
                       />
                       <span className="flex flex-none flex-col gap-1 p-4">
-                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-malachite">
+                        <span className="font-mono text-xs uppercase tracking-[0.1em] text-malachite">
                           {period}
                         </span>
                         <span className="line-clamp-1 font-heading text-base font-bold leading-tight text-sand">
                           {project.client}
                         </span>
-                        <span className="line-clamp-2 text-xs leading-5 text-sand/65">
+                        <span className="line-clamp-2 text-xs leading-5 text-sand/75">
                           {project.mission}
                         </span>
                       </span>
@@ -425,22 +425,19 @@ export function MissionsRiver({ projects }: { projects: Project[] }) {
                   to: String(lastYear),
                 })}
               </p>
-              <p className="mt-3 text-sm leading-6 text-sand/65">
+              <p className="mt-3 text-sm leading-6 text-sand/75">
                 {tRiver('endText')}
               </p>
-              <div className="mt-8 flex flex-col items-start gap-4">
-                <ButtonLink href="/realisations" icon={ArrowRight}>
-                  {t('viewAll')}
-                </ButtonLink>
-                <TextLink href="/contact">{tRiver('contactCta')}</TextLink>
-              </div>
+              <ButtonLink href="/contact" icon={ArrowRight} className="mt-8">
+                {tRiver('contactCta')}
+              </ButtonLink>
             </div>
           </div>
         </div>
 
         {/* Pied : consigne + progression */}
         <div className="mx-auto mt-6 flex w-full max-w-[1440px] items-center gap-6 px-6 md:px-16">
-          <p className="flex-none font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+          <p className="flex-none font-mono text-xs uppercase tracking-[0.1em] text-muted">
             {pinned ? tRiver('scrollHint') : tRiver('swipeHint')}
           </p>
           {pinned && (

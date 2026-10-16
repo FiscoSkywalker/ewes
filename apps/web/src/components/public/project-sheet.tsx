@@ -120,7 +120,7 @@ export function ProjectSheet({
                 {project.client}
               </h2>
 
-              <h3 className="mt-10 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+              <h3 className="mt-10 font-mono text-xs uppercase tracking-[0.1em] text-muted">
                 {t('mission')}
               </h3>
               <p className="mt-3 border-l-2 border-malachite pl-5 font-heading text-xl leading-snug">
@@ -132,7 +132,7 @@ export function ProjectSheet({
                 </p>
               )}
 
-              <h3 className="mt-10 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+              <h3 className="mt-10 font-mono text-xs uppercase tracking-[0.1em] text-muted">
                 {t('nature', { type: category?.label ?? project.category })}
               </h3>
               <p className="mt-3 text-sm leading-7 text-sand/80">
@@ -141,7 +141,7 @@ export function ProjectSheet({
               {project.slug && (
                 <Link
                   href={`/realisations/${project.slug}`}
-                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-sand px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-paper transition-opacity hover:opacity-85"
+                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-sand px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-paper transition-opacity hover:opacity-85"
                 >
                   {tDetail('openSheet')} <ArrowRight size={13} />
                 </Link>
@@ -152,7 +152,7 @@ export function ProjectSheet({
               <dl className="grid grid-cols-2 gap-x-6 gap-y-5 md:grid-cols-1">
                 {facts.map(([label, value]) => (
                   <div key={label}>
-                    <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+                    <dt className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
                       {label}
                     </dt>
                     <dd className="mt-1 text-sm font-semibold leading-6">
@@ -167,7 +167,7 @@ export function ProjectSheet({
                 </p>
                 <Link
                   href="/contact"
-                  className="mt-3 inline-flex items-center gap-2 border-b border-sand/25 pb-0.5 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:border-sand"
+                  className="mt-3 inline-flex items-center gap-2 border-b border-sand/25 pb-0.5 text-xs font-bold uppercase tracking-[0.1em] transition-colors hover:border-sand"
                 >
                   {t('cta')} <ArrowRight size={13} />
                 </Link>
@@ -200,7 +200,7 @@ export function ProjectSheet({
                 onClick={() => item && onNavigate(item)}
                 className={`group flex flex-col gap-1.5 px-7 py-6 transition-colors hover:bg-paper-muted disabled:pointer-events-none disabled:opacity-35 sm:px-10 ${align} ${index === 1 ? 'items-end border-l border-border-subtle' : 'items-start'}`}
               >
-                <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+                <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-muted">
                   {index === 0 && <Icon size={12} />}
                   {label}
                   {index === 1 && <Icon size={12} />}

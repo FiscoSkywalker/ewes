@@ -56,13 +56,13 @@ function ChannelContent({ icon, label, value, hint }: ChannelProps) {
           className="text-muted transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary"
         />
       </span>
-      <span className="mt-8 block font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+      <span className="mt-8 block font-mono text-xs uppercase tracking-[0.1em] text-muted">
         {label}
       </span>
       <span className="mt-1.5 block break-all font-heading text-xl font-semibold leading-tight sm:text-2xl">
         {value}
       </span>
-      <span className="mt-2 block text-xs leading-5 text-sand/60">{hint}</span>
+      <span className="mt-2 block text-xs leading-5 text-sand/75">{hint}</span>
     </>
   );
 }
@@ -108,7 +108,7 @@ export default async function ContactPage({
             </div>
           </div>
 
-          <p className="mb-5 mt-16 font-mono text-[10px] uppercase tracking-[0.14em] text-muted md:mt-20">
+          <p className="mb-5 mt-16 font-mono text-xs uppercase tracking-[0.1em] text-muted md:mt-20">
             {t('channels.title')}
           </p>
           <div className="grid gap-4 md:grid-cols-3" data-stagger>

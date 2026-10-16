@@ -147,7 +147,7 @@ export function TextLink({
   return (
     <Link
       className={[
-        'inline-flex w-fit items-center gap-2 border-b pb-1 text-xs font-bold uppercase tracking-[0.12em] transition-colors outline-offset-4 focus-visible:outline-2',
+        'inline-flex w-fit items-center gap-2 border-b pb-1 text-xs font-bold uppercase tracking-[0.1em] transition-colors outline-offset-4 focus-visible:outline-2',
         TEXT_LINK_TONE[tone],
         className,
       ]

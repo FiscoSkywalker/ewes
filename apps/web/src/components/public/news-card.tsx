@@ -22,10 +22,10 @@ export function NewsMeta({
 
   return (
     <p
-      className={`flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] uppercase tracking-[0.1em] ${night ? 'text-on-night-muted' : 'text-muted'}`}
+      className={`flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs uppercase tracking-[0.1em] ${night ? 'text-on-night-muted' : 'text-muted'}`}
     >
       <span
-        className={`rounded-full px-2.5 py-1 font-bold ${night ? 'bg-malachite-bright/15 text-malachite-bright' : 'bg-malachite/10 text-malachite'}`}
+        className={`rounded-full px-2.5 py-1 font-bold ${night ? 'bg-malachite-bright/15 text-malachite-bright' : 'bg-malachite/5 text-malachite'}`}
       >
         {t(`categories.${item.category}`)}
       </span>

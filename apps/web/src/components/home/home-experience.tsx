@@ -1,23 +1,15 @@
-'use client';
-
-import { useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { ContactBlock } from '@/components/public/contact-block';
 import { Hero } from './sections/hero';
 import { AboutSection } from './sections/about-section';
 import { ClientsMarquee } from './sections/clients-marquee';
-import { ServicesOverview } from './sections/services-overview';
-import { EnvironmentSection } from './sections/environment-section';
-import { WaterSection } from './sections/water-section';
-import { EngineeringSection } from './sections/engineering-section';
+import { PolesSection } from './sections/poles-section';
 import { MethodSection } from './sections/method-section';
-import { MissionsRiver } from './sections/missions-river';
+import { FeaturedProjects } from './sections/featured-projects';
 import { TrainingSection } from './sections/training-section';
 import { NewsSection } from './sections/news-section';
 import { DocumentsSection } from './sections/documents-section';
-import { scrollToElement } from '@/lib/smooth-scroll';
-import { useResponsive } from '@/hooks/useResponsive';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useWebglAvailable } from '@/hooks/useWebglAvailable';
+import { FOUNDING_YEAR } from '@/data/metrics';
 import type {
   PoleContent,
   ServicePole,
@@ -27,16 +19,16 @@ import type { Project } from '@/data/projects';
 import type { HomeNews } from '@/lib/news';
 
 /**
- * Arbre client de la page d'Accueil (blueprint/15/16 : exception assumée et
- * validée au SSR par défaut — décor immersif WebGL/GSAP, homepage
- * uniquement, voir journal de session Phase 02). `(public)/page.tsx` reste
- * un Server Component pour les métadonnées ; toute l'interactivité vit ici.
+ * Page d'Accueil (blueprint/15/16), rendue côté serveur comme le reste du
+ * site public : seuls le hero (pause des animations, « Faire défiler »), le
+ * bandeau de logos, les actualités (rotation) et le bloc contact (formulaire)
+ * sont des composants client. Aucune scène WebGL : la page reste légère.
  *
- * Récit (fusion du prototype « storytelling » et de l'expérience immersive) :
- * hero → ils nous font confiance → qui nous sommes → les trois pôles comme
- * une colonne stratigraphique (ENV → H₂O → ING, avec l'eau et la maquette
- * 3D) → méthode → fil des missions → formation → actualités →
- * documents → contact.
+ * Parcours : hero (qui est EWES en cinq secondes) → ils nous font confiance
+ * → 01 qui est EWES → 02 les trois pôles → 03 méthode → 04 réalisations
+ * phares → 05 formation → 06 actualités → 07 documents → 08 contact. Le
+ * détail (prestations, publics, frise des missions, objectifs de recherche,
+ * thèmes de formation) vit sur les pages dédiées.
  */
 export function HomeExperience({
   lead,
@@ -55,40 +47,28 @@ export function HomeExperience({
   /** Pôles de services pilotés par l'API (repli sur les messages si absents). */
   poles?: Partial<Record<ServicePole, PoleContent>>;
 }) {
-  const { dpr, particleMultiplier } = useResponsive();
-  const reducedMotion = useReducedMotion();
-  const webglAvailable = useWebglAvailable();
+  const tWorld = useTranslations('World');
 
-  const aboutRef = useRef<HTMLDivElement>(null);
+  // Mêmes sources que la page À propos : registre des réalisations et
+  // liste des opérateurs miniers accompagnés.
+  const stats = {
+    year: FOUNDING_YEAR,
+    missions: projects.length,
+    operators: (tWorld.raw('clients') as string[]).length,
+    poles: 3,
+  };
 
   return (
     <div className="relative bg-background text-sand selection:bg-primary selection:text-white">
-      <Hero lead={lead} onExplore={() => scrollToElement(aboutRef.current)} />
+      <Hero lead={lead} proof={stats} exploreTargetId="qui-est-ewes" />
 
       <ClientsMarquee />
 
-      <div ref={aboutRef}>
-        <AboutSection projects={projects} />
-      </div>
+      <AboutSection stats={stats} />
 
-      <ServicesOverview poles={poles} />
-      <EnvironmentSection data={poles?.env} />
-      <WaterSection
-        reducedMotion={reducedMotion}
-        dpr={dpr}
-        particleMultiplier={particleMultiplier}
-        webglAvailable={webglAvailable}
-        data={poles?.eau}
-      />
-      <EngineeringSection
-        reducedMotion={reducedMotion}
-        dpr={dpr}
-        webglAvailable={webglAvailable}
-        data={poles?.ing}
-      />
-
+      <PolesSection poles={poles} />
       <MethodSection />
-      <MissionsRiver projects={projects} />
+      <FeaturedProjects projects={projects} />
       <TrainingSection projects={projects} />
       <NewsSection news={news} />
       <DocumentsSection documents={documents} />

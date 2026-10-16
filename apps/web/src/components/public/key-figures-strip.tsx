@@ -42,7 +42,7 @@ export function KeyFiguresStrip({
             )}
           </dd>
           {figure.subtext && (
-            <dd className="order-3 mt-2 text-xs leading-5 text-sand/55">
+            <dd className="order-3 mt-2 text-xs leading-5 text-sand/75">
               {figure.subtext}
             </dd>
           )}

@@ -69,7 +69,7 @@ function SummaryLink({
           aria-hidden="true"
         />
         <span className="min-w-0 flex-1">
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-pole">
+          <span className="font-mono text-xs uppercase tracking-[0.1em] text-pole">
             {String(index + 1).padStart(2, '0')} · {count}
           </span>
           <span className="mt-0.5 block font-heading text-lg font-bold leading-tight text-sand">
@@ -131,7 +131,7 @@ export default async function ServicesPage({
             description={header.intro}
           />
           <nav aria-label={tOverview('indexLabel')} data-reveal>
-            <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+            <p className="mb-4 font-mono text-xs uppercase tracking-[0.1em] text-muted">
               {tOverview('indexLabel')}
             </p>
             <ul className="flex flex-col gap-3">
@@ -222,7 +222,7 @@ export default async function ServicesPage({
                   <h3 className="mt-8 font-heading text-lg font-bold leading-snug">
                     {item.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-6 text-sand/65">
+                  <p className="mt-3 text-sm leading-6 text-sand/75">
                     {item.text}
                   </p>
                 </li>
@@ -253,7 +253,7 @@ export default async function ServicesPage({
               title={tTraining('title')}
               description={tTraining('description')}
             />
-            <h3 className="mt-10 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+            <h3 className="mt-10 font-mono text-xs uppercase tracking-[0.1em] text-muted">
               {tTraining('topicsTitle')}
             </h3>
             <ul className="mt-4 flex flex-wrap gap-2" data-stagger>

@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getProjects } from '@/lib/api/public-realisations';
 import type { ProjectCategoryOption } from '@/data/projects';
 import { RealisationsGallery } from '@/components/public/realisations-gallery';
+import { MissionsRiver } from '@/components/public/missions-river';
 import { SectionHeading } from '@/components/public/section-heading';
 import { resolvePageHeader } from '@/lib/api/public-pages';
 import { pageSeo } from '@/lib/seo';
@@ -42,20 +43,24 @@ export default async function RealisationsPage({
   const projects = await getProjects(locale);
 
   return (
-    <div className="bg-paper px-6 pb-24 pt-28 text-sand md:px-16 md:pb-32 md:pt-36">
-      <div className="mx-auto w-full max-w-[1440px]">
-        <SectionHeading
-          as="h1"
-          eyebrow={t('eyebrow')}
-          title={header.title}
-          description={header.intro}
-          className="mb-14 max-w-4xl"
-        />
-        <RealisationsGallery
-          projects={projects}
-          categories={tProjects.raw('categories') as ProjectCategoryOption[]}
-        />
+    <>
+      <div className="bg-paper px-6 pb-24 pt-28 text-sand md:px-16 md:pb-32 md:pt-36">
+        <div className="mx-auto w-full max-w-[1440px]">
+          <SectionHeading
+            as="h1"
+            eyebrow={t('eyebrow')}
+            title={header.title}
+            description={header.intro}
+            className="mb-14 max-w-4xl"
+          />
+          <RealisationsGallery
+            projects={projects}
+            categories={tProjects.raw('categories') as ProjectCategoryOption[]}
+          />
+        </div>
       </div>
-    </div>
+      {/* Frise complète des missions, au fil du défilement (venue de l'Accueil). */}
+      <MissionsRiver projects={projects} />
+    </>
   );
 }

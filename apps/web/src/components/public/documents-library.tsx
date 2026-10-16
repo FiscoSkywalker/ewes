@@ -105,7 +105,7 @@ export function DocumentsLibrary({
         <DocumentCover doc={latest} />
 
         <div className="max-w-2xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-on-night/15 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-malachite-bright">
+          <span className="inline-flex items-center gap-2 rounded-full border border-on-night/15 px-3 py-1 font-mono text-xs uppercase tracking-[0.1em] text-malachite-bright">
             <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-malachite-bright" />
             {t('latest')}
           </span>
@@ -122,7 +122,7 @@ export function DocumentsLibrary({
               [t('meta.file'), `${latest.format} · ${latest.size}`],
             ].map(([label, value]) => (
               <div key={label}>
-                <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-on-night-muted/70">
+                <dt className="font-mono text-xs uppercase tracking-[0.1em] text-on-night-muted/70">
                   {label}
                 </dt>
                 <dd className="mt-1.5 text-sm font-semibold text-on-night">
@@ -216,7 +216,7 @@ export function DocumentsLibrary({
           </div>
 
           <p
-            className="flex items-center gap-4 font-mono text-[11px] uppercase tracking-[0.12em] text-muted"
+            className="flex items-center gap-4 font-mono text-xs uppercase tracking-[0.1em] text-muted"
             aria-live="polite"
           >
             {t('results', { count: filtered.length })}
@@ -245,11 +245,11 @@ export function DocumentsLibrary({
               >
                 <div className="flex items-start justify-between">
                   <FileBadge doc={doc} />
-                  <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+                  <span className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
                     {doc.year}
                   </span>
                 </div>
-                <span className="mt-7 font-mono text-[10px] uppercase tracking-[0.14em] text-pole">
+                <span className="mt-7 font-mono text-xs uppercase tracking-[0.1em] text-pole">
                   {tDoc(`categories.${doc.category}`)}
                   {doc.pole && ` · ${t(`poles.${doc.pole}`)}`}
                 </span>
@@ -260,7 +260,7 @@ export function DocumentsLibrary({
                   {doc.excerpt}
                 </p>
                 <div className="mt-auto flex items-center justify-between gap-4 border-t border-border-subtle pt-5">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+                  <span className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
                     {doc.format} · {meta(doc)}
                   </span>
                   <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full border border-border text-sand transition-colors group-hover:border-pole group-hover:bg-pole group-hover:text-white">

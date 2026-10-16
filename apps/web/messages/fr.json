@@ -14,7 +14,9 @@
     "mainNavAriaLabel": "Navigation principale",
     "mobileNavAriaLabel": "Navigation mobile",
     "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu"
+    "closeMenu": "Fermer le menu",
+    "skipToContent": "Aller au contenu",
+    "contactCta": "Discuter d’un projet"
   },
   "Legal": {
     "toc": "Sommaire",
@@ -46,17 +48,18 @@
   "HomePage": {
     "eyebrow": "Accueil",
     "title": "EWES S.A.R.L. | Environnement, Eau et Services d’Ingénierie",
-    "description": "Études d’impact, audits environnementaux, ressources en eau et travaux d’ingénierie pour les secteurs minier, pétrolier et public en République Démocratique du Congo."
+    "description": "EWES est un bureau d’études congolais issu de l’Université de Lubumbashi. Nous réalisons des études d’impact, des audits environnementaux, des analyses, ainsi que des projets eau et ingénierie pour les secteurs minier, pétrolier et public."
   },
   "Hero": {
-    "eyebrow": "Environnement, eau et travaux d’ingénierie",
+    "eyebrow": "Bureau d’études environnementales · Lubumbashi, RDC",
     "titleLine1": "Des données de\nterrain pour des\n",
     "titleHighlight": "décisions durables.",
-    "shieldLabel": "Experts congolais & étrangers",
     "locationLabel": "Lubumbashi · RD Congo",
     "scrollLabel": "Faire défiler",
     "imageAlt": "Expert EWES en suivi environnemental sur un site minier",
-    "ctaContact": "Discuter d’un projet"
+    "ctaContact": "Discuter d’un projet",
+    "ctaServices": "Découvrir nos services",
+    "proof": "Depuis {year} · {missions} missions · {operators} opérateurs miniers accompagnés"
   },
   "World": {
     "eyebrow": "01 · Qui sommes-nous",
@@ -277,7 +280,6 @@
       "Évaluation du carbone dans le domaine minier",
       "Inspections environnementales et sociales"
     ],
-    "homeEyebrow": "✳ Formation",
     "homeTitle": "Transmettre l’expertise à ceux qui gèrent le terrain.",
     "counterLabel": "formations et séminaires référencés depuis {year}",
     "cta": "Demander un programme sur mesure",
@@ -582,10 +584,11 @@
       "counter": "missions depuis {from}",
       "openLabel": "{client}, {year} : voir la fiche de la mission",
       "endTitle": "{count} missions, de {from} à {to}.",
-      "endText": "Études d’impact, audits, monitoring, agréments, formations et études : le registre complet se consulte et se filtre sur la page Réalisations.",
+      "endText": "Études d’impact, audits, monitoring, agréments, formations et études : retrouvez chaque mission dans le registre ci-dessus.",
       "contactCta": "Nous confier une mission",
       "scrollHint": "Défilez pour remonter le fil",
-      "swipeHint": "Faites glisser pour remonter le fil"
+      "swipeHint": "Faites glisser pour remonter le fil",
+      "eyebrow": "Frise des missions"
     }
   },
   "Impact": {
@@ -1026,39 +1029,13 @@
     "privacyNote": "Vos informations servent uniquement à répondre à votre demande. En envoyant ce formulaire, vous acceptez ce traitement ; vos droits sont détaillés dans notre <link>politique de confidentialité</link>."
   },
   "HomeAbout": {
-    "eyebrow": "01 · À propos",
-    "title": "Née à l’université, éprouvée sur le terrain.",
-    "lead": "EWES est issue du Pôle de l’Environnement de l’Interface Université de Lubumbashi–Société, en collaboration avec des partenaires belges, français et canadiens. Son équipe réunit des experts congolais et étrangers.",
-    "text": "La société s’est imposée dans l’élaboration et l’évaluation des plans environnementaux des projets miniers et pétroliers. Elle étudie les risques naturels et anthropiques, aménage des sites, accompagne la mise en conformité environnementale et forme les cadres et techniciens du secteur.",
     "imageAlt": "Équipe d’ingénieurs EWES en mission de terrain",
-    "imageCaption": "Équipe multidisciplinaire · RD Congo",
-    "timelineTitle": "Repères",
-    "timeline": [
-      {
-        "year": "2013",
-        "text": "Création d’EWES S.A.R.L. et premier séminaire de formation en environnement minier, avec l’Interface UNILU–Société."
-      },
-      {
-        "year": "2014",
-        "text": "Première étude d’impact environnemental et social, pour la Société de Surveillance Minière."
-      },
-      {
-        "year": "2021",
-        "text": "Accompagnement du Laboratoire d’Analyses Environnementales LAE/UNILU vers son agrément et son accréditation."
-      },
-      {
-        "year": "2025",
-        "text": "Enquête du Baromètre national de la RSE des entreprises minières, au Haut-Katanga et au Lualaba."
-      }
-    ],
-    "objectivesTitle": "Nos objectifs de recherche",
     "stats": {
       "founded": "Création d’EWES",
       "missions": "Missions référencées",
       "operators": "Opérateurs miniers accompagnés",
       "poles": "Pôles d’expertise"
-    },
-    "moreLink": "En savoir plus sur EWES"
+    }
   },
   "Clients": {
     "label": "Ils nous ont fait confiance"
@@ -1066,7 +1043,6 @@
   "ServicesOverview": {
     "eyebrow": "02 · Nos services",
     "title": "Trois pôles, une seule exigence scientifique.",
-    "aside": "Chaque pôle s’appuie sur le précédent : les données environnementales orientent la gestion de l’eau, qui guide à son tour nos travaux d’ingénierie.",
     "indexLabel": "Les trois pôles d’EWES",
     "services": "{count} prestations",
     "fields": "{count} volets",
@@ -1075,10 +1051,6 @@
       "eau": "Eau",
       "ing": "Travaux d’ingénierie"
     },
-    "chapterLink": "Explorer le pôle",
-    "detailLink": "Fiche détaillée",
-    "allLink": "Tous nos services",
-    "relations": ["oriente", "guide"],
     "audiencesTitle": "Pour qui nous travaillons"
   },
   "Method": {
@@ -1269,7 +1241,7 @@
     }
   },
   "ContactBlock": {
-    "eyebrow": "06 · Contact",
+    "eyebrow": "08 · Contact",
     "title": "Parlons de votre projet.",
     "lead": "Étude d’impact, audit environnemental, adduction d’eau, analyses ou formation : quelle que soit la nature de votre projet, l’équipe EWES est à votre écoute.",
     "address": "Adresse",
@@ -1294,5 +1266,23 @@
       "next": "Page suivante",
       "page": "Page {page}"
     }
+  },
+  "HomeSections": {
+    "aboutEyebrow": "01 · Qui est EWES",
+    "aboutTitle": "Née à l’université, éprouvée sur le terrain.",
+    "aboutText": "Issu du Pôle de l’Environnement de l’Interface Université de Lubumbashi–Société, EWES réunit des experts congolais et étrangers autour de l’évaluation et de la gestion environnementales des projets miniers, pétroliers et publics.",
+    "aboutLink": "En savoir plus sur EWES",
+    "polesEyebrow": "02 · Nos 3 pôles",
+    "polesTitle": "Trois pôles, une seule exigence scientifique.",
+    "polesText": "Les données environnementales orientent la gestion de l’eau, qui guide à son tour nos travaux d’ingénierie.",
+    "poleHighlights": "Prestations phares",
+    "poleLink": "Voir le pôle",
+    "methodEyebrow": "03 · Méthode",
+    "projectsEyebrow": "04 · Nos réalisations",
+    "projectsTitle": "Quelques missions récentes.",
+    "projectsText": "Un aperçu du registre : chaque carte ouvre la fiche de la mission.",
+    "trainingEyebrow": "05 · Formation",
+    "newsEyebrow": "06 · Actualités",
+    "documentsEyebrow": "07 · Documents"
   }
 }

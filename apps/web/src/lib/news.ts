@@ -185,7 +185,7 @@ export function readingMinutes(item: NewsItem) {
 }
 
 /** Actualités affichées dans le carnet de bord de l'Accueil. */
-export const HOME_NEWS_COUNT = 4;
+export const HOME_NEWS_COUNT = 3;
 
 export interface HomeNews {
   items: NewsItem[];

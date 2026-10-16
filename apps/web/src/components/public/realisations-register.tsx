@@ -151,7 +151,7 @@ export function RealisationsRegister({
                     style={{ height: `${(count / peak) * 100}%` }}
                   >
                     <span
-                      className={`absolute inset-x-0 -top-4 text-center font-mono text-[10px] leading-none text-sand transition-opacity ${
+                      className={`absolute inset-x-0 -top-4 text-center font-mono text-xs leading-none text-sand transition-opacity ${
                         active
                           ? 'opacity-100'
                           : 'opacity-0 group-hover:opacity-100'
@@ -162,7 +162,7 @@ export function RealisationsRegister({
                   </span>
                 </span>
                 <span
-                  className={`absolute inset-x-0 bottom-0 text-center font-mono text-[9px] leading-none md:text-[10px] ${
+                  className={`absolute inset-x-0 bottom-0 text-center font-mono text-xs leading-none md:text-xs ${
                     active ? 'font-bold text-sand' : 'text-muted'
                   }`}
                 >
@@ -202,7 +202,7 @@ export function RealisationsRegister({
 
         <div
           aria-hidden="true"
-          className="hidden grid-cols-[110px_1.1fr_1.6fr_150px] gap-6 pb-3 font-mono text-[10px] uppercase tracking-[0.12em] text-muted md:grid"
+          className="hidden grid-cols-[110px_1.1fr_1.6fr_150px] gap-6 pb-3 font-mono text-xs uppercase tracking-[0.1em] text-muted md:grid"
         >
           <span>{t('columns.year')}</span>
           <span>{t('columns.client')}</span>
@@ -242,7 +242,7 @@ export function RealisationsRegister({
                   </span>
                   <span className="col-start-2 row-start-1 justify-self-end md:col-start-auto md:row-start-auto md:justify-self-start">
                     <span
-                      className={`inline-block border border-current px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.06em] ${PROJECT_CATEGORY_TONE[project.category]}`}
+                      className={`inline-block border border-current px-2 py-1 font-mono text-xs font-medium uppercase tracking-[0.06em] ${PROJECT_CATEGORY_TONE[project.category]}`}
                     >
                       {option?.tag}
                     </span>
@@ -260,14 +260,14 @@ export function RealisationsRegister({
                 type="button"
                 aria-expanded={expanded}
                 onClick={() => setExpanded((value) => !value)}
-                className="border border-sand/25 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-sand transition-colors hover:border-sand hover:bg-sand hover:text-paper"
+                className="border border-sand/25 px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-sand transition-colors hover:border-sand hover:bg-sand hover:text-paper"
               >
                 {expanded
                   ? t('showLess')
                   : t('showAll', { count: rows.length })}
               </button>
             )}
-            <p className="font-mono text-[11px] text-muted" aria-live="polite">
+            <p className="font-mono text-xs text-muted" aria-live="polite">
               {status}
             </p>
           </div>
@@ -275,7 +275,7 @@ export function RealisationsRegister({
           {showPageLink && (
             <Link
               href="/realisations"
-              className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary transition-colors hover:text-sand"
+              className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-primary transition-colors hover:text-sand"
             >
               {t('viewAll')} <ArrowRight size={14} />
             </Link>

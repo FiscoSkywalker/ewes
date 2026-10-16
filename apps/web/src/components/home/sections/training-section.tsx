@@ -1,5 +1,3 @@
-'use client';
-
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ArrowRight } from 'lucide-react';
@@ -9,45 +7,38 @@ import type { Project } from '@/data/projects';
 import { ButtonLink } from '@/components/public/ui';
 
 /**
- * « Formation » de l'Accueil, section nuit — homepage uniquement. Le
- * compteur est calculé à partir du registre des réalisations (missions de
- * type Formation), pas saisi à la main.
+ * « 05 · Formation » de l'Accueil, section nuit — homepage uniquement, en
+ * version condensée : un paragraphe, le nombre de formations et l'action.
+ * Les thèmes de formation se lisent sur la page Nos services. Le compteur
+ * est calculé à partir du registre des réalisations (missions de type
+ * Formation), pas saisi à la main.
  */
 export function TrainingSection({ projects }: { projects: Project[] }) {
   const t = useTranslations('Training');
-  const topics = t.raw('topics') as string[];
+  const tHome = useTranslations('HomeSections');
   const trainings = projects.filter((p) => p.category === 'FORMATION');
   const since = Math.min(...trainings.map((p) => p.year));
 
   return (
-    <section className="tone-night relative overflow-hidden bg-night px-6 py-24 md:px-16 md:py-32">
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <Image
-          src="/assets/images/ewes-texture-malachite.jpg"
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover opacity-20 mix-blend-luminosity [mask-image:radial-gradient(60%_75%_at_75%_50%,#000_25%,transparent_78%)]"
-        />
-      </div>
+    <section className="tone-night relative overflow-hidden bg-night px-6 py-14 md:px-16 md:py-24">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_60%_at_90%_10%,rgba(90,209,161,.12),transparent_70%)]" />
       <TopoContours />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-[1440px] items-center gap-14 lg:grid-cols-2 lg:gap-24">
+      <div className="relative z-10 mx-auto grid w-full max-w-[1440px] items-center gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-20">
         <div>
           <SectionHeading
-            eyebrow={t('homeEyebrow')}
+            eyebrow={tHome('trainingEyebrow')}
             title={t('homeTitle')}
             description={t('description')}
             tone="night"
           />
 
           <div
-            className="my-10 flex items-end gap-5 border-t border-on-night/15 pt-6"
+            className="my-8 flex items-end gap-5 border-t border-on-night/15 pt-6"
             data-reveal
           >
             <b
-              className="font-heading text-8xl font-bold leading-[0.8] tracking-tight text-malachite-bright md:text-9xl"
+              className="font-heading text-7xl font-bold leading-[0.8] tracking-tight text-malachite-bright md:text-8xl"
               data-counter={trainings.length}
             >
               {trainings.length}
@@ -62,36 +53,15 @@ export function TrainingSection({ projects }: { projects: Project[] }) {
           </ButtonLink>
         </div>
 
-        <div>
-          <figure
-            className="relative aspect-[3/2] overflow-hidden"
-            data-image-reveal
-          >
-            <Image
-              src="/assets/images/ewes-photo-formation.jpg"
-              alt={t('imageAlt')}
-              fill
-              sizes="(min-width: 1024px) 45vw, 100vw"
-              className="object-cover"
-            />
-          </figure>
-          <ul className="mt-7 grid sm:grid-cols-2 sm:gap-x-7" data-stagger>
-            {topics.map((topic) => (
-              <li
-                key={topic}
-                className="flex items-baseline gap-3 border-b border-on-night/12 py-3 text-sm text-on-night"
-              >
-                <span
-                  className="text-xs text-malachite-bright"
-                  aria-hidden="true"
-                >
-                  ✳
-                </span>
-                {topic}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <figure className="relative hidden aspect-[3/2] overflow-hidden rounded-sheet md:block">
+          <Image
+            src="/assets/images/ewes-photo-formation.jpg"
+            alt={t('imageAlt')}
+            fill
+            sizes="(min-width: 1024px) 45vw, 100vw"
+            className="object-cover"
+          />
+        </figure>
       </div>
     </section>
   );

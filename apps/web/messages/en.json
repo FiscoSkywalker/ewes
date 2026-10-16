@@ -14,7 +14,9 @@
     "mainNavAriaLabel": "Main navigation",
     "mobileNavAriaLabel": "Mobile navigation",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "skipToContent": "Skip to content",
+    "contactCta": "Discuss a project"
   },
   "Legal": {
     "toc": "Contents",
@@ -46,17 +48,18 @@
   "HomePage": {
     "eyebrow": "Home",
     "title": "EWES S.A.R.L. | Environment, Water and Engineering Services",
-    "description": "Impact studies, environmental audits, water resources and engineering works for the mining, oil and public sectors in the Democratic Republic of Congo."
+    "description": "EWES is a Congolese consultancy that grew out of the University of Lubumbashi. We carry out impact assessments, environmental audits and analyses, as well as water and engineering projects for the mining, oil and public sectors."
   },
   "Hero": {
-    "eyebrow": "Environment, water and engineering works",
+    "eyebrow": "Environmental consultancy · Lubumbashi, DRC",
     "titleLine1": "Field data for\n",
     "titleHighlight": "lasting decisions.",
-    "shieldLabel": "Congolese & international experts",
     "locationLabel": "Lubumbashi · DR Congo",
     "scrollLabel": "Scroll down",
     "imageAlt": "EWES expert carrying out environmental monitoring at a mining site",
-    "ctaContact": "Discuss a project"
+    "ctaContact": "Discuss a project",
+    "ctaServices": "Explore our services",
+    "proof": "Since {year} · {missions} assignments · {operators} mining operators supported"
   },
   "World": {
     "eyebrow": "01 · Who we are",
@@ -277,7 +280,6 @@
       "Carbon assessment in mining",
       "Environmental and social inspections"
     ],
-    "homeEyebrow": "✳ Training",
     "homeTitle": "Passing on expertise to those who manage the field.",
     "counterLabel": "training courses and seminars referenced since {year}",
     "cta": "Request a tailored programme",
@@ -582,10 +584,11 @@
       "counter": "assignments since {from}",
       "openLabel": "{client}, {year}: view the assignment sheet",
       "endTitle": "{count} assignments, from {from} to {to}.",
-      "endText": "Impact assessments, audits, monitoring, approvals, training and studies: browse and filter the full register on the “Our projects” page.",
+      "endText": "Impact assessments, audits, monitoring, approvals, training and studies: find every assignment in the register above.",
       "contactCta": "Entrust us with an assignment",
       "scrollHint": "Scroll to follow the thread",
-      "swipeHint": "Swipe to follow the thread"
+      "swipeHint": "Swipe to follow the thread",
+      "eyebrow": "Assignment timeline"
     }
   },
   "Impact": {
@@ -1013,39 +1016,13 @@
     "privacyNote": "Your information is used only to answer your request. By sending this form you agree to this processing; your rights are detailed in our <link>privacy policy</link>."
   },
   "HomeAbout": {
-    "eyebrow": "01 · About us",
-    "title": "Born at the university, proven in the field.",
-    "lead": "EWES grew out of the Environment Centre of the University of Lubumbashi–Society Interface, working with Belgian, French and Canadian partners. Its team brings together Congolese and international experts.",
-    "text": "The company has established itself in drawing up and assessing the environmental plans of mining and oil projects. It studies natural and man-made risks, develops sites, supports environmental compliance and trains the sector’s managers and technicians.",
     "imageAlt": "EWES engineering team on a field mission",
-    "imageCaption": "Multidisciplinary team · DR Congo",
-    "timelineTitle": "Milestones",
-    "timeline": [
-      {
-        "year": "2013",
-        "text": "EWES S.A.R.L. is founded and holds its first training seminar on the mining environment, with the UNILU–Society Interface."
-      },
-      {
-        "year": "2014",
-        "text": "First environmental and social impact assessment, for the Société de Surveillance Minière."
-      },
-      {
-        "year": "2021",
-        "text": "Support for the LAE/UNILU Environmental Analysis Laboratory in obtaining its approval and accreditation."
-      },
-      {
-        "year": "2025",
-        "text": "Survey for the national CSR barometer of mining companies in Haut-Katanga and Lualaba."
-      }
-    ],
-    "objectivesTitle": "Our research objectives",
     "stats": {
       "founded": "EWES founded",
       "missions": "Referenced assignments",
       "operators": "Mining operators supported",
       "poles": "Areas of expertise"
-    },
-    "moreLink": "Learn more about EWES"
+    }
   },
   "Clients": {
     "label": "They have trusted us"
@@ -1053,7 +1030,6 @@
   "ServicesOverview": {
     "eyebrow": "02 · Our services",
     "title": "Three areas, one scientific standard.",
-    "aside": "Each area builds on the previous one: environmental data shape water management, which in turn guides our engineering works.",
     "indexLabel": "EWES’s three areas of expertise",
     "services": "{count} services",
     "fields": "{count} fields",
@@ -1062,10 +1038,6 @@
       "eau": "Water",
       "ing": "Engineering works"
     },
-    "chapterLink": "Explore this area",
-    "detailLink": "Full details",
-    "allLink": "All our services",
-    "relations": ["informs", "guides"],
     "audiencesTitle": "Who we work for"
   },
   "Method": {
@@ -1256,7 +1228,7 @@
     }
   },
   "ContactBlock": {
-    "eyebrow": "06 · Contact",
+    "eyebrow": "08 · Contact",
     "title": "Let’s talk about your project.",
     "lead": "Impact study, environmental audit, water supply, analyses or training: whatever the nature of your project, the EWES team is ready to listen.",
     "address": "Address",
@@ -1281,5 +1253,23 @@
       "next": "Next page",
       "page": "Page {page}"
     }
+  },
+  "HomeSections": {
+    "aboutEyebrow": "01 · Who we are",
+    "aboutTitle": "Born at the university, proven in the field.",
+    "aboutText": "Founded within the Environment Unit of the University of Lubumbashi–Society Interface, EWES brings together Congolese and international experts in the environmental assessment and management of mining, oil and public projects.",
+    "aboutLink": "Learn more about EWES",
+    "polesEyebrow": "02 · Our 3 divisions",
+    "polesTitle": "Three divisions, one scientific standard.",
+    "polesText": "Environmental data shapes how water is managed, which in turn guides our engineering works.",
+    "poleHighlights": "Key services",
+    "poleLink": "View division",
+    "methodEyebrow": "03 · Method",
+    "projectsEyebrow": "04 · Our projects",
+    "projectsTitle": "A few recent assignments.",
+    "projectsText": "A glimpse of the register: each card opens the assignment sheet.",
+    "trainingEyebrow": "05 · Training",
+    "newsEyebrow": "06 · News",
+    "documentsEyebrow": "07 · Documents"
   }
 }

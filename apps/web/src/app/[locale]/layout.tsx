@@ -1,11 +1,5 @@
 import type { Metadata } from 'next';
-import {
-  Archivo,
-  DM_Sans,
-  Geist_Mono,
-  Rajdhani,
-  Source_Serif_4,
-} from 'next/font/google';
+import { Archivo, DM_Sans, Geist_Mono, Source_Serif_4 } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -15,10 +9,10 @@ import '../globals.css';
 import '@/styles/article-prose.css';
 
 /**
- * Identité typographique du site public (blueprint/05_UI_UX_System.md §3) :
- * DM Sans pour le corps de texte, Rajdhani pour les titres — reprises du
- * prototype immersif validé pour la page d'Accueil, appliquées à l'ensemble
- * du site public pour une identité cohérente.
+ * Identité typographique du site public (blueprint/05_UI_UX_System.md §3),
+ * quatre familles et pas une de plus : Archivo pour tous les titres, DM Sans
+ * pour le texte, Geist Mono pour les étiquettes techniques et Source Serif 4
+ * italique pour le seul mot d'accent du titre de l'Accueil.
  */
 const bodyFont = DM_Sans({
   variable: '--font-body',
@@ -26,23 +20,14 @@ const bodyFont = DM_Sans({
   weight: ['400', '500', '600', '700'],
 });
 
-const headingFont = Rajdhani({
+/** Titres : Archivo variable (graisse et axe de largeur, élargi pour le hero). */
+const headingFont = Archivo({
   variable: '--font-heading',
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-});
-
-/**
- * Typographie du titre du hero, reprise du prototype : Archivo (axe de
- * largeur) et Source Serif 4 italique pour l'accent. Chargées une fois pour
- * tout le site mais utilisées par le seul hero.
- */
-const heroFont = Archivo({
-  variable: '--font-archivo',
   subsets: ['latin'],
   axes: ['wdth'],
 });
 
+/** Mot d'accent du titre de l'Accueil uniquement. */
 const accentSerif = Source_Serif_4({
   variable: '--font-serif-accent',
   subsets: ['latin'],
@@ -53,6 +38,9 @@ const accentSerif = Source_Serif_4({
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+  // Étiquettes secondaires : pas de préchargement, pour laisser la bande
+  // passante du premier écran à la photo du hero et aux titres.
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -92,7 +80,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${bodyFont.variable} ${headingFont.variable} ${heroFont.variable} ${accentSerif.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${bodyFont.variable} ${headingFont.variable} ${accentSerif.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider messages={messages}>

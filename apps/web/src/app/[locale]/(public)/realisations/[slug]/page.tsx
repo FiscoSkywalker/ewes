@@ -146,7 +146,7 @@ export default async function RealisationPage({
       <article className="mx-auto w-full max-w-[1200px]">
         {/* Fil d'Ariane */}
         <nav aria-label={tDetail('breadcrumb')} className="mb-10">
-          <ol className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+          <ol className="flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-muted">
             <li>
               <Link href="/" className="hover:text-sand">
                 {tDetail('home')}
@@ -174,7 +174,7 @@ export default async function RealisationPage({
 
         <header className="max-w-4xl" data-reveal>
           <p
-            className={`font-mono text-[11px] font-bold uppercase tracking-[0.18em] ${PROJECT_CATEGORY_TONE[project.category as ProjectCategory]}`}
+            className={`font-mono text-xs font-bold uppercase tracking-[0.1em] ${PROJECT_CATEGORY_TONE[project.category as ProjectCategory]}`}
           >
             {category?.label ?? project.category}
           </p>
@@ -208,7 +208,7 @@ export default async function RealisationPage({
               <section key={section.id} aria-labelledby={`${section.id}-title`}>
                 <h2
                   id={`${section.id}-title`}
-                  className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted"
+                  className="font-mono text-xs uppercase tracking-[0.1em] text-muted"
                 >
                   {section.title}
                 </h2>
@@ -224,7 +224,7 @@ export default async function RealisationPage({
             <section aria-labelledby="nature-title">
               <h2
                 id="nature-title"
-                className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted"
+                className="font-mono text-xs uppercase tracking-[0.1em] text-muted"
               >
                 {tDetail('sections.nature')} —{' '}
                 {category?.label ?? project.category}
@@ -248,7 +248,7 @@ export default async function RealisationPage({
               <section aria-labelledby="gallery-title">
                 <h2
                   id="gallery-title"
-                  className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted"
+                  className="font-mono text-xs uppercase tracking-[0.1em] text-muted"
                 >
                   {tDetail('sections.gallery')}
                 </h2>
@@ -264,7 +264,7 @@ export default async function RealisationPage({
               <section aria-labelledby="documents-title">
                 <h2
                   id="documents-title"
-                  className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted"
+                  className="font-mono text-xs uppercase tracking-[0.1em] text-muted"
                 >
                   {tDetail('sections.documents')}
                 </h2>
@@ -289,7 +289,7 @@ export default async function RealisationPage({
                           <span className="block text-sm font-semibold leading-6">
                             {document.title}
                           </span>
-                          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-muted">
+                          <span className="block font-mono text-xs uppercase tracking-[0.1em] text-muted">
                             {[
                               document.format,
                               document.size,
@@ -302,7 +302,7 @@ export default async function RealisationPage({
                               .join(' · ')}
                           </span>
                         </span>
-                        <span className="hidden items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-sand/70 transition-colors group-hover:text-sand sm:inline-flex">
+                        <span className="hidden items-center gap-1.5 text-xs font-bold uppercase tracking-[0.1em] text-sand/70 transition-colors group-hover:text-sand sm:inline-flex">
                           {tDetail('download')}
                           <Download size={14} aria-hidden="true" />
                         </span>
@@ -318,7 +318,7 @@ export default async function RealisationPage({
             <dl className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-sand pt-6 lg:grid-cols-1">
               {facts.map(([label, value]) => (
                 <div key={label}>
-                  <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+                  <dt className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
                     {label}
                   </dt>
                   <dd className="mt-1 text-sm font-semibold leading-6">
@@ -328,7 +328,7 @@ export default async function RealisationPage({
               ))}
               {detail.partners.length > 0 && (
                 <div className="col-span-2 lg:col-span-1">
-                  <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+                  <dt className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
                     {tDetail('facts.partners')}
                   </dt>
                   <dd className="mt-2">
@@ -353,7 +353,7 @@ export default async function RealisationPage({
               </p>
               <Link
                 href="/contact"
-                className="mt-3 inline-flex items-center gap-2 border-b border-sand/25 pb-0.5 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:border-sand"
+                className="mt-3 inline-flex items-center gap-2 border-b border-sand/25 pb-0.5 text-xs font-bold uppercase tracking-[0.1em] transition-colors hover:border-sand"
               >
                 {tSheet('cta')} <ArrowRight size={13} />
               </Link>

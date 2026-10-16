@@ -127,7 +127,7 @@ function Block({
               key={label}
               className="grid gap-1 border-b border-border-subtle px-5 py-4 last:border-b-0 sm:grid-cols-[13rem_1fr] sm:gap-6"
             >
-              <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+              <dt className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
                 {label}
               </dt>
               <dd className="text-sm leading-6 text-sand">{text(value)}</dd>
@@ -148,7 +148,7 @@ function Block({
                     <th
                       key={cell}
                       scope="col"
-                      className="px-4 py-3 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-muted"
+                      className="px-4 py-3 font-mono text-xs font-medium uppercase tracking-[0.1em] text-muted"
                     >
                       {cell}
                     </th>
@@ -183,7 +183,7 @@ function Block({
               >
                 {row.map((cell, column) => (
                   <div key={column}>
-                    <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                    <div className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
                       {block.head[column]}
                     </div>
                     <div
@@ -242,7 +242,7 @@ export async function LegalDocument({
             href={`#${anchor(index)}`}
             className="flex gap-3 rounded-control px-3 py-2 leading-5 text-sand/70 transition-colors hover:bg-sand/6 hover:text-sand"
           >
-            <span className="font-mono text-[11px] leading-5 text-primary">
+            <span className="font-mono text-xs leading-5 text-primary">
               {String(index + 1).padStart(2, '0')}
             </span>
             {section.title}
@@ -263,7 +263,7 @@ export async function LegalDocument({
             description={document.intro}
             className="max-w-4xl"
           />
-          <p className="mt-8 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+          <p className="mt-8 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-muted">
             <CalendarClock size={14} aria-hidden="true" />
             {t('updated', { date: formatUpdated(locale) })}
           </p>
@@ -289,7 +289,7 @@ export async function LegalDocument({
               <div className="border-t border-border-subtle p-2">{toc}</div>
             </details>
             <div className="hidden lg:block">
-              <h2 className="mb-3 px-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+              <h2 className="mb-3 px-3 font-mono text-xs uppercase tracking-[0.1em] text-muted">
                 {t('toc')}
               </h2>
               {toc}
@@ -327,7 +327,7 @@ export async function LegalDocument({
             >
               <h2
                 id="legal-others"
-                className="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-muted"
+                className="mb-4 font-mono text-xs uppercase tracking-[0.1em] text-muted"
               >
                 {t('others')}
               </h2>

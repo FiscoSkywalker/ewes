@@ -36,7 +36,7 @@ export async function Footer() {
   ] as const;
 
   const headingClass =
-    'mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-on-night';
+    'mb-2 font-mono text-xs uppercase tracking-[0.1em] text-on-night';
   const linkClass = 'w-fit transition-colors hover:text-malachite-bright';
 
   return (
@@ -120,7 +120,7 @@ export async function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 pt-6 font-mono text-[11px] sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 pt-6 font-mono text-xs sm:flex-row sm:items-center sm:justify-between">
         <div>
           © {new Date().getFullYear()} EWES S.A.R.L. {t('rights')}
         </div>

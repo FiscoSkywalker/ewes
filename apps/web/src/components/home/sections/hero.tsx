@@ -1,18 +1,32 @@
 'use client';
 
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { ArrowUpRight, ChevronDown, MapPin, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, ChevronDown, MapPin } from 'lucide-react';
 import { useSectionActivity } from '@/hooks/useSectionActivity';
-import { ButtonLink } from '@/components/public/ui';
+import { ButtonLink, TextLink } from '@/components/public/ui';
+import { scrollToElement } from '@/lib/smooth-scroll';
 
 interface HeroProps {
   /** Paragraphe d'accroche, piloté depuis le portail (page « accueil »). */
   lead: string;
-  onExplore: () => void;
+  /** Ligne de preuve, calculée à partir des mêmes données que le reste du site. */
+  proof: { year: number; missions: number; operators: number };
+  /** Section vers laquelle mène « Faire défiler ». */
+  exploreTargetId: string;
 }
 
-/** Premier écran de l'Accueil — homepage uniquement. */
-export function Hero({ lead, onExplore }: HeroProps) {
+/**
+ * Premier écran de l'Accueil — homepage uniquement. Dit en cinq secondes qui
+ * est EWES : petit titre (métier + lieu), titre, sous-titre explicite, deux
+ * actions et une ligne de preuve chiffrée.
+ *
+ * Voile latéral (≥ md) : plein derrière le texte, transparent à partir de
+ * ~55 % de la largeur, pour que la photo de terrain reste lisible à droite.
+ * Mobile : la photo occupe un bloc à part sous le texte (aucun texte posé sur
+ * l'image), ce qui garantit le contraste sans voiler la photo.
+ */
+export function Hero({ lead, proof, exploreTargetId }: HeroProps) {
   const t = useTranslations('Hero');
   const { ref, active } = useSectionActivity<HTMLElement>();
 
@@ -20,62 +34,68 @@ export function Hero({ lead, onExplore }: HeroProps) {
     <section
       ref={ref}
       data-paused={!active}
-      className="relative flex min-h-[112svh] flex-col justify-end overflow-hidden px-6 pb-6 pt-32 md:px-16"
+      className="relative flex flex-col overflow-hidden bg-background md:min-h-svh md:justify-end md:px-16 md:pb-6 md:pt-32"
     >
-      <div className="absolute inset-0 overflow-hidden" data-parallax-media>
-        <picture>
-          <source
-            media="(max-width: 767px)"
-            srcSet="/assets/images/ewes-photo-site-minier-mobile.jpg"
-          />
-          <img
-            src="/assets/images/ewes-photo-site-minier.jpg"
-            alt={t('imageAlt')}
-            fetchPriority="high"
-            className="hero-cinematic-image absolute inset-0 h-full w-full object-cover"
-          />
-        </picture>
+      <div
+        className="relative order-2 aspect-[16/9] overflow-hidden md:absolute md:inset-0 md:order-none md:aspect-auto"
+        data-parallax-media
+      >
+        {/* Même photo sur tous les écrans, redimensionnée et convertie
+            (WebP/AVIF) par l'optimiseur de Next : c'est l'élément LCP. */}
+        <Image
+          src="/assets/images/ewes-photo-site-minier.jpg"
+          alt={t('imageAlt')}
+          fill
+          priority
+          sizes="100vw"
+          className="hero-cinematic-image object-cover"
+        />
         <div className="hero-cloud hero-cloud-one" />
         <div className="hero-cloud hero-cloud-two" />
         <div className="hero-water-shimmer" />
       </div>
-      <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(213,228,234,.98)_0%,rgba(213,228,234,.89)_38%,rgba(213,228,234,.26)_72%,rgba(213,228,234,.16)_100%)] md:block" />
-      <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(180deg,rgba(213,228,234,.38),transparent_35%,rgba(181,208,219,.76))] md:block" />
-      {/* Mobile : voile vertical (le texte occupe toute la largeur) qui finit exactement sur la couleur du fond, sans ligne de raccord. */}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(213,228,234,.5)_0%,rgba(213,228,234,.82)_30%,rgba(213,228,234,.9)_65%,rgb(213,228,234)_100%)] md:hidden" />
+      {/* Voile latéral : opaque sous le texte, nul au-delà de ~55 % de la largeur. */}
+      <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgb(213,228,234)_0%,rgba(213,228,234,.96)_34%,rgba(213,228,234,.7)_45%,rgba(213,228,234,0)_56%)] md:block" />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 items-center">
-        <div className="hero-enter max-w-4xl">
-          <div className="eyebrow mb-6">{t('eyebrow')}</div>
+      <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 items-center px-6 pb-10 pt-28 md:px-0 md:pb-0 md:pt-0">
+        <div className="hero-enter max-w-[46rem]">
+          <p className="eyebrow mb-6 [--pole:var(--color-primary-deep)]">
+            {t('eyebrow')}
+          </p>
           <h1 className="hero-title text-sand">
             {t('titleLine1')} <em>{t('titleHighlight')}</em>
           </h1>
-          <p className="hero-lead mt-7 text-sand/75">{lead}</p>
+          <p className="hero-lead mt-7 text-sand/85">{lead}</p>
 
-          <div className="pointer-events-auto mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="pointer-events-auto mt-8 flex flex-col items-start gap-x-7 gap-y-4 sm:flex-row sm:items-center">
             <ButtonLink href="/contact" icon={ArrowUpRight}>
               {t('ctaContact')}
             </ButtonLink>
-            <div className="flex items-center gap-3 border-l border-sand/25 px-5 py-3 text-xs text-sand/70">
-              <ShieldCheck size={16} className="text-primary" />
-              {t('shieldLabel')}
-            </div>
+            <TextLink href="/services" icon={ArrowRight}>
+              {t('ctaServices')}
+            </TextLink>
           </div>
+
+          <p className="mt-8 border-t border-sand/20 pt-4 font-mono text-xs uppercase tracking-[0.08em] text-sand">
+            {t('proof', proof)}
+          </p>
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto mt-8 flex w-full max-w-[1440px] items-center justify-between border-t border-sand/12 pt-5 text-[11px] uppercase tracking-[0.16em] text-sand/55">
-        <div className="flex items-center gap-2">
-          <MapPin size={13} className="text-primary" />
+      <div className="relative z-10 mx-auto mt-8 hidden w-full max-w-[1440px] items-center justify-between border-t border-sand/20 pt-5 text-xs uppercase tracking-[0.1em] text-sand md:flex">
+        <div className="flex items-center gap-2 rounded-full bg-background/90 px-3 py-1">
+          <MapPin size={13} className="text-primary" aria-hidden="true" />
           {t('locationLabel')}
         </div>
         <button
           type="button"
-          onClick={onExplore}
-          className="pointer-events-auto hidden items-center gap-2 transition-colors hover:text-primary sm:flex"
+          onClick={() =>
+            scrollToElement(document.getElementById(exploreTargetId))
+          }
+          className="pointer-events-auto flex items-center gap-2 rounded-full bg-background/90 px-3 py-1 transition-colors hover:text-primary"
         >
           {t('scrollLabel')}
-          <ChevronDown size={14} />
+          <ChevronDown size={14} aria-hidden="true" />
         </button>
       </div>
     </section>

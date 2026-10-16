@@ -54,11 +54,11 @@ export function ShareLinks({
   ];
 
   const button =
-    'flex h-9 min-w-9 items-center justify-center rounded-full border border-border px-2.5 font-mono text-[11px] font-bold uppercase text-sand transition-colors hover:border-sand hover:bg-sand hover:text-paper';
+    'flex h-9 min-w-9 items-center justify-center rounded-full border border-border px-2.5 font-mono text-xs font-bold uppercase text-sand transition-colors hover:border-sand hover:bg-sand hover:text-paper';
 
   return (
     <div>
-      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+      <p className="font-mono text-xs uppercase tracking-[0.1em] text-muted">
         {t('share')}
       </p>
       <ul className="mt-3 flex flex-wrap gap-1.5">
@@ -126,7 +126,7 @@ export function ShareLinks({
         </li>
       </ul>
       <p
-        className="mt-2 h-4 font-mono text-[10px] text-malachite"
+        className="mt-2 h-4 font-mono text-xs text-malachite"
         aria-live="polite"
       >
         {copied ? t('copied') : ''}

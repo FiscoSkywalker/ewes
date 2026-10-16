@@ -122,7 +122,7 @@ export function GalleryLightbox({
           <div className="flex h-full flex-col">
             <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
               <p
-                className="font-mono text-[11px] uppercase tracking-[0.14em] text-on-night-muted"
+                className="font-mono text-xs uppercase tracking-[0.1em] text-on-night-muted"
                 aria-live="polite"
               >
                 {t('galleryImage', { index: numberOf(current), count: total })}
