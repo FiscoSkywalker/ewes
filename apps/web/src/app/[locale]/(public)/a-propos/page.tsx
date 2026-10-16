@@ -105,7 +105,8 @@ export default async function AboutPage({
                 src="/assets/images/ewes-photo-equipe-terrain.jpg"
                 alt={t('imageAlt')}
                 fill
-                priority
+                loading="eager"
+                fetchPriority="high"
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover"
               />

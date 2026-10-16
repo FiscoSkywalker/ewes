@@ -46,7 +46,10 @@ export function Hero({ lead, proof, exploreTargetId }: HeroProps) {
           src="/assets/images/ewes-photo-site-minier.jpg"
           alt={t('imageAlt')}
           fill
-          priority
+          // `priority` est déprécié depuis Next 16 et ne relève plus la
+          // priorité réseau : l'image partait en priorité basse.
+          loading="eager"
+          fetchPriority="high"
           sizes="100vw"
           className="hero-cinematic-image object-cover"
         />
