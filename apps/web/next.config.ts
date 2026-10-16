@@ -83,8 +83,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Nécessaire pour la scène WebGL de la page d'Accueil (three.js/R3F/drei).
-  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
+  // AVIF d'abord (30 à 50 % plus léger que WebP pour les photos), WebP en repli.
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
 };
 
 export default withNextIntl(nextConfig);
